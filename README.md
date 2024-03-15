@@ -63,9 +63,9 @@ If you view the raw file contents of `Info.plist`, it should look like this:
 <dict>
     ...
     <key>NSCameraUsageDescription</key>
-    <string>Daily Playground needs camera access to work</string>
+    <string>Vapi Playground needs camera access to work</string>
     <key>NSMicrophoneUsageDescription</key>
-    <string>Daily Playground needs microphone access to work</string>
+    <string>Vapi Playground needs microphone access to work</string>
     <key>UIBackgroundModes</key>
     <array>
         <string>voip</string>
