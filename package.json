@@ -12,14 +12,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/VapiAI/snippet.git"
+    "url": "git+https://github.com/VapiAI/react-native-sdk"
   },
   "author": "vapi",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/VapiAI/snippet/issues"
+    "url": "https://github.com/VapiAI/react-native-sdk/issues"
   },
-  "homepage": "https://github.com/VapiAI/snippet#readme",
+  "homepage": "https://github.com/VapiAI/react-native-sdk",
   "dependencies": {
     "events": "^3.3.0",
     "@daily-co/react-native-daily-js": "^0.58.0"
