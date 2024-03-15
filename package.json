@@ -1,6 +1,6 @@
 {
   "name": "@vapi-ai/react-native",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "",
   "main": "dist/vapi.js",
   "types": "dist/vapi.d.ts",
