@@ -102,7 +102,7 @@ minSdkVersion = 24
 # Expo Guide
 To add Vapi react native SDK to your existing react native expo project
 
->  **Warning:** This project cannot be used with an Expo Go app because it requires custom native code. Follow the steps in the article on how to make your own development build or prebuild your native projects.
+>  **Warning:** This project cannot be used with an Expo Go app because it requires custom native code.
 
 
 1. update your current existing dependencies in package.json to the exact version as showing below
