@@ -2,6 +2,8 @@
 
 This package lets you start Vapi calls directly in your React native.
 
+## Warning
+> This guide is for bare bone react native project if you use **expo build** skip this section to [Expo guide](#expo-guide)
 
 ## Minimum OS/SDK versions
 
@@ -96,6 +98,81 @@ minSdkVersion = 24
 ```
 
 (If you run into any issues, refer to [Github issues](https://github.com/react-native-webrtc/react-native-webrtc/issues/720) like [these](https://github.com/jitsi/jitsi-meet/issues/4778), or the `react-native-webrtc` [installation docs](https://github.com/react-native-webrtc/react-native-webrtc/blob/master/Documentation/AndroidInstallation.md), which walk you through a more complicated process. The simpler process laid out above seems to work in a vanilla modern React Native CLI-based setup).
+
+# Expo Guide
+To add Vapi react native SDK to your existing react native expo project
+
+>  **Warning:** This project cannot be used with an Expo Go app because it requires custom native code. Follow the steps in the article on how to make your own development build or prebuild your native projects.
+
+
+1. update your current existing dependencies in package.json to the exact version as showing below
+```
+"expo": "^49",
+"react-native": "0.72.10",
+```
+
+1. Add new dependencies to your package.json with exact version as showing below
+```
+"@vapi-ai/react-native": "^0.1.2",
+"@config-plugins/react-native-webrtc": "7.0.0",
+"@daily-co/config-plugin-rn-daily-js": "0.0.3",
+"@daily-co/react-native-daily-js": "0.49.0",
+"@daily-co/react-native-webrtc": "111.0.0-daily.2",
+"@react-native-async-storage/async-storage": "^1.22.3",
+"react-native-background-timer": "^2.4.1",
+"react-native-get-random-values": "^1.11.0",
+```
+
+1. Update app.json
+
+```
+{
+    "expo": {
+
+        ...
+
+        "ios": {
+        "supportsTablet": true,
+        "bundleIdentifier": "co.vapi.DailyPlayground",
+        "infoPlist": {
+            "UIBackgroundModes": [
+            "voip"
+            ]
+        },
+        "bitcode": false
+        }
+
+    ...
+
+  }
+
+    ...
+
+    "plugins": [
+        "@config-plugins/react-native-webrtc",
+        "@daily-co/config-plugin-rn-daily-js",
+        [
+        "expo-build-properties",
+        {
+            "android": {
+                "minSdkVersion": 24
+            },
+            "ios": {
+                "deploymentTarget": "13.4"
+            }
+        }
+        ]
+    ]
+}
+
+4. prepare expo build `npx expo prebuild`
+
+5. Install iOS pods with `npx pod-install`
+
+6. Set up your `.env` file with the required Vapi tokens.
+
+7. Run the local server with `npx expo run:ios`.
+
 
 
 ## Usage
