@@ -112,7 +112,7 @@ To add Vapi react native SDK to your existing react native expo project
 
 1. Add new dependencies to your package.json with exact version as showing below
 ```
-"@vapi-ai/react-native": "^0.1.2",
+"@vapi-ai/react-native": "^0.1.3",
 "@config-plugins/react-native-webrtc": "8.0.0",
 "@daily-co/config-plugin-rn-daily-js": "0.0.4",
 "@daily-co/react-native-daily-js": "0.59.0",
