@@ -1,5 +1,4 @@
 # Vapi React Native SDK
-
 This package lets you start Vapi calls directly in your React native.
 
 ## Warning
@@ -18,7 +17,7 @@ Install `@vapi-ai/react-native` along with its peer dependencies:
 
 ```bash
 npm i @vapi-ai/react-native @daily-co/react-native-daily-js @react-native-async-storage/async-storage@^1.15.7 react-native-background-timer@^2.3.1 react-native-get-random-values@^1.9.0
-npm i --save-exact @daily-co/react-native-webrtc@111.0.0-daily.2
+npm i --save-exact @daily-co/react-native-webrtc@118.0.3-daily.1
 ```
 
 Then, follow the below steps to set up your native project on each platform. **Note that these steps assume you're using a version of React Native that supports autolinking (>= 60).**
@@ -107,17 +106,17 @@ To add Vapi react native SDK to your existing react native expo project
 
 1. update your current existing dependencies in package.json to the exact version as showing below
 ```
-"expo": "^49",
-"react-native": "0.72.10",
+"expo": "^50",
+"react-native": "^0.73.6",
 ```
 
 1. Add new dependencies to your package.json with exact version as showing below
 ```
 "@vapi-ai/react-native": "^0.1.2",
-"@config-plugins/react-native-webrtc": "7.0.0",
-"@daily-co/config-plugin-rn-daily-js": "0.0.3",
-"@daily-co/react-native-daily-js": "0.49.0",
-"@daily-co/react-native-webrtc": "111.0.0-daily.2",
+"@config-plugins/react-native-webrtc": "8.0.0",
+"@daily-co/config-plugin-rn-daily-js": "0.0.4",
+"@daily-co/react-native-daily-js": "0.59.0",
+"@daily-co/react-native-webrtc": "118.0.3-daily.1",
 "@react-native-async-storage/async-storage": "^1.22.3",
 "react-native-background-timer": "^2.4.1",
 "react-native-get-random-values": "^1.11.0",
