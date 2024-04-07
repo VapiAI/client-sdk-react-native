@@ -110,7 +110,7 @@ To add Vapi react native SDK to your existing react native expo project
 "react-native": "^0.73.6",
 ```
 
-1. Add new dependencies to your package.json with exact version as showing below
+2. Add new dependencies to your package.json with exact version as showing below
 ```
 "@vapi-ai/react-native": "^0.1.6",
 "@config-plugins/react-native-webrtc": "8.0.0",
@@ -122,7 +122,7 @@ To add Vapi react native SDK to your existing react native expo project
 "react-native-get-random-values": "^1.11.0",
 ```
 
-1. Update app.json
+3. Update app.json
 
 ```
 {
