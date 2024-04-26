@@ -272,7 +272,7 @@ export default class Vapi extends VapiEventEmitter {
         url: roomUrl,
       });
 
-      return null;
+      return webCall;
     } catch (e) {
       console.error(e);
       this.emit('error', e);
