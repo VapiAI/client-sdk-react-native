@@ -1,7 +1,9 @@
 # Vapi React Native SDK
+
 This package lets you start Vapi calls directly in your React native.
 
 ## Warning
+
 > This guide is for bare bone react native project if you use **expo build** skip this section to [Expo guide](#expo-guide)
 
 ## Minimum OS/SDK versions
@@ -21,7 +23,6 @@ npm i --save-exact @daily-co/react-native-webrtc@118.0.3-daily.1
 ```
 
 Then, follow the below steps to set up your native project on each platform. **Note that these steps assume you're using a version of React Native that supports autolinking (>= 60).**
-
 
 ### iOS
 
@@ -51,12 +52,12 @@ For the first two key's values, provide user-facing strings explaining why your 
 
 To add the new rows through Xcode, open the `Info.plist` and add the following three rows:
 
-| Key                                    | Type   | Value                                              |
-| -------------------------------------- | ------ | -------------------------------------------------- |
+| Key                                    | Type   | Value                                             |
+| -------------------------------------- | ------ | ------------------------------------------------- |
 | Privacy - Camera Usage Description     | String | "Vapi Playground needs camera access to work"     |
 | Privacy - Microphone Usage Description | String | "Vapi Playground needs microphone access to work" |
-| Required background modes              | Array  | 1 item                                             |
-| ---> Item 0                            | String | "App provides Voice over IP services"              |
+| Required background modes              | Array  | 1 item                                            |
+| ---> Item 0                            | String | "App provides Voice over IP services"             |
 
 If you view the raw file contents of `Info.plist`, it should look like this:
 
@@ -74,6 +75,7 @@ If you view the raw file contents of `Info.plist`, it should look like this:
     ...
 </dict>
 ```
+
 ### Android
 
 Add the following to `AndroidManifest.xml`:
@@ -99,18 +101,20 @@ minSdkVersion = 24
 (If you run into any issues, refer to [Github issues](https://github.com/react-native-webrtc/react-native-webrtc/issues/720) like [these](https://github.com/jitsi/jitsi-meet/issues/4778), or the `react-native-webrtc` [installation docs](https://github.com/react-native-webrtc/react-native-webrtc/blob/master/Documentation/AndroidInstallation.md), which walk you through a more complicated process. The simpler process laid out above seems to work in a vanilla modern React Native CLI-based setup).
 
 # Expo Guide
+
 To add Vapi react native SDK to your existing react native expo project
 
->  **Warning:** This project cannot be used with an Expo Go app because it requires custom native code.
-
+> **Warning:** This project cannot be used with an Expo Go app because it requires custom native code.
 
 1. update your current existing dependencies in package.json to the exact version as showing below
+
 ```
 "expo": "^50",
 "react-native": "^0.73.6",
 ```
 
 2. Add new dependencies to your package.json with exact version as showing below
+
 ```
 "@vapi-ai/react-native": "^0.1.7",
 "@config-plugins/react-native-webrtc": "8.0.0",
@@ -124,7 +128,7 @@ To add Vapi react native SDK to your existing react native expo project
 
 3. Update app.json
 
-```
+````
 {
     "expo": {
 
@@ -180,7 +184,7 @@ First, import the Vapi class from the package:
 
 ```javascript
 import Vapi from '@vapi-ai/react-native';
-```
+````
 
 Then, create a new instance of the Vapi class, passing your Public Key as a parameter to the constructor:
 
@@ -209,23 +213,40 @@ vapi.start({
   ...
 });
 ```
+
 ```javascript
 vapi.start('your-assistant-id');
 ```
 
 The `start` method will initiate a new call.
 
+You can override existing assistant parameters or set variables with the `assistant_overrides` parameter.
+Assume the first message is `Hey, {{name}} how are you?` and you want to set the value of `name` to `John`:
+
+```javascript
+const assistantOverrides = {
+  recordingEnabled: false,
+  variableValues: {
+    name: 'John',
+  },
+};
+
+vapi.start({
+  assistantId: 'your-assistant-id',
+  assistantOverrides: assistantOverrides,
+});
+```
+
 You can also send text messages to the assistant aside from the audio input using the `send` method and passing appropriate `role` and `content`.
 
 ```javascript
 vapi.send({
-  type: "add-message",
+  type: 'add-message',
   message: {
-    role: "system",
-    content: "The user has pressed the button, say peanuts",
+    role: 'system',
+    content: 'The user has pressed the button, say peanuts',
   },
 });
-
 ```
 
 Possible values for the role are `system`, `user`, `assistant`, `tool` or `function`.
@@ -273,12 +294,11 @@ vapi.on('message', (message) => {
 });
 
 vapi.on('error', (e) => {
-  console.error(e)
+  console.error(e);
 });
 ```
 
 These events allow you to react to changes in the state of the call or speech.
-
 
 ## License
 
