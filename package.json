@@ -22,7 +22,7 @@
   "homepage": "https://github.com/VapiAI/react-native-sdk",
   "dependencies": {
     "events": "^3.3.0",
-    "@daily-co/react-native-daily-js": "^0.59.0"
+    "@daily-co/react-native-daily-js": "^0.61.0"
   },
   "devDependencies": {
     "@types/jest": "^29.5.12",
