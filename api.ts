@@ -1389,7 +1389,34 @@ export interface Call {
   metadata?: object;
 }
 
-export interface CreateOutboundCallDTO {
+export class CreateCallAssistantDTO {
+  /**
+   * This is the assistant that will be used for the call. To use a transient assistant, use `assistant` instead.
+   */
+  assistantId?: string | null;
+  /**
+   * Overrides for a single assistant's settings and template variables.
+   */
+  assistantOverride?: OverrideAssistantDTO;
+  /**
+   * Individual overrides for multiple assistant settings and template variables.
+   * If only one override is provided and multiple assistants are used, it will apply to all assistants.
+   * Otherwise, the number of overrides must match the number of assistants.
+   */
+  assistantOverrides?: OverrideAssistantDTO[];
+  /**
+   * This is the assistant that will be used for the call. To use an existing assistant, use `assistantId` instead.
+   */
+  assistant?: CreateAssistantDTO;
+  /**
+   * This is the set of all assistants that can be used for the call.
+   * The call can be transferred between these assistants.
+   * The first assistant in the array will be the primary assistant that starts the call.
+   */
+  assistants?: CreateAssistantDTO[];
+}
+
+export interface CreateOutboundCallDTO extends CreateCallAssistantDTO {
   /**
    * This is the maximum number of seconds that the call will last. When the call reaches this duration, it will be ended.
    * @min 10
@@ -1397,12 +1424,6 @@ export interface CreateOutboundCallDTO {
    * @example 1800
    */
   maxDurationSeconds?: number;
-  /** This is the assistant that will be used for the call. To use a transient assistant, use `assistant` instead. */
-  assistantId?: string;
-  /** This is the assistant that will be used for the call. To use an existing assistant, use `assistantId` instead. */
-  assistant?: CreateAssistantDTO;
-  /** These are assistant overrides for the call. */
-  assistantOverrides?: OverrideAssistantDTO;
   /**
    * This is the customer that will be called. To call a transient customer , use `customer` instead.
    *
@@ -1431,13 +1452,7 @@ export interface CreateOutboundCallDTO {
   metadata?: object;
 }
 
-export interface CreateWebCallDTO {
-  /** This is the assistant that will be used for the call. To use a transient assistant, use `assistant` instead. */
-  assistantId?: string;
-  /** This is the assistant that will be used for the call. To use an existing assistant, use `assistantId` instead. */
-  assistant?: CreateAssistantDTO;
-  /** These are assistant overrides for the call. */
-  assistantOverrides?: OverrideAssistantDTO;
+export interface CreateWebCallDTO extends CreateCallAssistantDTO {
   /** This will expose SIP URI you can use to connect to the call. Disabled by default. */
   sipEnabled?: boolean;
   /** This is the metadata associated with the call. */

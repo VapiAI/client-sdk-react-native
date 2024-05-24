@@ -244,9 +244,15 @@ export default class Vapi extends VapiEventEmitter {
   }
 
   async start(
-    assistant: CreateAssistantDTO | string,
-    assistantOverrides?: OverrideAssistantDTO,
+    assistant?: CreateAssistantDTO | string,
+    assistants?: CreateAssistantDTO[],
+    assistantOverride?: OverrideAssistantDTO,
+    assistantOverrides?: OverrideAssistantDTO[],
   ): Promise<Call | null> {
+    if (!assistant && !assistants) {
+      throw new Error('Assistant or assistants must be provided.');
+    }
+
     if (this.started) {
       return null;
     }
@@ -256,6 +262,8 @@ export default class Vapi extends VapiEventEmitter {
       await apiClient.call.callControllerCreateWebCall({
         assistant: typeof assistant === 'string' ? undefined : assistant,
         assistantId: typeof assistant === 'string' ? assistant : undefined,
+        assistants,
+        assistantOverride,
         assistantOverrides,
       })
     ).data;
