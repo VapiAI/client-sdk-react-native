@@ -10,7 +10,7 @@ import Daily, {
   MediaDeviceInfo,
 } from '@daily-co/react-native-daily-js';
 
-import { Call, CreateAssistantDTO, OverrideAssistantDTO } from './api';
+import { Call, CreateAssistantDTO, CreateSquadDTO, OverrideAssistantDTO } from './api';
 import { apiClient } from './apiClient';
 
 export interface AddMessageMessage {
@@ -244,9 +244,14 @@ export default class Vapi extends VapiEventEmitter {
   }
 
   async start(
-    assistant: CreateAssistantDTO | string,
+    assistant?: CreateAssistantDTO | string,
     assistantOverrides?: OverrideAssistantDTO,
+    squad?: CreateSquadDTO | string,
   ): Promise<Call | null> {
+    if (!assistant && !squad) {
+      throw new Error('Assistant or assistants must be provided.');
+    }
+
     if (this.started) {
       return null;
     }
@@ -257,6 +262,8 @@ export default class Vapi extends VapiEventEmitter {
         assistant: typeof assistant === 'string' ? undefined : assistant,
         assistantId: typeof assistant === 'string' ? assistant : undefined,
         assistantOverrides,
+        squad: typeof squad === 'string' ? undefined : squad,
+        squadId: typeof squad === 'string' ? squad : undefined,
       })
     ).data;
     const roomUrl = webCall.webCallUrl;
