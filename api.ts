@@ -16377,6 +16377,316 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
         format: 'json',
         ...params,
       }),
+
+    /**
+     * No description
+     *
+     * @tags Calls
+     * @name CallControllerCreatePhoneCall
+     * @summary Create Phone Call
+     * @request POST:/call/phone
+     * @deprecated
+     * @secure
+     */
+    callControllerCreatePhoneCall: (data: CreateOutboundCallDTO, params: RequestParams = {}) =>
+      this.request<Call, any>({
+        path: `/call/phone`,
+        method: 'POST',
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        format: 'json',
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Calls
+     * @name CallControllerCreateWebCall
+     * @summary Create Web Call
+     * @request POST:/call/web
+     * @secure
+     */
+    callControllerCreateWebCall: (data: CreateWebCallDTO, params: RequestParams = {}) =>
+      this.request<Call, any>({
+        path: `/call/web`,
+        method: 'POST',
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        format: 'json',
+        ...params,
+      }),
+  };
+  v2 = {
+    /**
+     * No description
+     *
+     * @tags Calls
+     * @name CallControllerFindAllPaginated
+     * @summary List Calls
+     * @request GET:/v2/call
+     * @secure
+     */
+    callControllerFindAllPaginated: (
+      query?: {
+        /** This will return calls with the specified assistantId. */
+        assistantId?: string;
+        /** This will return calls with the specified callId. */
+        id?: string;
+        /** This will return calls where the cost is less than or equal to the specified value. */
+        costLe?: number;
+        /** This will return calls where the cost is greater than or equal to the specified value. */
+        costGe?: number;
+        /** This will return calls with the exact specified cost. */
+        cost?: number;
+        /**
+         * This will return calls with the specified successEvaluation.
+         * @maxLength 1000
+         */
+        successEvaluation?: string;
+        /**
+         * This will return calls with the specified endedReason.
+         * @maxLength 1000
+         */
+        endedReason?: string;
+        /**
+         * This is the page number to return. Defaults to 1.
+         * @min 1
+         */
+        page?: number;
+        /** This is the sort order for pagination. Defaults to 'DESC'. */
+        sortOrder?: 'ASC' | 'DESC';
+        /**
+         * This is the maximum number of items to return. Defaults to 100.
+         * @min 0
+         * @max 1000
+         */
+        limit?: number;
+        /**
+         * This will return items where the createdAt is greater than the specified value.
+         * @format date-time
+         */
+        createdAtGt?: string;
+        /**
+         * This will return items where the createdAt is less than the specified value.
+         * @format date-time
+         */
+        createdAtLt?: string;
+        /**
+         * This will return items where the createdAt is greater than or equal to the specified value.
+         * @format date-time
+         */
+        createdAtGe?: string;
+        /**
+         * This will return items where the createdAt is less than or equal to the specified value.
+         * @format date-time
+         */
+        createdAtLe?: string;
+        /**
+         * This will return items where the updatedAt is greater than the specified value.
+         * @format date-time
+         */
+        updatedAtGt?: string;
+        /**
+         * This will return items where the updatedAt is less than the specified value.
+         * @format date-time
+         */
+        updatedAtLt?: string;
+        /**
+         * This will return items where the updatedAt is greater than or equal to the specified value.
+         * @format date-time
+         */
+        updatedAtGe?: string;
+        /**
+         * This will return items where the updatedAt is less than or equal to the specified value.
+         * @format date-time
+         */
+        updatedAtLe?: string;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<CallPaginatedResponse, any>({
+        path: `/v2/call`,
+        method: 'GET',
+        query: query,
+        secure: true,
+        format: 'json',
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Calls
+     * @name CallControllerFindAllMetadataPaginated
+     * @summary List Call Metadata
+     * @request GET:/v2/call/metadata
+     * @secure
+     */
+    callControllerFindAllMetadataPaginated: (
+      query?: {
+        /** This will return calls with the specified assistantId. */
+        assistantId?: string;
+        /** This will return calls with the specified callId. */
+        id?: string;
+        /** This will return calls where the cost is less than or equal to the specified value. */
+        costLe?: number;
+        /** This will return calls where the cost is greater than or equal to the specified value. */
+        costGe?: number;
+        /** This will return calls with the exact specified cost. */
+        cost?: number;
+        /**
+         * This will return calls with the specified successEvaluation.
+         * @maxLength 1000
+         */
+        successEvaluation?: string;
+        /**
+         * This will return calls with the specified endedReason.
+         * @maxLength 1000
+         */
+        endedReason?: string;
+        /**
+         * This is the page number to return. Defaults to 1.
+         * @min 1
+         */
+        page?: number;
+        /** This is the sort order for pagination. Defaults to 'DESC'. */
+        sortOrder?: 'ASC' | 'DESC';
+        /**
+         * This is the maximum number of items to return. Defaults to 100.
+         * @min 0
+         * @max 1000
+         */
+        limit?: number;
+        /**
+         * This will return items where the createdAt is greater than the specified value.
+         * @format date-time
+         */
+        createdAtGt?: string;
+        /**
+         * This will return items where the createdAt is less than the specified value.
+         * @format date-time
+         */
+        createdAtLt?: string;
+        /**
+         * This will return items where the createdAt is greater than or equal to the specified value.
+         * @format date-time
+         */
+        createdAtGe?: string;
+        /**
+         * This will return items where the createdAt is less than or equal to the specified value.
+         * @format date-time
+         */
+        createdAtLe?: string;
+        /**
+         * This will return items where the updatedAt is greater than the specified value.
+         * @format date-time
+         */
+        updatedAtGt?: string;
+        /**
+         * This will return items where the updatedAt is less than the specified value.
+         * @format date-time
+         */
+        updatedAtLt?: string;
+        /**
+         * This will return items where the updatedAt is greater than or equal to the specified value.
+         * @format date-time
+         */
+        updatedAtGe?: string;
+        /**
+         * This will return items where the updatedAt is less than or equal to the specified value.
+         * @format date-time
+         */
+        updatedAtLe?: string;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<CallPaginatedResponse, any>({
+        path: `/v2/call/metadata`,
+        method: 'GET',
+        query: query,
+        secure: true,
+        format: 'json',
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Phone Numbers
+     * @name PhoneNumberControllerFindAllPaginated
+     * @summary List Phone Numbers
+     * @request GET:/v2/phone-number
+     * @secure
+     */
+    phoneNumberControllerFindAllPaginated: (
+      query?: {
+        /**
+         * This is the page number to return. Defaults to 1.
+         * @min 1
+         */
+        page?: number;
+        /** This is the sort order for pagination. Defaults to 'DESC'. */
+        sortOrder?: 'ASC' | 'DESC';
+        /**
+         * This is the maximum number of items to return. Defaults to 100.
+         * @min 0
+         * @max 1000
+         */
+        limit?: number;
+        /**
+         * This will return items where the createdAt is greater than the specified value.
+         * @format date-time
+         */
+        createdAtGt?: string;
+        /**
+         * This will return items where the createdAt is less than the specified value.
+         * @format date-time
+         */
+        createdAtLt?: string;
+        /**
+         * This will return items where the createdAt is greater than or equal to the specified value.
+         * @format date-time
+         */
+        createdAtGe?: string;
+        /**
+         * This will return items where the createdAt is less than or equal to the specified value.
+         * @format date-time
+         */
+        createdAtLe?: string;
+        /**
+         * This will return items where the updatedAt is greater than the specified value.
+         * @format date-time
+         */
+        updatedAtGt?: string;
+        /**
+         * This will return items where the updatedAt is less than the specified value.
+         * @format date-time
+         */
+        updatedAtLt?: string;
+        /**
+         * This will return items where the updatedAt is greater than or equal to the specified value.
+         * @format date-time
+         */
+        updatedAtGe?: string;
+        /**
+         * This will return items where the updatedAt is less than or equal to the specified value.
+         * @format date-time
+         */
+        updatedAtLe?: string;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<PhoneNumberPaginatedResponse, any>({
+        path: `/v2/phone-number`,
+        method: 'GET',
+        query: query,
+        secure: true,
+        format: 'json',
+        ...params,
+      }),
   };
   assistant = {
     /**
@@ -16510,6 +16820,30 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
      * No description
      *
      * @tags Assistants
+     * @name AssistantControllerReplace
+     * @summary Replace Assistant
+     * @request PUT:/assistant/{id}
+     * @secure
+     */
+    assistantControllerReplace: (
+      id: string,
+      data: UpdateAssistantDTO,
+      params: RequestParams = {},
+    ) =>
+      this.request<Assistant, any>({
+        path: `/assistant/${id}`,
+        method: 'PUT',
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        format: 'json',
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Assistants
      * @name AssistantControllerRemove
      * @summary Delete Assistant
      * @request DELETE:/assistant/{id}
@@ -16525,6 +16859,82 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
       }),
   };
   phoneNumber = {
+    /**
+     * @description Use POST /phone-number instead.
+     *
+     * @tags Phone Numbers
+     * @name PhoneNumberControllerImportTwilio
+     * @summary Import Twilio Number
+     * @request POST:/phone-number/import/twilio
+     * @deprecated
+     * @secure
+     */
+    phoneNumberControllerImportTwilio: (
+      data: ImportTwilioPhoneNumberDTO,
+      params: RequestParams = {},
+    ) =>
+      this.request<
+        | ({
+            provider: 'byo-phone-number';
+          } & ByoPhoneNumber)
+        | ({
+            provider: 'twilio';
+          } & TwilioPhoneNumber)
+        | ({
+            provider: 'vonage';
+          } & VonagePhoneNumber)
+        | ({
+            provider: 'vapi';
+          } & VapiPhoneNumber),
+        any
+      >({
+        path: `/phone-number/import/twilio`,
+        method: 'POST',
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        format: 'json',
+        ...params,
+      }),
+
+    /**
+     * @description Use POST /phone-number instead.
+     *
+     * @tags Phone Numbers
+     * @name PhoneNumberControllerImportVonage
+     * @summary Import Vonage Number
+     * @request POST:/phone-number/import/vonage
+     * @deprecated
+     * @secure
+     */
+    phoneNumberControllerImportVonage: (
+      data: ImportVonagePhoneNumberDTO,
+      params: RequestParams = {},
+    ) =>
+      this.request<
+        | ({
+            provider: 'byo-phone-number';
+          } & ByoPhoneNumber)
+        | ({
+            provider: 'twilio';
+          } & TwilioPhoneNumber)
+        | ({
+            provider: 'vonage';
+          } & VonagePhoneNumber)
+        | ({
+            provider: 'vapi';
+          } & VapiPhoneNumber),
+        any
+      >({
+        path: `/phone-number/import/vonage`,
+        method: 'POST',
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        format: 'json',
+        ...params,
+      }),
+
     /**
      * No description
      *
@@ -17731,6 +18141,27 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
   };
   file = {
     /**
+     * @description Use POST /file instead.
+     *
+     * @tags Files
+     * @name FileControllerCreateDeprecated
+     * @summary Upload File
+     * @request POST:/file/upload
+     * @deprecated
+     * @secure
+     */
+    fileControllerCreateDeprecated: (data: CreateFileDTO, params: RequestParams = {}) =>
+      this.request<File, void>({
+        path: `/file/upload`,
+        method: 'POST',
+        body: data,
+        secure: true,
+        type: ContentType.FormData,
+        format: 'json',
+        ...params,
+      }),
+
+    /**
      * No description
      *
      * @tags Files
@@ -17824,6 +18255,50 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
         ...params,
       }),
   };
+  metrics = {
+    /**
+     * @description Use GET /metric instead
+     *
+     * @tags Analytics
+     * @name AnalyticsControllerFindAllDeprecated
+     * @summary List Billing Metrics
+     * @request GET:/metrics
+     * @deprecated
+     * @secure
+     */
+    analyticsControllerFindAllDeprecated: (
+      query?: {
+        /**
+         * Convert date & and time to provided timezone. https://popsql.com/learn-sql/postgresql/how-to-convert-utc-to-local-time-zone-in-postgresql
+         * @example "PST"
+         */
+        timezone?: string;
+        /**
+         * This will include calls with a createdAt timestamp greater than or equal to the specified value.
+         *
+         * If not provided, defaults to the org's current period start.
+         * @format date-time
+         */
+        rangeStart?: string;
+        /**
+         * This will include calls with a createdAt timestamp less than the specified value.
+         *
+         * If not provided, the default value will be the current timestamp.
+         * @format date-time
+         */
+        rangeEnd?: string;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<Metrics[], any>({
+        path: `/metrics`,
+        method: 'GET',
+        query: query,
+        secure: true,
+        format: 'json',
+        ...params,
+      }),
+  };
   analytics = {
     /**
      * No description
@@ -17842,6 +18317,107 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
         secure: true,
         type: ContentType.Json,
         format: 'json',
+        ...params,
+      }),
+  };
+  log = {
+    /**
+     * No description
+     *
+     * @tags Logs
+     * @name LoggingControllerCallLogsQuery
+     * @summary Get Call Logs
+     * @request GET:/log
+     * @secure
+     */
+    loggingControllerCallLogsQuery: (
+      query: {
+        callId: string;
+        /**
+         * This is the page number to return. Defaults to 1.
+         * @min 1
+         */
+        page?: number;
+        /** This is the sort order for pagination. Defaults to 'DESC'. */
+        sortOrder?: 'ASC' | 'DESC';
+        /**
+         * This is the maximum number of items to return. Defaults to 100.
+         * @min 0
+         * @max 1000
+         */
+        limit?: number;
+        /**
+         * This will return items where the createdAt is greater than the specified value.
+         * @format date-time
+         */
+        createdAtGt?: string;
+        /**
+         * This will return items where the createdAt is less than the specified value.
+         * @format date-time
+         */
+        createdAtLt?: string;
+        /**
+         * This will return items where the createdAt is greater than or equal to the specified value.
+         * @format date-time
+         */
+        createdAtGe?: string;
+        /**
+         * This will return items where the createdAt is less than or equal to the specified value.
+         * @format date-time
+         */
+        createdAtLe?: string;
+        /**
+         * This will return items where the updatedAt is greater than the specified value.
+         * @format date-time
+         */
+        updatedAtGt?: string;
+        /**
+         * This will return items where the updatedAt is less than the specified value.
+         * @format date-time
+         */
+        updatedAtLt?: string;
+        /**
+         * This will return items where the updatedAt is greater than or equal to the specified value.
+         * @format date-time
+         */
+        updatedAtGe?: string;
+        /**
+         * This will return items where the updatedAt is less than or equal to the specified value.
+         * @format date-time
+         */
+        updatedAtLe?: string;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<CallLogsPaginatedResponse, any>({
+        path: `/log`,
+        method: 'GET',
+        query: query,
+        secure: true,
+        format: 'json',
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Logs
+     * @name LoggingControllerCallLogsDeleteQuery
+     * @summary Delete Call Logs
+     * @request DELETE:/log
+     * @secure
+     */
+    loggingControllerCallLogsDeleteQuery: (
+      query: {
+        callId: string;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<void, any>({
+        path: `/log`,
+        method: 'DELETE',
+        query: query,
+        secure: true,
         ...params,
       }),
   };
@@ -17968,6 +18544,1898 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
         method: 'DELETE',
         query: query,
         secure: true,
+        ...params,
+      }),
+  };
+  chat = {
+    /**
+     * No description
+     *
+     * @tags Chat
+     * @name ChatControllerChat
+     * @summary Chat with Assistant
+     * @request POST:/chat
+     * @deprecated
+     * @secure
+     */
+    chatControllerChat: (data: ChatDTO, params: RequestParams = {}) =>
+      this.request<ChatServiceResponse, any>({
+        path: `/chat`,
+        method: 'POST',
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        format: 'json',
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Chat
+     * @name ChatControllerChatCompletions
+     * @summary Chat with a Workflow
+     * @request POST:/chat/completions
+     * @secure
+     */
+    chatControllerChatCompletions: (data: ChatCompletionsDTO, params: RequestParams = {}) =>
+      this.request<ChatServiceResponse, any>({
+        path: `/chat/completions`,
+        method: 'POST',
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        format: 'json',
+        ...params,
+      }),
+  };
+  credential = {
+    /**
+     * No description
+     *
+     * @tags Credentials
+     * @name CredentialControllerCreate
+     * @summary Create Credential
+     * @request POST:/credential
+     * @secure
+     */
+    credentialControllerCreate: (
+      data:
+        | ({
+            provider: '11labs';
+          } & CreateElevenLabsCredentialDTO)
+        | ({
+            provider: 'anthropic';
+          } & CreateAnthropicCredentialDTO)
+        | ({
+            provider: 'anyscale';
+          } & CreateAnyscaleCredentialDTO)
+        | ({
+            provider: 'assembly-ai';
+          } & CreateAssemblyAICredentialDTO)
+        | ({
+            provider: 'azure-openai';
+          } & CreateAzureOpenAICredentialDTO)
+        | ({
+            provider: 'azure';
+          } & CreateAzureCredentialDTO)
+        | ({
+            provider: 'byo-sip-trunk';
+          } & CreateByoSipTrunkCredentialDTO)
+        | ({
+            provider: 'cartesia';
+          } & CreateCartesiaCredentialDTO)
+        | ({
+            provider: 'cerebras';
+          } & CreateCerebrasCredentialDTO)
+        | ({
+            provider: 'cloudflare';
+          } & CreateCloudflareCredentialDTO)
+        | ({
+            provider: 'custom-llm';
+          } & CreateCustomLLMCredentialDTO)
+        | ({
+            provider: 'deepgram';
+          } & CreateDeepgramCredentialDTO)
+        | ({
+            provider: 'deepinfra';
+          } & CreateDeepInfraCredentialDTO)
+        | ({
+            provider: 'deep-seek';
+          } & CreateDeepSeekCredentialDTO)
+        | ({
+            provider: 'gcp';
+          } & CreateGcpCredentialDTO)
+        | ({
+            provider: 'gladia';
+          } & CreateGladiaCredentialDTO)
+        | ({
+            provider: 'gohighlevel';
+          } & CreateGoHighLevelCredentialDTO)
+        | ({
+            provider: 'google';
+          } & CreateGoogleCredentialDTO)
+        | ({
+            provider: 'groq';
+          } & CreateGroqCredentialDTO)
+        | ({
+            provider: 'inflection-ai';
+          } & CreateInflectionAICredentialDTO)
+        | ({
+            provider: 'langfuse';
+          } & CreateLangfuseCredentialDTO)
+        | ({
+            provider: 'lmnt';
+          } & CreateLmntCredentialDTO)
+        | ({
+            provider: 'make';
+          } & CreateMakeCredentialDTO)
+        | ({
+            provider: 'openai';
+          } & CreateOpenAICredentialDTO)
+        | ({
+            provider: 'openrouter';
+          } & CreateOpenRouterCredentialDTO)
+        | ({
+            provider: 'perplexity-ai';
+          } & CreatePerplexityAICredentialDTO)
+        | ({
+            provider: 'playht';
+          } & CreatePlayHTCredentialDTO)
+        | ({
+            provider: 'rime-ai';
+          } & CreateRimeAICredentialDTO)
+        | ({
+            provider: 'runpod';
+          } & CreateRunpodCredentialDTO)
+        | ({
+            provider: 's3';
+          } & CreateS3CredentialDTO)
+        | ({
+            provider: 'supabase';
+          } & CreateSupabaseCredentialDTO)
+        | ({
+            provider: 'smallest-ai';
+          } & CreateSmallestAICredentialDTO)
+        | ({
+            provider: 'tavus';
+          } & CreateTavusCredentialDTO)
+        | ({
+            provider: 'together-ai';
+          } & CreateTogetherAICredentialDTO)
+        | ({
+            provider: 'twilio';
+          } & CreateTwilioCredentialDTO)
+        | ({
+            provider: 'vonage';
+          } & CreateVonageCredentialDTO)
+        | ({
+            provider: 'webhook';
+          } & CreateWebhookCredentialDTO)
+        | ({
+            provider: 'xai';
+          } & CreateXAiCredentialDTO),
+      params: RequestParams = {},
+    ) =>
+      this.request<
+        | ({
+            provider: '11labs';
+          } & ElevenLabsCredential)
+        | ({
+            provider: 'anthropic';
+          } & AnthropicCredential)
+        | ({
+            provider: 'anyscale';
+          } & AnyscaleCredential)
+        | ({
+            provider: 'assembly-ai';
+          } & AssemblyAICredential)
+        | ({
+            provider: 'azure';
+          } & AzureCredential)
+        | ({
+            provider: 'azure-openai';
+          } & AzureOpenAICredential)
+        | ({
+            provider: 'byo-sip-trunk';
+          } & ByoSipTrunkCredential)
+        | ({
+            provider: 'cartesia';
+          } & CartesiaCredential)
+        | ({
+            provider: 'cerebras';
+          } & CerebrasCredential)
+        | ({
+            provider: 'custom-llm';
+          } & CustomLLMCredential)
+        | ({
+            provider: 'deepgram';
+          } & DeepgramCredential)
+        | ({
+            provider: 'deepinfra';
+          } & DeepInfraCredential)
+        | ({
+            provider: 'deep-seek';
+          } & DeepSeekCredential)
+        | ({
+            provider: 'gcp';
+          } & GcpCredential)
+        | ({
+            provider: 'gladia';
+          } & GladiaCredential)
+        | ({
+            provider: 'gohighlevel';
+          } & GoHighLevelCredential)
+        | ({
+            provider: 'google';
+          } & GoogleCredential)
+        | ({
+            provider: 'groq';
+          } & GroqCredential)
+        | ({
+            provider: 'inflection-ai';
+          } & InflectionAICredential)
+        | ({
+            provider: 'langfuse';
+          } & LangfuseCredential)
+        | ({
+            provider: 'lmnt';
+          } & LmntCredential)
+        | ({
+            provider: 'make';
+          } & MakeCredential)
+        | ({
+            provider: 'openai';
+          } & OpenAICredential)
+        | ({
+            provider: 'openrouter';
+          } & OpenRouterCredential)
+        | ({
+            provider: 'perplexity-ai';
+          } & PerplexityAICredential)
+        | ({
+            provider: 'playht';
+          } & PlayHTCredential)
+        | ({
+            provider: 'rime-ai';
+          } & RimeAICredential)
+        | ({
+            provider: 'runpod';
+          } & RunpodCredential)
+        | ({
+            provider: 's3';
+          } & S3Credential)
+        | ({
+            provider: 'supabase';
+          } & SupabaseCredential)
+        | ({
+            provider: 'smallest-ai';
+          } & SmallestAICredential)
+        | ({
+            provider: 'neuphonic';
+          } & any)
+        | ({
+            provider: 'hume';
+          } & any)
+        | ({
+            provider: 'tavus';
+          } & TavusCredential)
+        | ({
+            provider: 'together-ai';
+          } & TogetherAICredential)
+        | ({
+            provider: 'twilio';
+          } & TwilioCredential)
+        | ({
+            provider: 'vonage';
+          } & VonageCredential)
+        | ({
+            provider: 'webhook';
+          } & WebhookCredential)
+        | ({
+            provider: 'xai';
+          } & XAiCredential),
+        any
+      >({
+        path: `/credential`,
+        method: 'POST',
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        format: 'json',
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Credentials
+     * @name CredentialControllerFindAll
+     * @summary List Credentials
+     * @request GET:/credential
+     * @secure
+     */
+    credentialControllerFindAll: (
+      query?: {
+        /**
+         * This is the maximum number of items to return. Defaults to 100.
+         * @min 0
+         * @max 1000
+         */
+        limit?: number;
+        /**
+         * This will return items where the createdAt is greater than the specified value.
+         * @format date-time
+         */
+        createdAtGt?: string;
+        /**
+         * This will return items where the createdAt is less than the specified value.
+         * @format date-time
+         */
+        createdAtLt?: string;
+        /**
+         * This will return items where the createdAt is greater than or equal to the specified value.
+         * @format date-time
+         */
+        createdAtGe?: string;
+        /**
+         * This will return items where the createdAt is less than or equal to the specified value.
+         * @format date-time
+         */
+        createdAtLe?: string;
+        /**
+         * This will return items where the updatedAt is greater than the specified value.
+         * @format date-time
+         */
+        updatedAtGt?: string;
+        /**
+         * This will return items where the updatedAt is less than the specified value.
+         * @format date-time
+         */
+        updatedAtLt?: string;
+        /**
+         * This will return items where the updatedAt is greater than or equal to the specified value.
+         * @format date-time
+         */
+        updatedAtGe?: string;
+        /**
+         * This will return items where the updatedAt is less than or equal to the specified value.
+         * @format date-time
+         */
+        updatedAtLe?: string;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<
+        (
+          | ({
+              provider: '11labs';
+            } & ElevenLabsCredential)
+          | ({
+              provider: 'anthropic';
+            } & AnthropicCredential)
+          | ({
+              provider: 'anyscale';
+            } & AnyscaleCredential)
+          | ({
+              provider: 'assembly-ai';
+            } & AssemblyAICredential)
+          | ({
+              provider: 'azure';
+            } & AzureCredential)
+          | ({
+              provider: 'azure-openai';
+            } & AzureOpenAICredential)
+          | ({
+              provider: 'byo-sip-trunk';
+            } & ByoSipTrunkCredential)
+          | ({
+              provider: 'cartesia';
+            } & CartesiaCredential)
+          | ({
+              provider: 'cerebras';
+            } & CerebrasCredential)
+          | ({
+              provider: 'custom-llm';
+            } & CustomLLMCredential)
+          | ({
+              provider: 'deepgram';
+            } & DeepgramCredential)
+          | ({
+              provider: 'deepinfra';
+            } & DeepInfraCredential)
+          | ({
+              provider: 'deep-seek';
+            } & DeepSeekCredential)
+          | ({
+              provider: 'gcp';
+            } & GcpCredential)
+          | ({
+              provider: 'gladia';
+            } & GladiaCredential)
+          | ({
+              provider: 'gohighlevel';
+            } & GoHighLevelCredential)
+          | ({
+              provider: 'google';
+            } & GoogleCredential)
+          | ({
+              provider: 'groq';
+            } & GroqCredential)
+          | ({
+              provider: 'inflection-ai';
+            } & InflectionAICredential)
+          | ({
+              provider: 'langfuse';
+            } & LangfuseCredential)
+          | ({
+              provider: 'lmnt';
+            } & LmntCredential)
+          | ({
+              provider: 'make';
+            } & MakeCredential)
+          | ({
+              provider: 'openai';
+            } & OpenAICredential)
+          | ({
+              provider: 'openrouter';
+            } & OpenRouterCredential)
+          | ({
+              provider: 'perplexity-ai';
+            } & PerplexityAICredential)
+          | ({
+              provider: 'playht';
+            } & PlayHTCredential)
+          | ({
+              provider: 'rime-ai';
+            } & RimeAICredential)
+          | ({
+              provider: 'runpod';
+            } & RunpodCredential)
+          | ({
+              provider: 's3';
+            } & S3Credential)
+          | ({
+              provider: 'supabase';
+            } & SupabaseCredential)
+          | ({
+              provider: 'smallest-ai';
+            } & SmallestAICredential)
+          | ({
+              provider: 'neuphonic';
+            } & any)
+          | ({
+              provider: 'hume';
+            } & any)
+          | ({
+              provider: 'tavus';
+            } & TavusCredential)
+          | ({
+              provider: 'together-ai';
+            } & TogetherAICredential)
+          | ({
+              provider: 'twilio';
+            } & TwilioCredential)
+          | ({
+              provider: 'vonage';
+            } & VonageCredential)
+          | ({
+              provider: 'webhook';
+            } & WebhookCredential)
+          | ({
+              provider: 'xai';
+            } & XAiCredential)
+        )[],
+        any
+      >({
+        path: `/credential`,
+        method: 'GET',
+        query: query,
+        secure: true,
+        format: 'json',
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Credentials
+     * @name CredentialControllerFindOne
+     * @summary Get Credential
+     * @request GET:/credential/{id}
+     * @secure
+     */
+    credentialControllerFindOne: (id: string, params: RequestParams = {}) =>
+      this.request<
+        | ({
+            provider: '11labs';
+          } & ElevenLabsCredential)
+        | ({
+            provider: 'anthropic';
+          } & AnthropicCredential)
+        | ({
+            provider: 'anyscale';
+          } & AnyscaleCredential)
+        | ({
+            provider: 'assembly-ai';
+          } & AssemblyAICredential)
+        | ({
+            provider: 'azure';
+          } & AzureCredential)
+        | ({
+            provider: 'azure-openai';
+          } & AzureOpenAICredential)
+        | ({
+            provider: 'byo-sip-trunk';
+          } & ByoSipTrunkCredential)
+        | ({
+            provider: 'cartesia';
+          } & CartesiaCredential)
+        | ({
+            provider: 'cerebras';
+          } & CerebrasCredential)
+        | ({
+            provider: 'custom-llm';
+          } & CustomLLMCredential)
+        | ({
+            provider: 'deepgram';
+          } & DeepgramCredential)
+        | ({
+            provider: 'deepinfra';
+          } & DeepInfraCredential)
+        | ({
+            provider: 'deep-seek';
+          } & DeepSeekCredential)
+        | ({
+            provider: 'gcp';
+          } & GcpCredential)
+        | ({
+            provider: 'gladia';
+          } & GladiaCredential)
+        | ({
+            provider: 'gohighlevel';
+          } & GoHighLevelCredential)
+        | ({
+            provider: 'google';
+          } & GoogleCredential)
+        | ({
+            provider: 'groq';
+          } & GroqCredential)
+        | ({
+            provider: 'inflection-ai';
+          } & InflectionAICredential)
+        | ({
+            provider: 'langfuse';
+          } & LangfuseCredential)
+        | ({
+            provider: 'lmnt';
+          } & LmntCredential)
+        | ({
+            provider: 'make';
+          } & MakeCredential)
+        | ({
+            provider: 'openai';
+          } & OpenAICredential)
+        | ({
+            provider: 'openrouter';
+          } & OpenRouterCredential)
+        | ({
+            provider: 'perplexity-ai';
+          } & PerplexityAICredential)
+        | ({
+            provider: 'playht';
+          } & PlayHTCredential)
+        | ({
+            provider: 'rime-ai';
+          } & RimeAICredential)
+        | ({
+            provider: 'runpod';
+          } & RunpodCredential)
+        | ({
+            provider: 's3';
+          } & S3Credential)
+        | ({
+            provider: 'supabase';
+          } & SupabaseCredential)
+        | ({
+            provider: 'smallest-ai';
+          } & SmallestAICredential)
+        | ({
+            provider: 'neuphonic';
+          } & any)
+        | ({
+            provider: 'hume';
+          } & any)
+        | ({
+            provider: 'tavus';
+          } & TavusCredential)
+        | ({
+            provider: 'together-ai';
+          } & TogetherAICredential)
+        | ({
+            provider: 'twilio';
+          } & TwilioCredential)
+        | ({
+            provider: 'vonage';
+          } & VonageCredential)
+        | ({
+            provider: 'webhook';
+          } & WebhookCredential)
+        | ({
+            provider: 'xai';
+          } & XAiCredential),
+        any
+      >({
+        path: `/credential/${id}`,
+        method: 'GET',
+        secure: true,
+        format: 'json',
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Credentials
+     * @name CredentialControllerUpdate
+     * @summary Update Credential
+     * @request PATCH:/credential/{id}
+     * @secure
+     */
+    credentialControllerUpdate: (
+      id: string,
+      data:
+        | ({
+            provider: '11labs';
+          } & UpdateElevenLabsCredentialDTO)
+        | ({
+            provider: 'anthropic';
+          } & UpdateAnthropicCredentialDTO)
+        | ({
+            provider: 'anyscale';
+          } & UpdateAnyscaleCredentialDTO)
+        | ({
+            provider: 'assembly-ai';
+          } & UpdateAssemblyAICredentialDTO)
+        | ({
+            provider: 'azure-openai';
+          } & UpdateAzureOpenAICredentialDTO)
+        | ({
+            provider: 'azure';
+          } & UpdateAzureCredentialDTO)
+        | ({
+            provider: 'byo-sip-trunk';
+          } & UpdateByoSipTrunkCredentialDTO)
+        | ({
+            provider: 'cartesia';
+          } & UpdateCartesiaCredentialDTO)
+        | ({
+            provider: 'cerebras';
+          } & UpdateCerebrasCredentialDTO)
+        | ({
+            provider: 'custom-llm';
+          } & UpdateCustomLLMCredentialDTO)
+        | ({
+            provider: 'deepgram';
+          } & UpdateDeepgramCredentialDTO)
+        | ({
+            provider: 'deepinfra';
+          } & UpdateDeepInfraCredentialDTO)
+        | ({
+            provider: 'deep-seek';
+          } & UpdateDeepSeekCredentialDTO)
+        | ({
+            provider: 'gcp';
+          } & UpdateGcpCredentialDTO)
+        | ({
+            provider: 'gladia';
+          } & UpdateGladiaCredentialDTO)
+        | ({
+            provider: 'gohighlevel';
+          } & UpdateGoHighLevelCredentialDTO)
+        | ({
+            provider: 'google';
+          } & UpdateGoogleCredentialDTO)
+        | ({
+            provider: 'groq';
+          } & UpdateGroqCredentialDTO)
+        | ({
+            provider: 'inflection-ai';
+          } & UpdateInflectionAICredentialDTO)
+        | ({
+            provider: 'langfuse';
+          } & UpdateLangfuseCredentialDTO)
+        | ({
+            provider: 'lmnt';
+          } & UpdateLmntCredentialDTO)
+        | ({
+            provider: 'make';
+          } & UpdateMakeCredentialDTO)
+        | ({
+            provider: 'openai';
+          } & UpdateOpenAICredentialDTO)
+        | ({
+            provider: 'openrouter';
+          } & UpdateOpenRouterCredentialDTO)
+        | ({
+            provider: 'perplexity-ai';
+          } & UpdatePerplexityAICredentialDTO)
+        | ({
+            provider: 'playht';
+          } & UpdatePlayHTCredentialDTO)
+        | ({
+            provider: 'rime-ai';
+          } & UpdateRimeAICredentialDTO)
+        | ({
+            provider: 'runpod';
+          } & UpdateRunpodCredentialDTO)
+        | ({
+            provider: 's3';
+          } & UpdateS3CredentialDTO)
+        | ({
+            provider: 'supabase';
+          } & UpdateSupabaseCredentialDTO)
+        | ({
+            provider: 'smallest-ai';
+          } & UpdateSmallestAICredentialDTO)
+        | ({
+            provider: 'neuphonic';
+          } & any)
+        | ({
+            provider: 'hume';
+          } & any)
+        | ({
+            provider: 'tavus';
+          } & UpdateTavusCredentialDTO)
+        | ({
+            provider: 'together-ai';
+          } & UpdateTogetherAICredentialDTO)
+        | ({
+            provider: 'twilio';
+          } & UpdateTwilioCredentialDTO)
+        | ({
+            provider: 'vonage';
+          } & UpdateVonageCredentialDTO)
+        | ({
+            provider: 'webhook';
+          } & any)
+        | ({
+            provider: 'xai';
+          } & UpdateXAiCredentialDTO),
+      params: RequestParams = {},
+    ) =>
+      this.request<
+        | ({
+            provider: '11labs';
+          } & ElevenLabsCredential)
+        | ({
+            provider: 'anthropic';
+          } & AnthropicCredential)
+        | ({
+            provider: 'anyscale';
+          } & AnyscaleCredential)
+        | ({
+            provider: 'assembly-ai';
+          } & AssemblyAICredential)
+        | ({
+            provider: 'azure';
+          } & AzureCredential)
+        | ({
+            provider: 'azure-openai';
+          } & AzureOpenAICredential)
+        | ({
+            provider: 'byo-sip-trunk';
+          } & ByoSipTrunkCredential)
+        | ({
+            provider: 'cartesia';
+          } & CartesiaCredential)
+        | ({
+            provider: 'cerebras';
+          } & CerebrasCredential)
+        | ({
+            provider: 'custom-llm';
+          } & CustomLLMCredential)
+        | ({
+            provider: 'deepgram';
+          } & DeepgramCredential)
+        | ({
+            provider: 'deepinfra';
+          } & DeepInfraCredential)
+        | ({
+            provider: 'deep-seek';
+          } & DeepSeekCredential)
+        | ({
+            provider: 'gcp';
+          } & GcpCredential)
+        | ({
+            provider: 'gladia';
+          } & GladiaCredential)
+        | ({
+            provider: 'gohighlevel';
+          } & GoHighLevelCredential)
+        | ({
+            provider: 'google';
+          } & GoogleCredential)
+        | ({
+            provider: 'groq';
+          } & GroqCredential)
+        | ({
+            provider: 'inflection-ai';
+          } & InflectionAICredential)
+        | ({
+            provider: 'langfuse';
+          } & LangfuseCredential)
+        | ({
+            provider: 'lmnt';
+          } & LmntCredential)
+        | ({
+            provider: 'make';
+          } & MakeCredential)
+        | ({
+            provider: 'openai';
+          } & OpenAICredential)
+        | ({
+            provider: 'openrouter';
+          } & OpenRouterCredential)
+        | ({
+            provider: 'perplexity-ai';
+          } & PerplexityAICredential)
+        | ({
+            provider: 'playht';
+          } & PlayHTCredential)
+        | ({
+            provider: 'rime-ai';
+          } & RimeAICredential)
+        | ({
+            provider: 'runpod';
+          } & RunpodCredential)
+        | ({
+            provider: 's3';
+          } & S3Credential)
+        | ({
+            provider: 'supabase';
+          } & SupabaseCredential)
+        | ({
+            provider: 'smallest-ai';
+          } & SmallestAICredential)
+        | ({
+            provider: 'neuphonic';
+          } & any)
+        | ({
+            provider: 'hume';
+          } & any)
+        | ({
+            provider: 'tavus';
+          } & TavusCredential)
+        | ({
+            provider: 'together-ai';
+          } & TogetherAICredential)
+        | ({
+            provider: 'twilio';
+          } & TwilioCredential)
+        | ({
+            provider: 'vonage';
+          } & VonageCredential)
+        | ({
+            provider: 'webhook';
+          } & WebhookCredential)
+        | ({
+            provider: 'xai';
+          } & XAiCredential),
+        any
+      >({
+        path: `/credential/${id}`,
+        method: 'PATCH',
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        format: 'json',
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Credentials
+     * @name CredentialControllerRemove
+     * @summary Delete Credential
+     * @request DELETE:/credential/{id}
+     * @secure
+     */
+    credentialControllerRemove: (id: string, params: RequestParams = {}) =>
+      this.request<
+        | ({
+            provider: '11labs';
+          } & ElevenLabsCredential)
+        | ({
+            provider: 'anthropic';
+          } & AnthropicCredential)
+        | ({
+            provider: 'anyscale';
+          } & AnyscaleCredential)
+        | ({
+            provider: 'assembly-ai';
+          } & AssemblyAICredential)
+        | ({
+            provider: 'azure';
+          } & AzureCredential)
+        | ({
+            provider: 'azure-openai';
+          } & AzureOpenAICredential)
+        | ({
+            provider: 'byo-sip-trunk';
+          } & ByoSipTrunkCredential)
+        | ({
+            provider: 'cartesia';
+          } & CartesiaCredential)
+        | ({
+            provider: 'cerebras';
+          } & CerebrasCredential)
+        | ({
+            provider: 'custom-llm';
+          } & CustomLLMCredential)
+        | ({
+            provider: 'deepgram';
+          } & DeepgramCredential)
+        | ({
+            provider: 'deepinfra';
+          } & DeepInfraCredential)
+        | ({
+            provider: 'deep-seek';
+          } & DeepSeekCredential)
+        | ({
+            provider: 'gcp';
+          } & GcpCredential)
+        | ({
+            provider: 'gladia';
+          } & GladiaCredential)
+        | ({
+            provider: 'gohighlevel';
+          } & GoHighLevelCredential)
+        | ({
+            provider: 'google';
+          } & GoogleCredential)
+        | ({
+            provider: 'groq';
+          } & GroqCredential)
+        | ({
+            provider: 'inflection-ai';
+          } & InflectionAICredential)
+        | ({
+            provider: 'langfuse';
+          } & LangfuseCredential)
+        | ({
+            provider: 'lmnt';
+          } & LmntCredential)
+        | ({
+            provider: 'make';
+          } & MakeCredential)
+        | ({
+            provider: 'openai';
+          } & OpenAICredential)
+        | ({
+            provider: 'openrouter';
+          } & OpenRouterCredential)
+        | ({
+            provider: 'perplexity-ai';
+          } & PerplexityAICredential)
+        | ({
+            provider: 'playht';
+          } & PlayHTCredential)
+        | ({
+            provider: 'rime-ai';
+          } & RimeAICredential)
+        | ({
+            provider: 'runpod';
+          } & RunpodCredential)
+        | ({
+            provider: 's3';
+          } & S3Credential)
+        | ({
+            provider: 'supabase';
+          } & SupabaseCredential)
+        | ({
+            provider: 'smallest-ai';
+          } & SmallestAICredential)
+        | ({
+            provider: 'neuphonic';
+          } & any)
+        | ({
+            provider: 'hume';
+          } & any)
+        | ({
+            provider: 'tavus';
+          } & TavusCredential)
+        | ({
+            provider: 'together-ai';
+          } & TogetherAICredential)
+        | ({
+            provider: 'twilio';
+          } & TwilioCredential)
+        | ({
+            provider: 'vonage';
+          } & VonageCredential)
+        | ({
+            provider: 'webhook';
+          } & WebhookCredential)
+        | ({
+            provider: 'xai';
+          } & XAiCredential),
+        any
+      >({
+        path: `/credential/${id}`,
+        method: 'DELETE',
+        secure: true,
+        format: 'json',
+        ...params,
+      }),
+  };
+  org = {
+    /**
+     * No description
+     *
+     * @tags Orgs
+     * @name OrgControllerCreate
+     * @summary Create Org
+     * @request POST:/org
+     * @secure
+     */
+    orgControllerCreate: (data: CreateOrgDTO, params: RequestParams = {}) =>
+      this.request<Org, any>({
+        path: `/org`,
+        method: 'POST',
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        format: 'json',
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Orgs
+     * @name OrgControllerFindAll
+     * @summary List Orgs
+     * @request GET:/org
+     * @secure
+     */
+    orgControllerFindAll: (params: RequestParams = {}) =>
+      this.request<Org[], any>({
+        path: `/org`,
+        method: 'GET',
+        secure: true,
+        format: 'json',
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Orgs
+     * @name OrgControllerFindOne
+     * @summary Get Org
+     * @request GET:/org/{id}
+     * @secure
+     */
+    orgControllerFindOne: (id: string, params: RequestParams = {}) =>
+      this.request<Org, any>({
+        path: `/org/${id}`,
+        method: 'GET',
+        secure: true,
+        format: 'json',
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Orgs
+     * @name OrgControllerUpdate
+     * @summary Update Org
+     * @request PATCH:/org/{id}
+     * @secure
+     */
+    orgControllerUpdate: (id: string, data: UpdateOrgDTO, params: RequestParams = {}) =>
+      this.request<Org, any>({
+        path: `/org/${id}`,
+        method: 'PATCH',
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        format: 'json',
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Orgs
+     * @name OrgControllerDeleteOrg
+     * @summary Delete Org
+     * @request DELETE:/org/{id}
+     * @secure
+     */
+    orgControllerDeleteOrg: (id: string, params: RequestParams = {}) =>
+      this.request<void, any>({
+        path: `/org/${id}`,
+        method: 'DELETE',
+        secure: true,
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Orgs
+     * @name OrgControllerFindAllUsers
+     * @summary List Users
+     * @request GET:/org/{id}/user
+     * @secure
+     */
+    orgControllerFindAllUsers: (id: string, params: RequestParams = {}) =>
+      this.request<User[], any>({
+        path: `/org/${id}/user`,
+        method: 'GET',
+        secure: true,
+        format: 'json',
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Orgs
+     * @name OrgControllerOrgLeave
+     * @summary Leave Org
+     * @request DELETE:/org/{id}/leave
+     * @secure
+     */
+    orgControllerOrgLeave: (id: string, params: RequestParams = {}) =>
+      this.request<void, any>({
+        path: `/org/${id}/leave`,
+        method: 'DELETE',
+        secure: true,
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Orgs
+     * @name OrgControllerOrgRemoveUser
+     * @summary Remove Org Member
+     * @request DELETE:/org/{id}/member/{memberId}/leave
+     * @secure
+     */
+    orgControllerOrgRemoveUser: (id: string, memberId: string, params: RequestParams = {}) =>
+      this.request<void, any>({
+        path: `/org/${id}/member/${memberId}/leave`,
+        method: 'DELETE',
+        secure: true,
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Orgs
+     * @name OrgControllerUsersInvite
+     * @summary Invite User
+     * @request POST:/org/{id}/invite
+     * @secure
+     */
+    orgControllerUsersInvite: (id: string, data: InviteUserDTO, params: RequestParams = {}) =>
+      this.request<void, any>({
+        path: `/org/${id}/invite`,
+        method: 'POST',
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Orgs
+     * @name OrgControllerUserUpdate
+     * @summary Update User Role
+     * @request PATCH:/org/{id}/role
+     * @secure
+     */
+    orgControllerUserUpdate: (id: string, data: UpdateUserRoleDTO, params: RequestParams = {}) =>
+      this.request<void, any>({
+        path: `/org/${id}/role`,
+        method: 'PATCH',
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        ...params,
+      }),
+  };
+  provider = {
+    /**
+     * No description
+     *
+     * @tags Providers
+     * @name ProviderControllerGetWorkflows
+     * @request GET:/{provider}/workflows
+     * @secure
+     */
+    providerControllerGetWorkflows: (
+      provider: 'make' | 'ghl',
+      query?: {
+        locationId?: string;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<SbcConfiguration, any>({
+        path: `/${provider}/workflows`,
+        method: 'GET',
+        query: query,
+        secure: true,
+        format: 'json',
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Providers
+     * @name ProviderControllerGetWorkflowTriggerHook
+     * @request GET:/{provider}/workflows/{workflowId}/hooks
+     * @secure
+     */
+    providerControllerGetWorkflowTriggerHook: (
+      provider: 'make' | 'ghl',
+      workflowId: string,
+      params: RequestParams = {},
+    ) =>
+      this.request<SbcConfiguration, any>({
+        path: `/${provider}/workflows/${workflowId}/hooks`,
+        method: 'GET',
+        secure: true,
+        format: 'json',
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Providers
+     * @name ProviderControllerGetLocations
+     * @request GET:/{provider}/locations
+     * @secure
+     */
+    providerControllerGetLocations: (provider: 'make' | 'ghl', params: RequestParams = {}) =>
+      this.request<SbcConfiguration, any>({
+        path: `/${provider}/locations`,
+        method: 'GET',
+        secure: true,
+        format: 'json',
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Providers
+     * @name VoiceProviderControllerSearchVoices
+     * @summary Search Voice from Provider Voice Library.
+     * @request GET:/{provider}/voices/search
+     * @deprecated
+     * @secure
+     */
+    voiceProviderControllerSearchVoices: (
+      provider: string,
+      query: {
+        /** The name of the voice from the provider you want to search. */
+        name: string;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<VoiceLibraryVoiceResponse[], any>({
+        path: `/${provider}/voices/search`,
+        method: 'GET',
+        query: query,
+        secure: true,
+        format: 'json',
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Providers
+     * @name VoiceProviderControllerSearchVoice
+     * @summary Search Voice from Provider Voice Library.
+     * @request GET:/{provider}/voice/search
+     * @secure
+     */
+    voiceProviderControllerSearchVoice: (
+      provider: string,
+      query: {
+        /** The name of the voice from the provider you want to search. */
+        name: string;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<VoiceLibraryVoiceResponse[], any>({
+        path: `/${provider}/voice/search`,
+        method: 'GET',
+        query: query,
+        secure: true,
+        format: 'json',
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Providers
+     * @name VoiceProviderControllerAddVoices
+     * @summary Add Shared Voice to your Provider Account.
+     * @request POST:/{provider}/voices/add
+     * @deprecated
+     * @secure
+     */
+    voiceProviderControllerAddVoices: (
+      provider: string,
+      data: AddVoiceToProviderDTO,
+      params: RequestParams = {},
+    ) =>
+      this.request<VoiceLibrary, any>({
+        path: `/${provider}/voices/add`,
+        method: 'POST',
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        format: 'json',
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Providers
+     * @name VoiceProviderControllerAddVoice
+     * @summary Add Shared Voice to your Provider Account.
+     * @request POST:/{provider}/voice/add
+     * @secure
+     */
+    voiceProviderControllerAddVoice: (
+      provider: string,
+      data: AddVoiceToProviderDTO,
+      params: RequestParams = {},
+    ) =>
+      this.request<VoiceLibrary, any>({
+        path: `/${provider}/voice/add`,
+        method: 'POST',
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        format: 'json',
+        ...params,
+      }),
+  };
+  v11Labs = {
+    /**
+     * No description
+     *
+     * @tags Providers
+     * @name VoiceProviderControllerCloneVoices
+     * @summary Clone a voice to the provider account and add to Vapi Voice Library.
+     * @request POST:/11labs/voice/clone
+     * @secure
+     */
+    voiceProviderControllerCloneVoices: (data: CloneVoiceDTO, params: RequestParams = {}) =>
+      this.request<void, void>({
+        path: `/11labs/voice/clone`,
+        method: 'POST',
+        body: data,
+        secure: true,
+        type: ContentType.FormData,
+        ...params,
+      }),
+  };
+  template = {
+    /**
+     * No description
+     *
+     * @tags Templates
+     * @name TemplateControllerCreate
+     * @summary Create Template
+     * @request POST:/template
+     * @secure
+     */
+    templateControllerCreate: (data: CreateToolTemplateDTO[], params: RequestParams = {}) =>
+      this.request<Template, any>({
+        path: `/template`,
+        method: 'POST',
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        format: 'json',
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Templates
+     * @name TemplateControllerFindAll
+     * @summary List Templates
+     * @request GET:/template
+     * @secure
+     */
+    templateControllerFindAll: (
+      query?: {
+        collectionId?: string;
+        visibility?: 'public' | 'private';
+        provider?: 'make' | 'gohighlevel' | 'function';
+        /**
+         * This is the maximum number of items to return. Defaults to 100.
+         * @min 0
+         * @max 1000
+         */
+        limit?: number;
+        /**
+         * This will return items where the createdAt is greater than the specified value.
+         * @format date-time
+         */
+        createdAtGt?: string;
+        /**
+         * This will return items where the createdAt is less than the specified value.
+         * @format date-time
+         */
+        createdAtLt?: string;
+        /**
+         * This will return items where the createdAt is greater than or equal to the specified value.
+         * @format date-time
+         */
+        createdAtGe?: string;
+        /**
+         * This will return items where the createdAt is less than or equal to the specified value.
+         * @format date-time
+         */
+        createdAtLe?: string;
+        /**
+         * This will return items where the updatedAt is greater than the specified value.
+         * @format date-time
+         */
+        updatedAtGt?: string;
+        /**
+         * This will return items where the updatedAt is less than the specified value.
+         * @format date-time
+         */
+        updatedAtLt?: string;
+        /**
+         * This will return items where the updatedAt is greater than or equal to the specified value.
+         * @format date-time
+         */
+        updatedAtGe?: string;
+        /**
+         * This will return items where the updatedAt is less than or equal to the specified value.
+         * @format date-time
+         */
+        updatedAtLe?: string;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<Template[], any>({
+        path: `/template`,
+        method: 'GET',
+        query: query,
+        secure: true,
+        format: 'json',
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Templates
+     * @name TemplateControllerFindAllPinned
+     * @summary List Templates
+     * @request GET:/template/pinned
+     * @secure
+     */
+    templateControllerFindAllPinned: (params: RequestParams = {}) =>
+      this.request<Template[], any>({
+        path: `/template/pinned`,
+        method: 'GET',
+        secure: true,
+        format: 'json',
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Templates
+     * @name TemplateControllerFindOne
+     * @summary Get Template
+     * @request GET:/template/{id}
+     * @secure
+     */
+    templateControllerFindOne: (id: string, params: RequestParams = {}) =>
+      this.request<Template, any>({
+        path: `/template/${id}`,
+        method: 'GET',
+        secure: true,
+        format: 'json',
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Templates
+     * @name TemplateControllerUpdate
+     * @summary Update Template
+     * @request PATCH:/template/{id}
+     * @secure
+     */
+    templateControllerUpdate: (
+      id: string,
+      data: UpdateToolTemplateDTO,
+      params: RequestParams = {},
+    ) =>
+      this.request<Template, any>({
+        path: `/template/${id}`,
+        method: 'PATCH',
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        format: 'json',
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Templates
+     * @name TemplateControllerRemove
+     * @summary Delete Template
+     * @request DELETE:/template/{id}
+     * @secure
+     */
+    templateControllerRemove: (id: string, params: RequestParams = {}) =>
+      this.request<Template, any>({
+        path: `/template/${id}`,
+        method: 'DELETE',
+        secure: true,
+        format: 'json',
+        ...params,
+      }),
+  };
+  token = {
+    /**
+     * No description
+     *
+     * @tags Tokens
+     * @name TokenControllerCreate
+     * @summary Create Token
+     * @request POST:/token
+     * @secure
+     */
+    tokenControllerCreate: (data: CreateTokenDTO, params: RequestParams = {}) =>
+      this.request<Token, any>({
+        path: `/token`,
+        method: 'POST',
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        format: 'json',
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Tokens
+     * @name TokenControllerFindAll
+     * @summary List Tokens
+     * @request GET:/token
+     * @secure
+     */
+    tokenControllerFindAll: (
+      query?: {
+        /**
+         * This is the maximum number of items to return. Defaults to 100.
+         * @min 0
+         * @max 1000
+         */
+        limit?: number;
+        /**
+         * This will return items where the createdAt is greater than the specified value.
+         * @format date-time
+         */
+        createdAtGt?: string;
+        /**
+         * This will return items where the createdAt is less than the specified value.
+         * @format date-time
+         */
+        createdAtLt?: string;
+        /**
+         * This will return items where the createdAt is greater than or equal to the specified value.
+         * @format date-time
+         */
+        createdAtGe?: string;
+        /**
+         * This will return items where the createdAt is less than or equal to the specified value.
+         * @format date-time
+         */
+        createdAtLe?: string;
+        /**
+         * This will return items where the updatedAt is greater than the specified value.
+         * @format date-time
+         */
+        updatedAtGt?: string;
+        /**
+         * This will return items where the updatedAt is less than the specified value.
+         * @format date-time
+         */
+        updatedAtLt?: string;
+        /**
+         * This will return items where the updatedAt is greater than or equal to the specified value.
+         * @format date-time
+         */
+        updatedAtGe?: string;
+        /**
+         * This will return items where the updatedAt is less than or equal to the specified value.
+         * @format date-time
+         */
+        updatedAtLe?: string;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<Token[], any>({
+        path: `/token`,
+        method: 'GET',
+        query: query,
+        secure: true,
+        format: 'json',
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Tokens
+     * @name TokenControllerFindOne
+     * @summary Get Token
+     * @request GET:/token/{id}
+     * @secure
+     */
+    tokenControllerFindOne: (id: string, params: RequestParams = {}) =>
+      this.request<Token, any>({
+        path: `/token/${id}`,
+        method: 'GET',
+        secure: true,
+        format: 'json',
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Tokens
+     * @name TokenControllerUpdate
+     * @summary Update Token
+     * @request PATCH:/token/{id}
+     * @secure
+     */
+    tokenControllerUpdate: (id: string, data: UpdateTokenDTO, params: RequestParams = {}) =>
+      this.request<Token, any>({
+        path: `/token/${id}`,
+        method: 'PATCH',
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        format: 'json',
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Tokens
+     * @name TokenControllerRemove
+     * @summary Delete Token
+     * @request DELETE:/token/{id}
+     * @secure
+     */
+    tokenControllerRemove: (id: string, params: RequestParams = {}) =>
+      this.request<Token, any>({
+        path: `/token/${id}`,
+        method: 'DELETE',
+        secure: true,
+        format: 'json',
+        ...params,
+      }),
+  };
+  voiceLibrary = {
+    /**
+     * No description
+     *
+     * @tags Voice Library
+     * @name VoiceLibraryControllerVoiceGetByProvider
+     * @summary Get voices in Voice Library by Provider
+     * @request GET:/voice-library/{provider}
+     * @secure
+     */
+    voiceLibraryControllerVoiceGetByProvider: (
+      provider:
+        | '11labs'
+        | 'azure'
+        | 'cartesia'
+        | 'custom-voice'
+        | 'deepgram'
+        | 'hume'
+        | 'lmnt'
+        | 'neets'
+        | 'neuphonic'
+        | 'openai'
+        | 'playht'
+        | 'rime-ai'
+        | 'smallest-ai'
+        | 'tavus',
+      query?: {
+        page?: number;
+        keyword?: string;
+        language?: string;
+        accent?: string;
+        gender?: string;
+        /**
+         * This is the maximum number of items to return. Defaults to 100.
+         * @min 0
+         * @max 1000
+         */
+        limit?: number;
+        /**
+         * This will return items where the createdAt is greater than the specified value.
+         * @format date-time
+         */
+        createdAtGt?: string;
+        /**
+         * This will return items where the createdAt is less than the specified value.
+         * @format date-time
+         */
+        createdAtLt?: string;
+        /**
+         * This will return items where the createdAt is greater than or equal to the specified value.
+         * @format date-time
+         */
+        createdAtGe?: string;
+        /**
+         * This will return items where the createdAt is less than or equal to the specified value.
+         * @format date-time
+         */
+        createdAtLe?: string;
+        /**
+         * This will return items where the updatedAt is greater than the specified value.
+         * @format date-time
+         */
+        updatedAtGt?: string;
+        /**
+         * This will return items where the updatedAt is less than the specified value.
+         * @format date-time
+         */
+        updatedAtLt?: string;
+        /**
+         * This will return items where the updatedAt is greater than or equal to the specified value.
+         * @format date-time
+         */
+        updatedAtGe?: string;
+        /**
+         * This will return items where the updatedAt is less than or equal to the specified value.
+         * @format date-time
+         */
+        updatedAtLe?: string;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<VoiceLibrary[], any>({
+        path: `/voice-library/${provider}`,
+        method: 'GET',
+        query: query,
+        secure: true,
+        format: 'json',
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Voice Library
+     * @name VoiceLibraryControllerVoiceGetAccentsByProvider
+     * @summary Get accents in Voice Library by Provider
+     * @request GET:/voice-library/{provider}/accents
+     * @secure
+     */
+    voiceLibraryControllerVoiceGetAccentsByProvider: (
+      provider:
+        | '11labs'
+        | 'azure'
+        | 'cartesia'
+        | 'custom-voice'
+        | 'deepgram'
+        | 'hume'
+        | 'lmnt'
+        | 'neets'
+        | 'neuphonic'
+        | 'openai'
+        | 'playht'
+        | 'rime-ai'
+        | 'smallest-ai'
+        | 'tavus',
+      params: RequestParams = {},
+    ) =>
+      this.request<VoiceLibrary[], any>({
+        path: `/voice-library/${provider}/accents`,
+        method: 'GET',
+        secure: true,
+        format: 'json',
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Voice Library
+     * @name VoiceLibraryControllerVoiceLibrarySyncByProvider
+     * @summary Sync Private voices in Voice Library by Provider
+     * @request POST:/voice-library/sync/{provider}
+     * @secure
+     */
+    voiceLibraryControllerVoiceLibrarySyncByProvider: (
+      provider:
+        | '11labs'
+        | 'azure'
+        | 'cartesia'
+        | 'custom-voice'
+        | 'deepgram'
+        | 'hume'
+        | 'lmnt'
+        | 'neets'
+        | 'neuphonic'
+        | 'openai'
+        | 'playht'
+        | 'rime-ai'
+        | 'smallest-ai'
+        | 'tavus',
+      params: RequestParams = {},
+    ) =>
+      this.request<VoiceLibrary[], any>({
+        path: `/voice-library/sync/${provider}`,
+        method: 'POST',
+        secure: true,
+        format: 'json',
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Voice Library
+     * @name VoiceLibraryControllerVoiceLibrarySyncDefaultVoices
+     * @summary Sync Default voices in Voice Library by Providers
+     * @request POST:/voice-library/sync
+     * @secure
+     */
+    voiceLibraryControllerVoiceLibrarySyncDefaultVoices: (
+      data: SyncVoiceLibraryDTO,
+      params: RequestParams = {},
+    ) =>
+      this.request<VoiceLibrary[], any>({
+        path: `/voice-library/sync`,
+        method: 'POST',
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        format: 'json',
         ...params,
       }),
   };
