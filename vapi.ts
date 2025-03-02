@@ -10,7 +10,7 @@ import Daily, {
   MediaDeviceInfo,
 } from '@daily-co/react-native-daily-js';
 
-import { Call, CreateAssistantDTO, CreateSquadDTO, OverrideAssistantDTO } from './api';
+import { Call, CreateAssistantDTO, CreateSquadDTO, AssistantOverrides } from './api';
 import { apiClient } from './apiClient';
 
 export interface AddMessageMessage {
@@ -245,7 +245,7 @@ export default class Vapi extends VapiEventEmitter {
 
   async start(
     assistant?: CreateAssistantDTO | string,
-    assistantOverrides?: OverrideAssistantDTO,
+    assistantOverrides?: AssistantOverrides,
     squad?: CreateSquadDTO | string,
   ): Promise<Call | null> {
     if (!assistant && !squad) {
@@ -266,10 +266,9 @@ export default class Vapi extends VapiEventEmitter {
         squadId: typeof squad === 'string' ? squad : undefined,
       })
     ).data;
-    const roomUrl = webCall.webCallUrl;
 
-    if (!roomUrl) {
-      throw new Error('webCallUrl is not available');
+    if (this.call) {
+      this.cleanup();
     }
 
     try {
@@ -280,7 +279,8 @@ export default class Vapi extends VapiEventEmitter {
       this.initEventListeners();
 
       this.call?.join({
-        url: roomUrl,
+        // @ts-expect-error This exists
+        url: webCall.webCallUrl,
       });
 
       return webCall;
