@@ -82,9 +82,9 @@ export default class Vapi extends VapiEventEmitter {
   private async cleanup() {
     if (!this.call) return;
     this.removeEventListeners();
+    this.started = false;
     await this.call.destroy();
     this.call = null;
-    this.started = false;
     this.emit('call-end');
   }
 
@@ -269,7 +269,7 @@ export default class Vapi extends VapiEventEmitter {
       ).data;
 
       if (this.call) {
-        await this.cleanup();
+        this.cleanup();
       }
 
       const isVideoEnabled = webCall.transport?.assistantVideoEnabled ?? false;
@@ -291,7 +291,7 @@ export default class Vapi extends VapiEventEmitter {
     } catch (e) {
       console.error('Error starting call:', e);
       this.emit('error', e);
-      await this.cleanup();
+      this.cleanup();
       return null;
     }
   }
