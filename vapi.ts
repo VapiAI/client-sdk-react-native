@@ -82,9 +82,9 @@ export default class Vapi extends VapiEventEmitter {
   private async cleanup() {
     if (!this.call) return;
     this.removeEventListeners();
-    this.started = false;
     await this.call.destroy();
     this.call = null;
+    this.started = false;
     this.emit('call-end');
   }
 
@@ -249,45 +249,52 @@ export default class Vapi extends VapiEventEmitter {
     squad?: CreateSquadDTO | string,
   ): Promise<Call | null> {
     if (!assistant && !squad) {
-      throw new Error('Assistant or assistants must be provided.');
+      throw new Error('Assistant or Squad must be provided.');
     }
 
     if (this.started) {
-      return null;
+      await this.cleanup();
     }
     this.started = true;
 
-    const webCall = (
-      await apiClient.call.callControllerCreateWebCall({
-        assistant: typeof assistant === 'string' ? undefined : assistant,
-        assistantId: typeof assistant === 'string' ? assistant : undefined,
-        assistantOverrides,
-        squad: typeof squad === 'string' ? undefined : squad,
-        squadId: typeof squad === 'string' ? squad : undefined,
-      })
-    ).data;
-
-    if (this.call) {
-      this.cleanup();
-    }
-
     try {
+      const webCall = (
+        await apiClient.call.callControllerCreateWebCall({
+          assistant: typeof assistant === 'string' ? undefined : assistant,
+          assistantId: typeof assistant === 'string' ? assistant : undefined,
+          assistantOverrides,
+          squad: typeof squad === 'string' ? undefined : squad,
+          squadId: typeof squad === 'string' ? squad : undefined,
+        })
+      ).data;
+
+      if (this.call) {
+        await this.cleanup();
+      }
+
+      const isVideoEnabled = webCall.transport?.assistantVideoEnabled ?? false;
+
       this.call = Daily.createCallObject({
         audioSource: true,
-        videoSource: false,
+        videoSource: isVideoEnabled,
       });
+
+      if (!this.call) {
+        throw new Error('Failed to create call object');
+      }
+
       this.initEventListeners();
 
-      this.call?.join({
-        // @ts-expect-error This exists
-        url: webCall.webCallUrl,
+      await this.call.join({
+        url: (webCall as any).webCallUrl,
+        subscribeToTracksAutomatically: true,
       });
 
       return webCall;
     } catch (e) {
-      console.error(e);
+      console.error('Error starting call:', e);
       this.emit('error', e);
-      this.cleanup();
+      await this.cleanup();
       return null;
     }
   }
