@@ -253,7 +253,7 @@ export default class Vapi extends VapiEventEmitter {
     }
 
     if (this.started) {
-      await this.cleanup();
+      return null;
     }
     this.started = true;
 
@@ -279,14 +279,11 @@ export default class Vapi extends VapiEventEmitter {
         videoSource: isVideoEnabled,
       });
 
-      if (!this.call) {
-        throw new Error('Failed to create call object');
-      }
-
       this.initEventListeners();
 
       await this.call.join({
-        url: (webCall as any).webCallUrl,
+        // @ts-expect-error This exists
+        url: webCall.webCallUrl,
         subscribeToTracksAutomatically: true,
       });
 
