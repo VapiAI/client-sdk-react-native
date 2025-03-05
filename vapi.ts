@@ -194,37 +194,41 @@ export default class Vapi extends VapiEventEmitter {
     if (!this.call) return;
 
     this.call.on('available-devices-updated', (e) => {
+      console.log('available-devices-updated', e)
       this.updateAvailableDevices(e?.availableDevices);
     });
     this.call.on('app-message', (e) => {
+      console.log('app-message', e)
       this.onAppMessage(e);
     });
     this.call.on('track-started', (e) => {
+      console.log('track-started', e)
       this.onTrackStarted(e);
     });
     this.call.on('participant-left', (e) => {
+      console.log('participant-left', e)
       this.cleanup();
     });
     this.call.on('left-meeting', (e) => {
+      console.log('left-meeting', e)
       this.cleanup();
     });
-
-    const events: DailyEvent[] = ['joined-meeting', 'left-meeting', 'error'];
-    const handleNewMeetingState = async (_event?: DailyEventObject) => {
-      switch (this.call?.meetingState()) {
-        case 'joined-meeting':
-          return this.onJoinedMeeting();
-        case 'left-meeting':
-          return this.cleanup();
-        case 'error':
-          await this.cleanup();
-          break;
-      }
-    };
-    handleNewMeetingState();
-    for (const event of events) {
-      this.call.on(event, handleNewMeetingState);
-    }
+    this.call.on('error', (e) => {
+      console.log('error', e)
+      this.emit('error', e);
+      this.cleanup();
+    });
+    this.call.on('nonfatal-error', (err) => {
+      console.log('nonfatal-error', err);
+    });
+    this.call.on('joined-meeting', (e) => {
+      console.log('joined-meeting', e)
+      this.onJoinedMeeting();
+    });
+    this.call.on('left-meeting', (e) => {
+      console.log('left-meeting', e)
+      this.cleanup();
+    });
   }
 
   private removeEventListeners() {
@@ -237,6 +241,7 @@ export default class Vapi extends VapiEventEmitter {
       'joined-meeting',
       'left-meeting',
       'error',
+      'nonfatal-error',
     ];
     for (const event of events) {
       this.call.off(event, (e: any) => console.log('Off ', e));
@@ -280,9 +285,13 @@ export default class Vapi extends VapiEventEmitter {
       });
       this.initEventListeners();
 
-      await this.call?.join({
+      console.log('joining call', roomUrl)
+
+      const participants = await this.call.join({
         url: roomUrl,
       });
+
+      console.log('participants', participants)
 
       return webCall;
     } catch (e) {
