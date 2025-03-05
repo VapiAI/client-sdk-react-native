@@ -9,6 +9,8 @@
  * ---------------------------------------------------------------
  */
 
+import axios, { AxiosHeaders, AxiosRequestConfig } from "axios";
+
 export interface AssemblyAITranscriber {
   /** This is the transcription provider that will be used. */
   provider: 'assembly-ai';
@@ -16024,9 +16026,12 @@ export interface ApiConfig<SecurityDataType = unknown> {
   customFetch?: typeof fetch;
 }
 
-export interface HttpResponse<D extends unknown, E extends unknown = unknown> extends Response {
+export interface HttpResponse<D extends unknown, E extends unknown = unknown> {
   data: D;
   error: E;
+  status: number;
+  statusText: string;
+  headers: Record<string, string>;
 }
 
 type CancelToken = Symbol | string | number;
@@ -16043,7 +16048,42 @@ export class HttpClient<SecurityDataType = unknown> {
   private securityData: SecurityDataType | null = null;
   private securityWorker?: ApiConfig<SecurityDataType>['securityWorker'];
   private abortControllers = new Map<CancelToken, AbortController>();
-  private customFetch = (...fetchParams: Parameters<typeof fetch>) => fetch(...fetchParams);
+
+  private convertFetchParamsToAxios(fetchParams: Parameters<typeof fetch>): AxiosRequestConfig {
+    const [input, init] = fetchParams;            // input = URL or Request object
+    const url = typeof input === "string" ? input : input.toString(); 
+    const method = init?.method ?? "GET";
+    const headers = init?.headers;                // type is HeadersInit
+    const body = init?.body;                      // type is BodyInit | null | undefined
+  
+    // We'll transform `body` into something Axios can handle.
+    let data: any; // 'any' or a more precise type if you prefer
+    if (typeof body === "string") {
+      // If it's a string, and you expect valid JSON, parse it:
+      try {
+        data = JSON.parse(body);
+      } catch {
+        data = body; // fallback if it's not valid JSON
+      }
+    } else {
+      // For example, if it's FormData, ReadableStream, etc., handle differently 
+      // or just pass it as-is if Axios can handle it (e.g., FormData).
+      data = body;
+    }
+  
+    // Return an AxiosRequestConfig object
+    return {
+      url,
+      method: method.toLowerCase() as AxiosRequestConfig["method"],
+      headers: headers as AxiosHeaders,
+      data,
+    };
+  }
+
+  private customFetch = (...fetchParams: Parameters<typeof fetch>) => {
+    const axiosConfig = this.convertFetchParamsToAxios(fetchParams);
+    return axios(axiosConfig);
+  }
 
   private baseApiParams: RequestParams = {
     credentials: 'same-origin',
@@ -16169,47 +16209,43 @@ export class HttpClient<SecurityDataType = unknown> {
     const requestParams = this.mergeRequestParams(params, secureParams);
     const queryString = query && this.toQueryString(query);
     const payloadFormatter = this.contentFormatters[type || ContentType.Json];
-    const responseFormat = format || requestParams.format;
 
-    return this.customFetch(
-      `${baseUrl || this.baseUrl || ''}${path}${queryString ? `?${queryString}` : ''}`,
-      {
-        ...requestParams,
-        headers: {
-          ...(requestParams.headers || {}),
-          ...(type && type !== ContentType.FormData ? { 'Content-Type': type } : {}),
+    try {
+      const response = await this.customFetch(
+        `${baseUrl || this.baseUrl || ''}${path}${queryString ? `?${queryString}` : ''}`,
+        {
+          ...requestParams,
+          headers: {
+            ...(requestParams.headers || {}),
+            ...(type && type !== ContentType.FormData ? { 'Content-Type': type } : {}),
+          },
+          signal: (cancelToken ? this.createAbortSignal(cancelToken) : requestParams.signal) || null,
+          body: typeof body === 'undefined' || body === null ? null : payloadFormatter(body),
         },
-        signal: (cancelToken ? this.createAbortSignal(cancelToken) : requestParams.signal) || null,
-        body: typeof body === 'undefined' || body === null ? null : payloadFormatter(body),
-      },
-    ).then(async (response) => {
-      const r = response.clone() as HttpResponse<T, E>;
-      r.data = null as unknown as T;
-      r.error = null as unknown as E;
-
-      const data = !responseFormat
-        ? r
-        : await response[responseFormat]()
-            .then((data) => {
-              if (r.ok) {
-                r.data = data;
-              } else {
-                r.error = data;
-              }
-              return r;
-            })
-            .catch((e) => {
-              r.error = e;
-              return r;
-            });
-
+      )
+      const r = {
+        data: response.data,
+        error: null as unknown as E,
+        status: response.status,
+        statusText: response.statusText,
+        headers: response.headers as Record<string, string>,
+      };
+    
       if (cancelToken) {
         this.abortControllers.delete(cancelToken);
       }
-
-      if (!response.ok) throw data;
-      return data;
-    });
+    
+      return r;
+    } catch(error: any) {
+      const r = {
+        data: null as unknown as T,
+        error: error.response?.data || error,
+        status: error.response?.status || 500,
+        statusText: error.response?.statusText || 'Internal Server Error',
+        headers: error.response?.headers || {},
+      };
+      throw r;
+    };
   };
 }
 
