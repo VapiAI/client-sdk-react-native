@@ -249,7 +249,7 @@ export default class Vapi extends VapiEventEmitter {
     squad?: CreateSquadDTO | string,
   ): Promise<Call | null> {
     if (!assistant && !squad) {
-      throw new Error('Assistant or Squad must be provided.');
+      throw new Error('Assistant or assistants must be provided.');
     }
 
     if (this.started) {
@@ -257,39 +257,36 @@ export default class Vapi extends VapiEventEmitter {
     }
     this.started = true;
 
+    const webCall = (
+      await apiClient.call.callControllerCreateWebCall({
+        assistant: typeof assistant === 'string' ? undefined : assistant,
+        assistantId: typeof assistant === 'string' ? assistant : undefined,
+        assistantOverrides,
+        squad: typeof squad === 'string' ? undefined : squad,
+        squadId: typeof squad === 'string' ? squad : undefined,
+      })
+    ).data;
+    // @ts-ignore this exists in the response
+    const roomUrl = webCall.webCallUrl;
+
+    if (!roomUrl) {
+      throw new Error('webCallUrl is not available');
+    }
+
     try {
-      const webCall = (
-        await apiClient.call.callControllerCreateWebCall({
-          assistant: typeof assistant === 'string' ? undefined : assistant,
-          assistantId: typeof assistant === 'string' ? assistant : undefined,
-          assistantOverrides,
-          squad: typeof squad === 'string' ? undefined : squad,
-          squadId: typeof squad === 'string' ? squad : undefined,
-        })
-      ).data;
-
-      if (this.call) {
-        this.cleanup();
-      }
-
-      const isVideoEnabled = webCall.transport?.assistantVideoEnabled ?? false;
-
       this.call = Daily.createCallObject({
         audioSource: true,
-        videoSource: isVideoEnabled,
+        videoSource: false,
       });
-
       this.initEventListeners();
 
-      await this.call.join({
-        // @ts-expect-error This exists
-        url: webCall.webCallUrl,
-        subscribeToTracksAutomatically: true,
+      await this.call?.join({
+        url: roomUrl,
       });
 
       return webCall;
     } catch (e) {
-      console.error('Error starting call:', e);
+      console.error(e);
       this.emit('error', e);
       this.cleanup();
       return null;
