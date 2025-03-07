@@ -3,14 +3,13 @@ import EventEmitter from 'events';
 import Daily, {
   DailyCall,
   DailyEvent,
-  DailyEventObject,
   DailyEventObjectAppMessage,
   DailyEventObjectTrack,
   DailyTrackState,
   MediaDeviceInfo,
 } from '@daily-co/react-native-daily-js';
 
-import { Call, CreateAssistantDTO, CreateSquadDTO, OverrideAssistantDTO } from './api';
+import { Call, CreateAssistantDTO, CreateSquadDTO, AssistantOverrides } from './api';
 import { apiClient } from './apiClient';
 
 export interface AddMessageMessage {
@@ -208,23 +207,16 @@ export default class Vapi extends VapiEventEmitter {
     this.call.on('left-meeting', (e) => {
       this.cleanup();
     });
-
-    const events: DailyEvent[] = ['joined-meeting', 'left-meeting', 'error'];
-    const handleNewMeetingState = async (_event?: DailyEventObject) => {
-      switch (this.call?.meetingState()) {
-        case 'joined-meeting':
-          return this.onJoinedMeeting();
-        case 'left-meeting':
-          return this.cleanup();
-        case 'error':
-          await this.cleanup();
-          break;
-      }
-    };
-    handleNewMeetingState();
-    for (const event of events) {
-      this.call.on(event, handleNewMeetingState);
-    }
+    this.call.on('error', (e) => {
+      this.emit('error', e);
+      this.cleanup();
+    });
+    this.call.on('joined-meeting', (e) => {
+      this.onJoinedMeeting();
+    });
+    this.call.on('left-meeting', (e) => {
+      this.cleanup();
+    });
   }
 
   private removeEventListeners() {
@@ -245,7 +237,7 @@ export default class Vapi extends VapiEventEmitter {
 
   async start(
     assistant?: CreateAssistantDTO | string,
-    assistantOverrides?: OverrideAssistantDTO,
+    assistantOverrides?: AssistantOverrides,
     squad?: CreateSquadDTO | string,
   ): Promise<Call | null> {
     if (!assistant && !squad) {
@@ -266,6 +258,7 @@ export default class Vapi extends VapiEventEmitter {
         squadId: typeof squad === 'string' ? squad : undefined,
       })
     ).data;
+    // @ts-ignore this exists in the response
     const roomUrl = webCall.webCallUrl;
 
     if (!roomUrl) {
@@ -279,10 +272,9 @@ export default class Vapi extends VapiEventEmitter {
       });
       this.initEventListeners();
 
-      this.call?.join({
-        url: roomUrl,
+      await this.call.join({
+        url: roomUrl
       });
-
       return webCall;
     } catch (e) {
       console.error(e);

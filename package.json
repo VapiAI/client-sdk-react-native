@@ -1,13 +1,13 @@
 {
   "name": "@vapi-ai/react-native",
-  "version": "0.1.9",
+  "version": "0.2.0",
   "description": "",
   "main": "dist/vapi.js",
   "types": "dist/vapi.d.ts",
   "scripts": {
     "test": "jest",
     "build": "tsc && tsc --declaration",
-    "generate-api": "npx swagger-typescript-api -p https://api.vapi.ai/api-json -o . -n api.ts",
+    "generate-api": "npx swagger-typescript-api -p https://api.vapi.ai/api-extended-json -o . -n api.ts",
     "update": "./update.sh"
   },
   "repository": {
@@ -21,16 +21,27 @@
   },
   "homepage": "https://github.com/VapiAI/react-native-sdk",
   "dependencies": {
-    "events": "^3.3.0",
-    "@daily-co/react-native-daily-js": "^0.61.0"
+    "axios": "^1.8.1",
+    "events": "^3.3.0"
+  },
+  "peerDependencies": {
+    "@daily-co/react-native-daily-js": "^0.72.1",
+    "@daily-co/react-native-webrtc": "118.0.3-daily.2",
+    "@react-native-async-storage/async-storage": "^1.24.0",
+    "react-native-background-timer": "^2.4.1"
   },
   "devDependencies": {
-    "@types/jest": "^29.5.12",
-    "@types/node": "^20.6.0",
+    "@daily-co/react-native-daily-js": "^0.72.1",
+    "@daily-co/react-native-webrtc": "118.0.3-daily.2",
+    "@react-native-async-storage/async-storage": "^1.24.0",
+    "react-native-background-timer": "^2.4.1",
+    "@types/jest": "^29.5.14",
+    "@types/node": "^20.17.22",
     "jest": "^29.7.0",
-    "openai": "^4.24.1",
-    "swagger-typescript-api": "^13.0.3",
-    "ts-jest": "^29.1.2",
-    "ts-node": "^10.9.2"
+    "openai": "^4.86.1",
+    "swagger-typescript-api": "^13.0.23",
+    "ts-jest": "^29.2.6",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.2"
   }
 }
