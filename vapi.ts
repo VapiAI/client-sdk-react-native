@@ -3,7 +3,6 @@ import EventEmitter from 'events';
 import Daily, {
   DailyCall,
   DailyEvent,
-  DailyEventObject,
   DailyEventObjectAppMessage,
   DailyEventObjectTrack,
   DailyTrackState,
@@ -285,14 +284,9 @@ export default class Vapi extends VapiEventEmitter {
       });
       this.initEventListeners();
 
-      console.log('joining call', roomUrl)
-
-      const participants = await this.call.join({
-        url: roomUrl,
+      await this.call.join({
+        url: roomUrl
       });
-
-      console.log('participants', participants)
-
       return webCall;
     } catch (e) {
       console.error(e);
