@@ -4,6 +4,7 @@ import Daily, {
   DailyCall,
   DailyEvent,
   DailyEventObjectAppMessage,
+  DailyEventObjectRemoteParticipantsAudioLevel,
   DailyEventObjectTrack,
   DailyTrackState,
   MediaDeviceInfo,
@@ -27,6 +28,7 @@ type VapiClientToServerMessage = AddMessageMessage | ControlMessages;
 type VapiEventNames =
   | 'call-end'
   | 'call-start'
+  | 'volume-level'
   | 'speech-start'
   | 'speech-end'
   | 'message'
@@ -35,6 +37,7 @@ type VapiEventNames =
 type VapiEventListeners = {
   'call-end': () => void;
   'call-start': () => void;
+  'volume-level': (volume: number) => void;
   'speech-start': () => void;
   'speech-end': () => void;
   playable: (track: DailyTrackState) => void;
@@ -71,7 +74,7 @@ export default class Vapi extends VapiEventEmitter {
   private cameraDeviceItems: any[] = [];
   private audioDeviceValue: string | null = null;
   private audioDevicesItems: any[] = [];
-
+  private speakingTimeout: NodeJS.Timeout | null = null;
   constructor(apiToken: string, apiBaseUrl?: string) {
     super();
     apiClient.baseUrl = apiBaseUrl ?? 'https://api.vapi.ai';
@@ -84,17 +87,8 @@ export default class Vapi extends VapiEventEmitter {
     this.started = false;
     await this.call.destroy();
     this.call = null;
+    this.speakingTimeout = null;
     this.emit('call-end');
-  }
-
-  private handleRemoteSpeech(e: any) {
-    if (e?.status === 'stopped') {
-      this.emit('speech-end');
-    } else if (e?.status === 'started') {
-      this.emit('speech-start');
-    } else {
-      console.log('unhandled remote speech status', e);
-    }
   }
 
   private onAppMessage(e?: DailyEventObjectAppMessage) {
@@ -107,9 +101,6 @@ export default class Vapi extends VapiEventEmitter {
       } else {
         try {
           const parsedMessage = JSON.parse(e.data);
-          if (parsedMessage?.type === 'speech-update') {
-            this.handleRemoteSpeech(parsedMessage);
-          }
           this.emit('message', parsedMessage);
         } catch (parseError) {
           console.log('Error parsing message data: ', parseError);
@@ -270,6 +261,13 @@ export default class Vapi extends VapiEventEmitter {
         audioSource: true,
         videoSource: false,
       });
+
+      this.call.startRemoteParticipantsAudioLevelObserver(100);
+
+      this.call.on('remote-participants-audio-level', (e) => {
+        if (e) this.handleRemoteParticipantsAudioLevel(e);
+      });
+
       this.initEventListeners();
 
       await this.call.join({
@@ -282,6 +280,35 @@ export default class Vapi extends VapiEventEmitter {
       this.cleanup();
       return null;
     }
+  }
+
+  private handleRemoteParticipantsAudioLevel(
+    e: DailyEventObjectRemoteParticipantsAudioLevel,
+  ) {
+    const speechLevel = Object.values(e.participantsAudioLevel).reduce(
+      (a, b) => a + b,
+      0,
+    );
+
+    this.emit('volume-level', Math.min(1, speechLevel / 0.15));
+
+    const isSpeaking = speechLevel > 0.01;
+
+    if (!isSpeaking) {
+      return;
+    }
+
+    if (this.speakingTimeout) {
+      clearTimeout(this.speakingTimeout);
+      this.speakingTimeout = null;
+    } else {
+      this.emit('speech-start');
+    }
+
+    this.speakingTimeout = setTimeout(() => {
+      this.emit('speech-end');
+      this.speakingTimeout = null;
+    }, 1000);
   }
 
   stop(): void {
