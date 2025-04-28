@@ -1,13 +1,13 @@
 {
   "name": "@vapi-ai/react-native",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "",
   "main": "dist/vapi.js",
   "types": "dist/vapi.d.ts",
   "scripts": {
     "test": "jest",
     "build": "tsc && tsc --declaration",
-    "generate-api": "npx swagger-typescript-api -p https://api.vapi.ai/api-extended-json -o . -n api.ts",
+    "generate-api": "./generate-api.sh",
     "update": "./update.sh"
   },
   "repository": {
