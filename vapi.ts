@@ -339,4 +339,17 @@ export default class Vapi extends VapiEventEmitter {
       throw error;
     }
   }
+
+  getAudioDevices() {
+    return this.audioDevicesItems;
+  }
+
+  setAudioDevice(deviceId: string) {
+    this.audioDeviceValue = deviceId;
+    this.call?.setAudioDevice(this.audioDeviceValue);
+  }
+
+  getCurrentAudioDevice() {
+    return this.audioDeviceValue;
+  }
 }

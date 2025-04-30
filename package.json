@@ -1,6 +1,6 @@
 {
   "name": "@vapi-ai/react-native",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "",
   "main": "dist/vapi.js",
   "types": "dist/vapi.d.ts",
@@ -8,7 +8,8 @@
     "test": "jest",
     "build": "tsc && tsc --declaration",
     "generate-api": "./generate-api.sh",
-    "update": "./update.sh"
+    "update": "./update.sh",
+    "generate-local-build": "npm install && npm run build && npm pack"
   },
   "repository": {
     "type": "git",
