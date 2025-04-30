@@ -184,19 +184,53 @@ export interface OpenAIMessage {
   role: 'assistant' | 'function' | 'user' | 'system' | 'tool';
 }
 
+export interface Mono {
+  /** This is the combined recording url for the call. To enable, set `assistant.artifactPlan.recordingEnabled`. */
+  combinedUrl?: string;
+  /** This is the mono recording url for the assistant. To enable, set `assistant.artifactPlan.recordingEnabled`. */
+  assistantUrl?: string;
+  /** This is the mono recording url for the customer. To enable, set `assistant.artifactPlan.recordingEnabled`. */
+  customerUrl?: string;
+}
+
+export interface Recording {
+  /** This is the stereo recording url for the call. To enable, set `assistant.artifactPlan.recordingEnabled`. */
+  stereoUrl?: string;
+  /** This is the video recording url for the call. To enable, set `assistant.artifactPlan.videoRecordingEnabled`. */
+  videoUrl?: string;
+  /** This is video recording start delay in ms. To enable, set `assistant.artifactPlan.videoRecordingEnabled`. This can be used to align the playback of the recording with artifact.messages timestamps. */
+  videoRecordingStartDelaySeconds?: number;
+  /** This is the mono recording url for the call. To enable, set `assistant.artifactPlan.recordingEnabled`. */
+  mono?: Mono;
+}
+
 export interface Artifact {
   /** These are the messages that were spoken during the call. */
   messages?: (UserMessage | SystemMessage | BotMessage | ToolCallMessage | ToolCallResultMessage)[];
   /** These are the messages that were spoken during the call, formatted for OpenAI. */
   messagesOpenAIFormatted?: OpenAIMessage[];
-  /** This is the recording url for the call. To enable, set `assistant.artifactPlan.recordingEnabled`. */
+  /**
+   * This is the recording url for the call. To enable, set `assistant.artifactPlan.recordingEnabled`.
+   * @deprecated
+   */
   recordingUrl?: string;
-  /** This is the stereo recording url for the call. To enable, set `assistant.artifactPlan.recordingEnabled`. */
+  /**
+   * This is the stereo recording url for the call. To enable, set `assistant.artifactPlan.recordingEnabled`.
+   * @deprecated
+   */
   stereoRecordingUrl?: string;
-  /** This is video recording url for the call. To enable, set `assistant.artifactPlan.videoRecordingEnabled`. */
+  /**
+   * This is video recording url for the call. To enable, set `assistant.artifactPlan.videoRecordingEnabled`.
+   * @deprecated
+   */
   videoRecordingUrl?: string;
-  /** This is video recording start delay in ms. To enable, set `assistant.artifactPlan.videoRecordingEnabled`. This can be used to align the playback of the recording with artifact.messages timestamps. */
+  /**
+   * This is video recording start delay in ms. To enable, set `assistant.artifactPlan.videoRecordingEnabled`. This can be used to align the playback of the recording with artifact.messages timestamps.
+   * @deprecated
+   */
   videoRecordingStartDelaySeconds?: number;
+  /** This is the recording url for the call. To enable, set `assistant.artifactPlan.recordingEnabled`. */
+  recording?: Recording;
   /** This is the transcript of the call. This is derived from `artifact.messages` but provided for convenience. */
   transcript?: string;
   /** This is the packet capture url for the call. This is only available for `phone` type calls where phone number's provider is `vapi` or `byo-phone-number`. */
@@ -3372,6 +3406,12 @@ export interface TransferPlan {
    * - Used only when `mode` is `blind-transfer-add-summary-to-sip-header` or `warm-transfer-say-summary` or `warm-transfer-wait-for-operator-to-speak-first-and-then-say-summary`.
    */
   summaryPlan?: SummaryPlan;
+  /**
+   * This flag includes the sipHeaders from above in the refer to sip uri as url encoded query params.
+   *
+   * @default false
+   */
+  sipHeadersInReferToEnabled?: boolean;
 }
 
 export interface TransferDestinationNumber {
@@ -4830,7 +4870,7 @@ export interface AIEdgeCondition {
 
 export interface LogicEdgeCondition {
   type: 'logic';
-  /** @maxLength 100 */
+  /** @maxLength 1000 */
   liquid: string;
 }
 
@@ -4849,7 +4889,7 @@ export interface Edge {
 }
 
 export interface Workflow {
-  nodes: (Assistant | Say | Gather | ApiRequest | Hangup | Transfer)[];
+  nodes: (Start | Assistant | Say | Gather | ApiRequest | Hangup | Transfer)[];
   /** These are the options for the workflow's LLM. */
   model?:
     | AnthropicModel
@@ -8040,6 +8080,28 @@ export interface TwilioVoicemailDetectionPlan {
   machineDetectionSilenceTimeout?: number;
 }
 
+export interface VapiVoicemailDetectionPlan {
+  /**
+   * This is the maximum duration from the start of the call that we will wait for a voicemail beep, before speaking our message
+   *
+   * - If we detect a voicemail beep before this, we will speak the message at that point.
+   *
+   * - Setting too low a value means that the bot will start speaking its voicemail message too early. If it does so before the actual beep, it will get cut off. You should definitely tune this to your use case.
+   *
+   * @default 30
+   * @min 0
+   * @max 60
+   * @min 0
+   * @max 30
+   * @default 30
+   */
+  beepMaxAwaitSeconds?: number;
+  /** This is the provider to use for voicemail detection. */
+  provider: 'vapi';
+  /** This is the backoff plan for the voicemail detection. */
+  backoffPlan?: VoicemailDetectionBackoffPlan;
+}
+
 export interface CompliancePlan {
   /**
    * When this is enabled, no logs, recordings, or transcriptions will be stored.
@@ -8686,7 +8748,8 @@ export interface CreateAssistantDTO {
   voicemailDetection?:
     | GoogleVoicemailDetectionPlan
     | OpenAIVoicemailDetectionPlan
-    | TwilioVoicemailDetectionPlan;
+    | TwilioVoicemailDetectionPlan
+    | VapiVoicemailDetectionPlan;
   /**
    * These are the messages that will be sent to your Client SDKs. Default is conversation-update,function-call,hang,model-output,speech-update,status-update,transfer-update,transcript,tool-calls,user-interrupted,voice-input,workflow.node.started. You can check the shape of the messages in ClientMessage schema.
    * @example ["conversation-update","function-call","hang","model-output","speech-update","status-update","transfer-update","transcript","tool-calls","user-interrupted","voice-input","workflow.node.started"]
@@ -9092,7 +9155,8 @@ export interface AssistantOverrides {
   voicemailDetection?:
     | GoogleVoicemailDetectionPlan
     | OpenAIVoicemailDetectionPlan
-    | TwilioVoicemailDetectionPlan;
+    | TwilioVoicemailDetectionPlan
+    | VapiVoicemailDetectionPlan;
   /**
    * These are the messages that will be sent to your Client SDKs. Default is conversation-update,function-call,hang,model-output,speech-update,status-update,transfer-update,transcript,tool-calls,user-interrupted,voice-input,workflow.node.started. You can check the shape of the messages in ClientMessage schema.
    * @example ["conversation-update","function-call","hang","model-output","speech-update","status-update","transfer-update","transcript","tool-calls","user-interrupted","voice-input","workflow.node.started"]
@@ -9498,6 +9562,16 @@ export interface ImportTwilioPhoneNumberDTO {
   fallbackDestination?: TransferDestinationNumber | TransferDestinationSip;
   /** This is the hooks that will be used for incoming calls to this phone number. */
   hooks?: PhoneNumberHookCallRinging[];
+  /**
+   * Controls whether Vapi sets the messaging webhook URL on the Twilio number during import.
+   *
+   * If set to `false`, Vapi will not update the Twilio messaging URL, leaving it as is.
+   * If `true` or omitted (default), Vapi will configure both the voice and messaging URLs.
+   *
+   * @default true
+   * @default true
+   */
+  smsEnabled?: boolean;
   /**
    * These are the digits of the phone number you own on your Twilio.
    * @deprecated
@@ -10365,6 +10439,23 @@ export interface ChatCompletionMessageWorkflows {
   metadata?: ChatCompletionMessageMetadata;
 }
 
+export interface Start {
+  type: 'start';
+  /** @maxLength 80 */
+  name: string;
+  /** This is for metadata you want to store on the task. */
+  metadata?: object;
+}
+
+export interface Assistant {
+  type: 'assistant';
+  assistantId: string;
+  /** @maxLength 80 */
+  name: string;
+  /** This is for metadata you want to store on the task. */
+  metadata?: object;
+}
+
 export interface Say {
   type: 'say';
   /** @maxLength 1000 */
@@ -10468,7 +10559,7 @@ export interface Transfer {
 }
 
 export interface CreateWorkflowDTO {
-  nodes: (Assistant | Say | Gather | ApiRequest | Hangup | Transfer)[];
+  nodes: (Start | Assistant | Say | Gather | ApiRequest | Hangup | Transfer)[];
   /** These are the options for the workflow's LLM. */
   model?:
     | AnthropicModel
@@ -10496,429 +10587,15 @@ export interface ChatCompletionsDTO {
   workflow?: CreateWorkflowDTO;
 }
 
-export interface Assistant {
-  /** These are the options for the assistant's transcriber. */
-  transcriber?:
-    | AssemblyAITranscriber
-    | AzureSpeechTranscriber
-    | CustomTranscriber
-    | DeepgramTranscriber
-    | ElevenLabsTranscriber
-    | GladiaTranscriber
-    | SpeechmaticsTranscriber
-    | TalkscriberTranscriber
-    | GoogleTranscriber
-    | OpenAITranscriber;
-  /** These are the options for the assistant's LLM. */
-  model?:
-    | AnyscaleModel
-    | AnthropicModel
-    | CerebrasModel
-    | CustomLLMModel
-    | DeepInfraModel
-    | DeepSeekModel
-    | GoogleModel
-    | GroqModel
-    | InflectionAIModel
-    | OpenAIModel
-    | OpenRouterModel
-    | PerplexityAIModel
-    | TogetherAIModel
-    | VapiModel
-    | XaiModel;
-  /**
-   * These are the options for the assistant's voice.
-   * @default {"provider":"playht","voiceId":"jennifer"}
-   */
-  voice?:
-    | AzureVoice
-    | CartesiaVoice
-    | CustomVoice
-    | DeepgramVoice
-    | ElevenLabsVoice
-    | HumeVoice
-    | LMNTVoice
-    | NeuphonicVoice
-    | OpenAIVoice
-    | PlayHTVoice
-    | RimeAIVoice
-    | SmallestAIVoice
-    | TavusVoice
-    | VapiVoice;
-  /**
-   * This is the first message that the assistant will say. This can also be a URL to a containerized audio file (mp3, wav, etc.).
-   *
-   * If unspecified, assistant will wait for user to speak and use the model to respond once they speak.
-   * @example "Hello! How can I help you today?"
-   */
-  firstMessage?: string;
-  /** @default false */
-  firstMessageInterruptionsEnabled?: boolean;
-  /**
-   * This is the mode for the first message. Default is 'assistant-speaks-first'.
-   *
-   * Use:
-   * - 'assistant-speaks-first' to have the assistant speak first.
-   * - 'assistant-waits-for-user' to have the assistant wait for the user to speak first.
-   * - 'assistant-speaks-first-with-model-generated-message' to have the assistant speak first with a message generated by the model based on the conversation state. (`assistant.model.messages` at call start, `call.messages` at squad transfer points).
-   *
-   * @default 'assistant-speaks-first'
-   * @example "assistant-speaks-first"
-   */
-  firstMessageMode?:
-    | 'assistant-speaks-first'
-    | 'assistant-speaks-first-with-model-generated-message'
-    | 'assistant-waits-for-user';
-  /**
-   * These are the settings to configure or disable voicemail detection. Alternatively, voicemail detection can be configured using the model.tools=[VoicemailTool].
-   * This uses Twilio's built-in detection while the VoicemailTool relies on the model to detect if a voicemail was reached.
-   * You can use neither of them, one of them, or both of them. By default, Twilio built-in detection is enabled while VoicemailTool is not.
-   */
-  voicemailDetection?:
-    | GoogleVoicemailDetectionPlan
-    | OpenAIVoicemailDetectionPlan
-    | TwilioVoicemailDetectionPlan;
-  /**
-   * These are the messages that will be sent to your Client SDKs. Default is conversation-update,function-call,hang,model-output,speech-update,status-update,transfer-update,transcript,tool-calls,user-interrupted,voice-input,workflow.node.started. You can check the shape of the messages in ClientMessage schema.
-   * @example ["conversation-update","function-call","hang","model-output","speech-update","status-update","transfer-update","transcript","tool-calls","user-interrupted","voice-input","workflow.node.started"]
-   */
-  clientMessages?:
-    | 'conversation-update'
-    | 'function-call'
-    | 'function-call-result'
-    | 'hang'
-    | 'language-changed'
-    | 'metadata'
-    | 'model-output'
-    | 'speech-update'
-    | 'status-update'
-    | 'transcript'
-    | 'tool-calls'
-    | 'tool-calls-result'
-    | 'tool.completed'
-    | 'transfer-update'
-    | 'user-interrupted'
-    | 'voice-input'
-    | 'workflow.node.started';
-  /**
-   * These are the messages that will be sent to your Server URL. Default is conversation-update,end-of-call-report,function-call,hang,speech-update,status-update,tool-calls,transfer-destination-request,user-interrupted. You can check the shape of the messages in ServerMessage schema.
-   * @example ["conversation-update","end-of-call-report","function-call","hang","speech-update","status-update","tool-calls","transfer-destination-request","user-interrupted"]
-   */
-  serverMessages?:
-    | 'conversation-update'
-    | 'end-of-call-report'
-    | 'function-call'
-    | 'hang'
-    | 'language-changed'
-    | 'language-change-detected'
-    | 'model-output'
-    | 'phone-call-control'
-    | 'speech-update'
-    | 'status-update'
-    | 'transcript'
-    | "transcript[transcriptType='final']"
-    | 'tool-calls'
-    | 'transfer-destination-request'
-    | 'transfer-update'
-    | 'user-interrupted'
-    | 'voice-input';
-  /**
-   * How many seconds of silence to wait before ending the call. Defaults to 30.
-   *
-   * @default 30
-   * @min 10
-   * @max 3600
-   * @example 30
-   */
-  silenceTimeoutSeconds?: number;
-  /**
-   * This is the maximum number of seconds that the call will last. When the call reaches this duration, it will be ended.
-   *
-   * @default 600 (10 minutes)
-   * @min 10
-   * @max 43200
-   * @example 600
-   */
-  maxDurationSeconds?: number;
-  /**
-   * This is the background sound in the call. Default for phone calls is 'office' and default for web calls is 'off'.
-   * You can also provide a custom sound by providing a URL to an audio file.
-   * @maxLength 1000
-   */
-  backgroundSound?: 'off' | 'office' | string;
-  /**
-   * This enables filtering of noise and background speech while the user is talking.
-   *
-   * Default `false` while in beta.
-   *
-   * @default false
-   * @example false
-   */
-  backgroundDenoisingEnabled?: boolean;
-  /**
-   * This determines whether the model's output is used in conversation history rather than the transcription of assistant's speech.
-   *
-   * Default `false` while in beta.
-   *
-   * @default false
-   * @example false
-   */
-  modelOutputInMessagesEnabled?: boolean;
-  /** These are the configurations to be passed to the transport providers of assistant's calls, like Twilio. You can store multiple configurations for different transport providers. For a call, only the configuration matching the call transport provider is used. */
-  transportConfigurations?: TransportConfigurationTwilio[];
-  /**
-   * This is the plan for observability configuration of assistant's calls.
-   * Currently supports Langfuse for tracing and monitoring.
-   */
-  observabilityPlan?: LangfuseObservabilityPlan;
-  /** These are dynamic credentials that will be used for the assistant calls. By default, all the credentials are available for use in the call but you can supplement an additional credentials using this. Dynamic credentials override existing credentials. */
-  credentials?: (
-    | ({
-        provider: '11labs';
-      } & CreateElevenLabsCredentialDTO)
-    | ({
-        provider: 'anthropic';
-      } & CreateAnthropicCredentialDTO)
-    | ({
-        provider: 'anyscale';
-      } & CreateAnyscaleCredentialDTO)
-    | ({
-        provider: 'assembly-ai';
-      } & CreateAssemblyAICredentialDTO)
-    | ({
-        provider: 'azure-openai';
-      } & CreateAzureOpenAICredentialDTO)
-    | ({
-        provider: 'azure';
-      } & CreateAzureCredentialDTO)
-    | ({
-        provider: 'byo-sip-trunk';
-      } & CreateByoSipTrunkCredentialDTO)
-    | ({
-        provider: 'cartesia';
-      } & CreateCartesiaCredentialDTO)
-    | ({
-        provider: 'cerebras';
-      } & CreateCerebrasCredentialDTO)
-    | ({
-        provider: 'cloudflare';
-      } & CreateCloudflareCredentialDTO)
-    | ({
-        provider: 'custom-llm';
-      } & CreateCustomLLMCredentialDTO)
-    | ({
-        provider: 'deepgram';
-      } & CreateDeepgramCredentialDTO)
-    | ({
-        provider: 'deepinfra';
-      } & CreateDeepInfraCredentialDTO)
-    | ({
-        provider: 'deep-seek';
-      } & CreateDeepSeekCredentialDTO)
-    | ({
-        provider: 'gcp';
-      } & CreateGcpCredentialDTO)
-    | ({
-        provider: 'gladia';
-      } & CreateGladiaCredentialDTO)
-    | ({
-        provider: 'gohighlevel';
-      } & CreateGoHighLevelCredentialDTO)
-    | ({
-        provider: 'google';
-      } & CreateGoogleCredentialDTO)
-    | ({
-        provider: 'groq';
-      } & CreateGroqCredentialDTO)
-    | ({
-        provider: 'inflection-ai';
-      } & CreateInflectionAICredentialDTO)
-    | ({
-        provider: 'langfuse';
-      } & CreateLangfuseCredentialDTO)
-    | ({
-        provider: 'lmnt';
-      } & CreateLmntCredentialDTO)
-    | ({
-        provider: 'make';
-      } & CreateMakeCredentialDTO)
-    | ({
-        provider: 'openai';
-      } & CreateOpenAICredentialDTO)
-    | ({
-        provider: 'openrouter';
-      } & CreateOpenRouterCredentialDTO)
-    | ({
-        provider: 'perplexity-ai';
-      } & CreatePerplexityAICredentialDTO)
-    | ({
-        provider: 'playht';
-      } & CreatePlayHTCredentialDTO)
-    | ({
-        provider: 'rime-ai';
-      } & CreateRimeAICredentialDTO)
-    | ({
-        provider: 'runpod';
-      } & CreateRunpodCredentialDTO)
-    | ({
-        provider: 's3';
-      } & CreateS3CredentialDTO)
-    | ({
-        provider: 'supabase';
-      } & CreateSupabaseCredentialDTO)
-    | ({
-        provider: 'smallest-ai';
-      } & CreateSmallestAICredentialDTO)
-    | ({
-        provider: 'tavus';
-      } & CreateTavusCredentialDTO)
-    | ({
-        provider: 'together-ai';
-      } & CreateTogetherAICredentialDTO)
-    | ({
-        provider: 'twilio';
-      } & CreateTwilioCredentialDTO)
-    | ({
-        provider: 'vonage';
-      } & CreateVonageCredentialDTO)
-    | ({
-        provider: 'webhook';
-      } & CreateWebhookCredentialDTO)
-    | ({
-        provider: 'xai';
-      } & CreateXAiCredentialDTO)
-    | ({
-        provider: 'neuphonic';
-      } & CreateNeuphonicCredentialDTO)
-    | ({
-        provider: 'hume';
-      } & CreateHumeCredentialDTO)
-    | ({
-        provider: 'mistral';
-      } & CreateMistralCredentialDTO)
-    | ({
-        provider: 'speechmatics';
-      } & CreateSpeechmaticsCredentialDTO)
-    | ({
-        provider: 'trieve';
-      } & CreateTrieveCredentialDTO)
-    | ({
-        provider: 'google.calendar.oauth2-client';
-      } & CreateGoogleCalendarOAuth2ClientCredentialDTO)
-    | ({
-        provider: 'google.calendar.oauth2-authorization';
-      } & CreateGoogleCalendarOAuth2AuthorizationCredentialDTO)
-    | ({
-        provider: 'google.sheets.oauth2-authorization';
-      } & CreateGoogleSheetsOAuth2AuthorizationCredentialDTO)
-    | ({
-        provider: 'slack.oauth2-authorization';
-      } & CreateSlackOAuth2AuthorizationCredentialDTO)
-  )[];
-  /** This is a set of actions that will be performed on certain events. */
-  hooks?: AssistantHookCallEnding[];
-  /**
-   * This is the name of the assistant.
-   *
-   * This is required when you want to transfer between assistants in a call.
-   * @maxLength 40
-   */
-  name?: string;
-  /**
-   * This is the message that the assistant will say if the call is forwarded to voicemail.
-   *
-   * If unspecified, it will hang up.
-   * @maxLength 1000
-   */
-  voicemailMessage?: string;
-  /**
-   * This is the message that the assistant will say if it ends the call.
-   *
-   * If unspecified, it will hang up without saying anything.
-   * @maxLength 1000
-   */
-  endCallMessage?: string;
-  /** This list contains phrases that, if spoken by the assistant, will trigger the call to be hung up. Case insensitive. */
-  endCallPhrases?: string[];
-  compliancePlan?: CompliancePlan;
-  /** This is for metadata you want to store on the assistant. */
-  metadata?: object;
-  /** This is the plan for analysis of assistant's calls. Stored in `call.analysis`. */
-  analysisPlan?: AnalysisPlan;
-  /**
-   * This is the plan for artifacts generated during assistant's calls. Stored in `call.artifact`.
-   *
-   * Note: `recordingEnabled` is currently at the root level. It will be moved to `artifactPlan` in the future, but will remain backwards compatible.
-   */
-  artifactPlan?: ArtifactPlan;
-  /**
-   * This is the plan for static predefined messages that can be spoken by the assistant during the call, like `idleMessages`.
-   *
-   * Note: `firstMessage`, `voicemailMessage`, and `endCallMessage` are currently at the root level. They will be moved to `messagePlan` in the future, but will remain backwards compatible.
-   */
-  messagePlan?: MessagePlan;
-  /**
-   * This is the plan for when the assistant should start talking.
-   *
-   * You should configure this if you're running into these issues:
-   * - The assistant is too slow to start talking after the customer is done speaking.
-   * - The assistant is too fast to start talking after the customer is done speaking.
-   * - The assistant is so fast that it's actually interrupting the customer.
-   */
-  startSpeakingPlan?: StartSpeakingPlan;
-  /**
-   * This is the plan for when assistant should stop talking on customer interruption.
-   *
-   * You should configure this if you're running into these issues:
-   * - The assistant is too slow to recognize customer's interruption.
-   * - The assistant is too fast to recognize customer's interruption.
-   * - The assistant is getting interrupted by phrases that are just acknowledgments.
-   * - The assistant is getting interrupted by background noises.
-   * - The assistant is not properly stopping -- it starts talking right after getting interrupted.
-   */
-  stopSpeakingPlan?: StopSpeakingPlan;
-  /**
-   * This is the plan for real-time monitoring of the assistant's calls.
-   *
-   * Usage:
-   * - To enable live listening of the assistant's calls, set `monitorPlan.listenEnabled` to `true`.
-   * - To enable live control of the assistant's calls, set `monitorPlan.controlEnabled` to `true`.
-   *
-   * Note, `serverMessages`, `clientMessages`, `serverUrl` and `serverUrlSecret` are currently at the root level but will be moved to `monitorPlan` in the future. Will remain backwards compatible
-   */
-  monitorPlan?: MonitorPlan;
-  /** These are the credentials that will be used for the assistant calls. By default, all the credentials are available for use in the call but you can provide a subset using this. */
-  credentialIds?: string[];
-  /**
-   * This is where Vapi will send webhooks. You can find all webhooks available along with their shape in ServerMessage schema.
-   *
-   * The order of precedence is:
-   *
-   * 1. assistant.server.url
-   * 2. phoneNumber.serverUrl
-   * 3. org.serverUrl
-   */
-  server?: Server;
-  keypadInputPlan?: KeypadInputPlan;
-  /** This is the unique identifier for the assistant. */
-  id: string;
-  /** This is the unique identifier for the org that this assistant belongs to. */
-  orgId: string;
-  /**
-   * This is the ISO 8601 date-time string of when the assistant was created.
-   * @format date-time
-   */
-  createdAt: string;
-  /**
-   * This is the ISO 8601 date-time string of when the assistant was last updated.
-   * @format date-time
-   */
-  updatedAt: string;
-}
-
 export interface AssistantPaginatedResponse {
   results: Assistant[];
   metadata: PaginationMeta;
+}
+
+export interface AssistantVersionPaginatedResponse {
+  results: any[];
+  metadata: PaginationMeta;
+  nextPageState?: string;
 }
 
 export interface UpdateAssistantDTO {
@@ -11002,7 +10679,8 @@ export interface UpdateAssistantDTO {
   voicemailDetection?:
     | GoogleVoicemailDetectionPlan
     | OpenAIVoicemailDetectionPlan
-    | TwilioVoicemailDetectionPlan;
+    | TwilioVoicemailDetectionPlan
+    | VapiVoicemailDetectionPlan;
   /**
    * These are the messages that will be sent to your Client SDKs. Default is conversation-update,function-call,hang,model-output,speech-update,status-update,transfer-update,transcript,tool-calls,user-interrupted,voice-input,workflow.node.started. You can check the shape of the messages in ClientMessage schema.
    * @example ["conversation-update","function-call","hang","model-output","speech-update","status-update","transfer-update","transcript","tool-calls","user-interrupted","voice-input","workflow.node.started"]
@@ -11425,6 +11103,16 @@ export interface TwilioPhoneNumber {
   hooks?: PhoneNumberHookCallRinging[];
   /** This is to use numbers bought on Twilio. */
   provider: 'twilio';
+  /**
+   * Controls whether Vapi sets the messaging webhook URL on the Twilio number during import.
+   *
+   * If set to `false`, Vapi will not update the Twilio messaging URL, leaving it as is.
+   * If `true` or omitted (default), Vapi will configure both the voice and messaging URLs.
+   *
+   * @default true
+   * @default true
+   */
+  smsEnabled?: boolean;
   /** This is the unique identifier for the phone number. */
   id: string;
   /** This is the unique identifier for the org that this phone number belongs to. */
@@ -11784,6 +11472,16 @@ export interface CreateTwilioPhoneNumberDTO {
   hooks?: PhoneNumberHookCallRinging[];
   /** This is to use numbers bought on Twilio. */
   provider: 'twilio';
+  /**
+   * Controls whether Vapi sets the messaging webhook URL on the Twilio number during import.
+   *
+   * If set to `false`, Vapi will not update the Twilio messaging URL, leaving it as is.
+   * If `true` or omitted (default), Vapi will configure both the voice and messaging URLs.
+   *
+   * @default true
+   * @default true
+   */
+  smsEnabled?: boolean;
   /** These are the digits of the phone number you own on your Twilio. */
   number: string;
   /** This is the Twilio Account SID for the phone number. */
@@ -12056,6 +11754,16 @@ export interface UpdateTwilioPhoneNumberDTO {
   fallbackDestination?: TransferDestinationNumber | TransferDestinationSip;
   /** This is the hooks that will be used for incoming calls to this phone number. */
   hooks?: PhoneNumberHookCallRinging[];
+  /**
+   * Controls whether Vapi sets the messaging webhook URL on the Twilio number during import.
+   *
+   * If set to `false`, Vapi will not update the Twilio messaging URL, leaving it as is.
+   * If `true` or omitted (default), Vapi will configure both the voice and messaging URLs.
+   *
+   * @default true
+   * @default true
+   */
+  smsEnabled?: boolean;
   /**
    * This is the name of the phone number. This is just for your own reference.
    * @maxLength 40
@@ -14373,7 +14081,7 @@ export interface TrieveKnowledgeBaseImport {
 }
 
 export interface UpdateWorkflowDTO {
-  nodes?: (Assistant | Say | Gather | ApiRequest | Hangup | Transfer)[];
+  nodes?: (Start | Assistant | Say | Gather | ApiRequest | Hangup | Transfer)[];
   /** These are the options for the workflow's LLM. */
   model?:
     | AnthropicModel
@@ -14776,7 +14484,7 @@ export interface TestSuiteTestScorerAI {
   type: 'ai';
   /**
    * This is the rubric used by the AI scorer.
-   * @maxLength 1000
+   * @maxLength 10000
    */
   rubric: string;
 }
@@ -14806,7 +14514,7 @@ export interface TestSuiteRunScorerAI {
   reasoning: string;
   /**
    * This is the rubric used by the AI scorer.
-   * @maxLength 1000
+   * @maxLength 10000
    */
   rubric: string;
 }
@@ -22001,6 +21709,33 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
       this.request<Assistant, any>({
         path: `/assistant/${id}`,
         method: 'DELETE',
+        secure: true,
+        format: 'json',
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Assistants
+     * @name AssistantControllerFindVersions
+     * @summary List Assistant Versions
+     * @request GET:/assistant/{id}/version
+     * @secure
+     */
+    assistantControllerFindVersions: (
+      id: string,
+      query?: {
+        page?: number;
+        limit?: number;
+        pageState?: string;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<AssistantVersionPaginatedResponse, any>({
+        path: `/assistant/${id}/version`,
+        method: 'GET',
+        query: query,
         secure: true,
         format: 'json',
         ...params,
