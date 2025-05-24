@@ -1,6 +1,6 @@
 {
   "name": "@vapi-ai/react-native",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "",
   "main": "dist/vapi.js",
   "types": "dist/vapi.d.ts",
@@ -26,14 +26,14 @@
     "events": "^3.3.0"
   },
   "peerDependencies": {
-    "@daily-co/react-native-daily-js": "^0.72.1",
-    "@daily-co/react-native-webrtc": "118.0.3-daily.2",
+    "@daily-co/react-native-daily-js": "^0.76.0",
+    "@daily-co/react-native-webrtc": "118.0.3-daily.3",
     "@react-native-async-storage/async-storage": "^1.24.0",
     "react-native-background-timer": "^2.4.1"
   },
   "devDependencies": {
-    "@daily-co/react-native-daily-js": "^0.72.1",
-    "@daily-co/react-native-webrtc": "118.0.3-daily.2",
+    "@daily-co/react-native-daily-js": "^0.76.0",
+    "@daily-co/react-native-webrtc": "118.0.3-daily.3",
     "@react-native-async-storage/async-storage": "^1.24.0",
     "react-native-background-timer": "^2.4.1",
     "@types/jest": "^29.5.14",
