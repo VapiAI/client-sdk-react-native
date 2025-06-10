@@ -10,7 +10,7 @@ import Daily, {
   MediaDeviceInfo,
 } from '@daily-co/react-native-daily-js';
 
-import { Call, CreateAssistantDTO, CreateSquadDTO, AssistantOverrides } from './api';
+import { Call, CreateAssistantDTO, CreateSquadDTO, AssistantOverrides, CreateWorkflowDTO, WorkflowOverrides } from './api';
 import { apiClient } from './apiClient';
 
 export interface AddMessageMessage {
@@ -230,9 +230,11 @@ export default class Vapi extends VapiEventEmitter {
     assistant?: CreateAssistantDTO | string,
     assistantOverrides?: AssistantOverrides,
     squad?: CreateSquadDTO | string,
+    workflow?: CreateWorkflowDTO | string,
+    workflowOverrides?: WorkflowOverrides,
   ): Promise<Call | null> {
-    if (!assistant && !squad) {
-      throw new Error('Assistant or assistants must be provided.');
+    if (!assistant && !squad && !workflow) {
+      throw new Error('Assistant or Squad or Workflow must be provided.');
     }
 
     if (this.started) {
@@ -247,6 +249,9 @@ export default class Vapi extends VapiEventEmitter {
         assistantOverrides,
         squad: typeof squad === 'string' ? undefined : squad,
         squadId: typeof squad === 'string' ? squad : undefined,
+        workflow: typeof workflow === 'string' ? undefined : workflow,
+        workflowId: typeof workflow === 'string' ? workflow : undefined,
+        workflowOverrides,
       })
     ).data;
     // @ts-ignore this exists in the response
