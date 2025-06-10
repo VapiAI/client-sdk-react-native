@@ -233,8 +233,8 @@ export default class Vapi extends VapiEventEmitter {
     workflow?: CreateWorkflowDTO | string,
     workflowOverrides?: WorkflowOverrides,
   ): Promise<Call | null> {
-    if (!assistant && !squad) {
-      throw new Error('Assistant or assistants must be provided.');
+    if (!assistant && !squad && !workflow) {
+      throw new Error('Assistant or Squad or Workflow must be provided.');
     }
 
     if (this.started) {
