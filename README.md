@@ -25,6 +25,7 @@ This package lets you start Vapi calls directly in your React Native app.
 - **This guide is for bare React Native projects**. If you use **expo build**, skip to the [Expo Integration](#expo-integration)
 - **Requires React Native 0.60+** for autolinking support
 - **Not compatible with Expo Go** - requires custom native code
+- **Not compatible with TurboModules** - requires `newArchEnabled=false` in `android/gradle.properties`
 
 ## 📋 Prerequisites
 
@@ -41,6 +42,8 @@ This package lets you start Vapi calls directly in your React Native app.
 
 ### Android
 - **Minimum SDK**: 24
+
+⚠️ If you are running into issues with TurboModules, you might need to disable `newArchEnabled` in your `android/gradle.properties` file.
 
 ## 🔧 Installation
 
@@ -131,8 +134,6 @@ If you view the raw file contents of `Info.plist`, it should look like this:
 minSdkVersion = 24
 ```
 
-If you are running into issues with TurboModules, you might need to disable `newArchEnabled` in your `android/gradle.properties` file.
-
 ```properties
 newArchEnabled=false
 ```
@@ -177,7 +178,7 @@ try {
   await vapi.start({
     model: {
       provider: 'openai',
-      model: 'gpt-4',
+      model: 'gpt-4o',
       messages: [
         {
           role: 'system',
@@ -271,6 +272,12 @@ cd ios && rm -rf Pods Podfile.lock && pod install && cd ..
 npx react-native start --reset-cache
 ```
 
+#### 5. **TurboModules Issues**
+```bash
+# Disable TurboModules
+cd android && echo 'newArchEnabled=false' >> gradle.properties && cd ..
+```
+
 ### Debug Commands
 
 ```bash
@@ -281,7 +288,7 @@ cd ios && xcodebuild clean && cd ..
 cd android && ./gradlew clean && cd ..
 
 # Reinstall dependencies
-rm -rf node_modules && npm install
+rm -rf node_modules && npm cache verify && npm install
 ```
 
 ## 🔗 Expo Integration
@@ -365,7 +372,23 @@ new Vapi(apiKey: string, apiBaseUrl?: string)
 
 ## 📄 License
 
-ISC License - see LICENSE file for details.
+MIT License
+Copyright (c) 2023 Vapi Labs Inc.
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 
 ## 🆘 Support
 
