@@ -53,7 +53,7 @@ Install `@vapi-ai/react-native` along with its peer dependencies:
 npm install @vapi-ai/react-native @daily-co/react-native-daily-js @react-native-async-storage/async-storage react-native-background-timer
 
 # Install exact WebRTC version (important for compatibility)
-npm install --save-exact @daily-co/react-native-webrtc@118.0.3-daily.3
+npm install --save-exact @daily-co/react-native-webrtc@118.0.3-daily.4
 ```
 
 ### Step 2: Platform Setup
