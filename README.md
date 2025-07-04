@@ -1,52 +1,91 @@
 # Vapi React Native SDK
 
-This package lets you start Vapi calls directly in your React native.
+This package lets you start Vapi calls directly in your React Native app.
 
-## Warning
+## 📋 Table of Contents
 
-> This guide is for bare bone react native project if you use **expo build** skip this section to [Expo guide](#expo-guide)
+- [⚠️ Important Notes](#⚠️-important-notes)
+- [📋 Prerequisites](#📋-prerequisites)
+- [🔧 Installation](#🔧-installation)
+- [🚀 Quick Start](#🚀-quick-start)
+  - [1. Import and Initialize](#1-import-and-initialize)
+  - [2. Set Up Event Listeners](#2-set-up-event-listeners)
+  - [3. Start a Call](#3-start-a-call)
+  - [4. Control the Call](#4-control-the-call)
+- [🔧 Advanced Usage](#🔧-advanced-usage)
+- [🐛 Troubleshooting](#🐛-troubleshooting)
+- [🔗 Expo Integration](#🔗-expo-integration)
+- [📚 API Reference](#📚-api-reference)
+- [🤝 Contributing](#🤝-contributing)
+- [📄 License](#📄-license)
+- [🆘 Support](#🆘-support)
 
-## Minimum OS/SDK versions
+## ⚠️ Important Notes
 
-This package introduces some constraints on what OS/SDK versions your project can support:
+- **This guide is for bare React Native projects**. If you use **expo build**, skip to the [Expo Integration](#expo-integration)
+- **Requires React Native 0.60+** for autolinking support
+- **Not compatible with Expo Go** - requires custom native code
+- **Not compatible with TurboModules** - requires `newArchEnabled=false` in `android/gradle.properties`
 
-- **iOS**: Deployment target >= 12.0
-- **Android**: `minSdkVersion` >= 24
+## 📋 Prerequisites
 
-## Installation
+- React Native 0.60+
+- Node.js 20+
+- React Native CLI or @react-native-community/cli
+- Xcode 14+ (for iOS development)
+- Android Studio (for Android development)
+- CocoaPods (for iOS dependencies)
+
+### iOS
+- **Minimum iOS version**: 12.0
+- **Screen sharing**: Requires iOS 14.0+
+
+### Android
+- **Minimum SDK**: 24
+
+⚠️ If you are running into issues with TurboModules, you might need to disable `newArchEnabled` in your `android/gradle.properties` file.
+
+## 🔧 Installation
+
+### Step 1: Install Dependencies
 
 Install `@vapi-ai/react-native` along with its peer dependencies:
 
 ```bash
-npm i @vapi-ai/react-native @daily-co/react-native-daily-js @react-native-async-storage/async-storage@^1.15.7 react-native-background-timer@^2.3.1 react-native-get-random-values@^1.9.0
-npm i --save-exact @daily-co/react-native-webrtc@118.0.3-daily.1
+# Install main dependencies
+npm install @vapi-ai/react-native @daily-co/react-native-daily-js @react-native-async-storage/async-storage react-native-background-timer react-native-get-random-values
+
+# Install exact WebRTC version (important for compatibility)
+npm install --save-exact @daily-co/react-native-webrtc@118.0.3-daily.4
 ```
 
-Then, follow the below steps to set up your native project on each platform. **Note that these steps assume you're using a version of React Native that supports autolinking (>= 60).**
+### Step 2: Platform Setup
 
-### iOS
+#### iOS Setup
 
-Update the `platform` in your `Podfile`, since `@daily-co/react-native-webrtc` only works on iOS 12 and above:
+1. Update the `platform` in your `Podfile`, since `@daily-co/react-native-webrtc` only works on iOS 12 and above:
 
 ```ruby
 platform :ios, '12.0'
 ```
 
-> If you wish to **send screen share** from iOS, it only works on **iOS 14** and above. Therefore, in this case, please switch to using iOS 14.0 instead of iOS 12.0.
+> **Note**: If you wish to **send screen share** from iOS, it only works on **iOS 14** and above. In this case, use iOS 14.0 instead of iOS 12.0.
 
-Then run:
+2. **Install CocoaPods dependencies**:
 
 ```bash
 npx pod-install
 ```
 
-Next, you will need to update your project's `Info.plist` to add three new rows with the following keys:
+3. **Configure Info.plist** (required to prevent crashes):
 
-- `NSCameraUsageDescription`
-- `NSMicrophoneUsageDescription`
-- `UIBackgroundModes`
+Add these keys to your `ios/YourApp/Info.plist`:
 
-For the first two key's values, provide user-facing strings explaining why your app is asking for camera and microphone access. **Note that the app will simply crash silently without these.**
+| Key | Type | Value |
+|-----|------|-------|
+| `NSCameraUsageDescription` | String | "This app needs camera access for voice calls" |
+| `NSMicrophoneUsageDescription` | String | "This app needs microphone access for voice calls" |
+| `UIBackgroundModes` | Array | Item 0: `voip` |
 
 `UIBackgroundModes` is handled slightly differently and will resolve to an array. For its first item, specify the value `voip`. This ensures that audio will continue uninterrupted when your app is sent to the background.
 
@@ -72,19 +111,17 @@ If you view the raw file contents of `Info.plist`, it should look like this:
     <array>
         <string>voip</string>
     </array>
-    ...
 </dict>
 ```
 
-### Android
+#### Android Setup
 
-Add the following to `AndroidManifest.xml`:
+1. **Update AndroidManifest.xml** - Add permissions:
 
 ```xml
 <uses-permission android:name="android.permission.CAMERA" />
 <uses-feature android:name="android.hardware.camera" />
 <uses-feature android:name="android.hardware.camera.autofocus"/>
-
 <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
 <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
 <uses-permission android:name="android.permission.RECORD_AUDIO" />
@@ -92,231 +129,285 @@ Add the following to `AndroidManifest.xml`:
 <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
 ```
 
-Update your `minSdkVersion` in your top-level `build.gradle` file:
-
+2. **Update build.gradle** - Set minimum SDK in your top-level `build.gradle` file:
 ```groovy
 minSdkVersion = 24
 ```
 
+```properties
+newArchEnabled=false
+```
+
 (If you run into any issues, refer to [Github issues](https://github.com/react-native-webrtc/react-native-webrtc/issues/720) like [these](https://github.com/jitsi/jitsi-meet/issues/4778), or the `react-native-webrtc` [installation docs](https://github.com/react-native-webrtc/react-native-webrtc/blob/master/Documentation/AndroidInstallation.md), which walk you through a more complicated process. The simpler process laid out above seems to work in a vanilla modern React Native CLI-based setup).
 
-# Expo Guide
+## 🚀 Quick Start
 
-To add Vapi react native SDK to your existing react native expo project
-
-> **Warning:** This project cannot be used with an Expo Go app because it requires custom native code.
-
-1. update your current existing dependencies in package.json to the exact version as showing below
-
-```
-"expo": "^50",
-"react-native": "^0.73.6",
-```
-
-2. Add new dependencies to your package.json with exact version as showing below
-
-```
-"@vapi-ai/react-native": "^0.1.7",
-"@config-plugins/react-native-webrtc": "8.0.0",
-"@daily-co/config-plugin-rn-daily-js": "0.0.4",
-"@daily-co/react-native-daily-js": "0.59.0",
-"@daily-co/react-native-webrtc": "118.0.3-daily.1",
-"@react-native-async-storage/async-storage": "^1.22.3",
-"react-native-background-timer": "^2.4.1",
-"react-native-get-random-values": "^1.11.0",
-```
-
-3. Update app.json
-
-````
-{
-    "expo": {
-
-        ...
-
-        "ios": {
-        "supportsTablet": true,
-        "bundleIdentifier": "co.vapi.DailyPlayground",
-        "infoPlist": {
-            "UIBackgroundModes": [
-            "voip"
-            ]
-        },
-        "bitcode": false
-        }
-
-    ...
-
-  }
-
-    ...
-
-    "plugins": [
-        "@config-plugins/react-native-webrtc",
-        "@daily-co/config-plugin-rn-daily-js",
-        [
-        "expo-build-properties",
-        {
-            "android": {
-                "minSdkVersion": 24
-            },
-            "ios": {
-                "deploymentTarget": "13.4"
-            }
-        }
-        ]
-    ]
-}
-
-4. prepare expo build `npx expo prebuild`
-
-5. Install iOS pods with `npx pod-install`
-
-6. Set up your `.env` file with the required Vapi tokens.
-
-7. Run the local server with `npx expo run:ios`.
-
-
-
-## Usage
-
-First, import the Vapi class from the package:
+### 1. Import and Initialize
 
 ```javascript
 import Vapi from '@vapi-ai/react-native';
-````
 
-Then, create a new instance of the Vapi class, passing your Public Key as a parameter to the constructor:
-
-```javascript
-const vapi = new Vapi('your-public-key');
+// Initialize with your API key
+const vapi = new Vapi('your-vapi-api-key');
 ```
 
-You can start a new call by calling the `start` method and passing an `assistant` object or `assistantId`:
+### 2. Set Up Event Listeners
 
 ```javascript
-vapi.start({
-  model: {
-    provider: "openai",
-    model: "gpt-3.5-turbo",
-    messages: [
-      {
-        role: "system",
-        content: "You are an assistant.",
-      },
-     ],
-   }
-   voice: {
-    provider: "11labs",
-    voiceId: "burt",
-  },
-  ...
-});
-```
-
-```javascript
-vapi.start('your-assistant-id');
-```
-
-The `start` method will initiate a new call.
-
-You can override existing assistant parameters or set variables with the `assistant_overrides` parameter.
-Assume the first message is `Hey, {{name}} how are you?` and you want to set the value of `name` to `John`:
-
-```javascript
-const assistantOverrides = {
-  recordingEnabled: false,
-  variableValues: {
-    name: 'John',
-  },
-};
-
-vapi.start({
-  assistantId: 'your-assistant-id',
-  assistantOverrides: assistantOverrides,
-});
-```
-
-You can also send text messages to the assistant aside from the audio input using the `send` method and passing appropriate `role` and `content`.
-
-```javascript
-vapi.send({
-  type: 'add-message',
-  message: {
-    role: 'system',
-    content: 'The user has pressed the button, say peanuts',
-  },
-});
-```
-
-Possible values for the role are `system`, `user`, `assistant`, `tool` or `function`.
-
-You can stop the session by calling the `stop` method:
-
-```javascript
-vapi.stop();
-```
-
-This will stop the recording and close the connection.
-
-The `setMuted(muted: boolean)` can be used to mute and un-mute the user's microphone.
-
-```javascript
-vapi.isMuted(); // false
-vapi.setMuted(true);
-vapi.isMuted(); // true
-```
-
-## Events
-
-You can listen to the following events:
-
-```javascript
-vapi.on('speech-start', () => {
-  console.log('Speech has started');
-});
-
-vapi.on('speech-end', () => {
-  console.log('Speech has ended');
-});
-
 vapi.on('call-start', () => {
-  console.log('Call has started');
+  console.log('Call started');
 });
 
 vapi.on('call-end', () => {
-  console.log('Call has stopped');
+  console.log('Call ended');
 });
 
-// Function calls and transcripts will be sent via messages
-vapi.on('message', (message) => {
-  console.log(message);
+vapi.on('volume-level', (volume) => {
+  console.log('Volume level:', volume);
 });
 
-vapi.on('error', (e) => {
-  console.error(e);
+vapi.on('error', (error) => {
+  console.error('Vapi error:', error);
 });
 ```
 
-These events allow you to react to changes in the state of the call or speech.
+### 3. Start a Call
 
-## License
-
+```javascript
+try {
+  await vapi.start({
+    model: {
+      provider: 'openai',
+      model: 'gpt-4o',
+      messages: [
+        {
+          role: 'system',
+          content: 'You are a helpful AI assistant.',
+        },
+      ],
+    },
+    voice: {
+      provider: '11labs',
+      voiceId: 'pNInz6obpgDQGcFmaJgB',
+    },
+    firstMessage: 'Hello! How can I help you today?',
+  });
+} catch (error) {
+  console.error('Failed to start call:', error);
+}
 ```
+
+### 4. Control the Call
+
+```javascript
+// Mute/unmute
+vapi.setMuted(true);
+
+// Send a message
+vapi.send({
+  type: 'add-message',
+  message: {
+    role: 'user',
+    content: 'Hello from React Native!',
+  },
+});
+
+// End the call
+vapi.stop();
+```
+
+## 🔧 Advanced Usage
+
+### Device Management
+
+```javascript
+// Get available audio devices
+const devices = vapi.getAudioDevices();
+console.log('Available devices:', devices);
+
+// Set specific audio device
+vapi.setAudioDevice(deviceId);
+
+// Get current device
+const currentDevice = vapi.getCurrentAudioDevice();
+```
+
+### Error Handling
+
+```javascript
+vapi.on('error', (error) => {
+  if (error.code === 'PERMISSION_DENIED') {
+    // Handle permission errors
+    Alert.alert('Permission Required', 'Please grant microphone and camera permissions');
+  } else if (error.code === 'NETWORK_ERROR') {
+    // Handle network errors
+    Alert.alert('Network Error', 'Please check your internet connection');
+  }
+});
+```
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+#### 1. **Permission Denied**
+- Ensure you've added the required permissions to Info.plist/AndroidManifest.xml
+- Request permissions at runtime on Android
+
+#### 2. **WebRTC Version Conflicts**
+```bash
+# If you see version conflicts, use the exact version:
+npm install --save-exact @daily-co/react-native-webrtc@118.0.3-daily.3
+```
+
+#### 3. **CocoaPods Installation Issues**
+```bash
+# Clean and reinstall
+cd ios && rm -rf Pods Podfile.lock && pod install && cd ..
+```
+
+#### 4. **Metro Cache Issues**
+```bash
+# Reset Metro cache
+npx react-native start --reset-cache
+```
+
+#### 5. **TurboModules Issues**
+```bash
+# Disable TurboModules
+cd android && echo 'newArchEnabled=false' >> gradle.properties && cd ..
+```
+
+### Debug Commands
+
+```bash
+# Clean iOS build
+cd ios && xcodebuild clean && cd ..
+
+# Clean Android build
+cd android && ./gradlew clean && cd ..
+
+# Reinstall dependencies
+rm -rf node_modules && npm cache verify && npm install
+```
+
+## 🔗 Expo Integration
+
+> **Warning**: This SDK cannot be used with Expo Go. Use Expo Development Build or EAS Build.
+
+### Expo Setup
+
+1. **Install dependencies**:
+```bash
+npx expo install @vapi-ai/react-native @daily-co/react-native-daily-js @react-native-async-storage/async-storage react-native-background-timer react-native-get-random-values
+npm install --save-exact @daily-co/react-native-webrtc@118.0.3-daily.4
+```
+
+2. **Update app.json**:
+```json
+{
+  "expo": {
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.anonymous.ReactNativeWithExpo52",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Vapi Playground needs camera access to work",
+        "NSMicrophoneUsageDescription": "Vapi Playground needs microphone access to work",
+        "UIBackgroundModes": ["voip"]
+      }
+    },
+    "android": {
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.INTERNET",
+        "android.permission.ACCESS_NETWORK_STATE",
+        "android.permission.CAMERA",
+        "android.permission.SYSTEM_ALERT_WINDOW",
+        "android.permission.WAKE_LOCK",
+        "android.permission.BLUETOOTH",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_CAMERA",
+        "android.permission.FOREGROUND_SERVICE_MICROPHONE",
+        "android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION",
+        "android.permission.POST_NOTIFICATIONS"
+      ],
+    },
+    "plugins": [
+      "@config-plugins/react-native-webrtc",
+      "@daily-co/config-plugin-rn-daily-js",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "minSdkVersion": 24
+          },
+          "ios": {
+            "deploymentTarget": "15.1"
+          }
+        }
+      ]
+    ]
+  }
+}
+```
+
+3. **Prebuild and run**:
+```bash
+npx expo prebuild
+npx expo run:ios  # or run:android
+```
+
+
+
+## 📚 API Reference
+
+### Vapi Class
+
+#### Constructor
+```javascript
+new Vapi(apiKey: string, apiBaseUrl?: string)
+```
+
+#### Methods
+- `start(assistant, overrides?)` - Start a voice call
+- `stop()` - End the current call
+- `setMuted(muted: boolean)` - Mute/unmute microphone
+- `isMuted()` - Check if currently muted
+- `send(message)` - Send a message during call
+- `getAudioDevices()` - Get available audio devices
+- `setAudioDevice(deviceId)` - Set audio device
+- `getCurrentAudioDevice()` - Get current audio device
+
+#### Events
+- `call-start` - Call has started
+- `call-end` - Call has ended
+- `volume-level` - Volume level changed
+- `speech-start` - Speech detection started
+- `speech-end` - Speech detection ended
+- `message` - Received message
+- `error` - Error occurred
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests
+5. Submit a pull request
+
+## 📄 License
+
 MIT License
-
 Copyright (c) 2023 Vapi Labs Inc.
-
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
 to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
-
 The above copyright notice and this permission notice shall be included in all
 copies or substantial portions of the Software.
-
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -324,4 +415,9 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-```
+
+## 🆘 Support
+
+- **Documentation**: [Vapi Docs](https://docs.vapi.ai)
+- **Issues**: [GitHub Issues](https://github.com/VapiAI/react-native-sdk/issues)
+- **Discord**: [Vapi Community](https://discord.gg/vapi)
