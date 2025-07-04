@@ -53,7 +53,7 @@ Install `@vapi-ai/react-native` along with its peer dependencies:
 
 ```bash
 # Install main dependencies
-npm install @vapi-ai/react-native @daily-co/react-native-daily-js @react-native-async-storage/async-storage react-native-background-timer
+npm install @vapi-ai/react-native @daily-co/react-native-daily-js @react-native-async-storage/async-storage react-native-background-timer react-native-get-random-values
 
 # Install exact WebRTC version (important for compatibility)
 npm install --save-exact @daily-co/react-native-webrtc@118.0.3-daily.4
@@ -299,14 +299,40 @@ rm -rf node_modules && npm cache verify && npm install
 
 1. **Install dependencies**:
 ```bash
-npx expo install @vapi-ai/react-native @daily-co/react-native-daily-js @react-native-async-storage/async-storage react-native-background-timer
-npm install --save-exact @daily-co/react-native-webrtc@118.0.3-daily.3
+npx expo install @vapi-ai/react-native @daily-co/react-native-daily-js @react-native-async-storage/async-storage react-native-background-timer react-native-get-random-values
+npm install --save-exact @daily-co/react-native-webrtc@118.0.3-daily.4
 ```
 
 2. **Update app.json**:
 ```json
 {
   "expo": {
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.anonymous.ReactNativeWithExpo52",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Vapi Playground needs camera access to work",
+        "NSMicrophoneUsageDescription": "Vapi Playground needs microphone access to work",
+        "UIBackgroundModes": ["voip"]
+      }
+    },
+    "android": {
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.INTERNET",
+        "android.permission.ACCESS_NETWORK_STATE",
+        "android.permission.CAMERA",
+        "android.permission.SYSTEM_ALERT_WINDOW",
+        "android.permission.WAKE_LOCK",
+        "android.permission.BLUETOOTH",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_CAMERA",
+        "android.permission.FOREGROUND_SERVICE_MICROPHONE",
+        "android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION",
+        "android.permission.POST_NOTIFICATIONS"
+      ],
+    },
     "plugins": [
       "@config-plugins/react-native-webrtc",
       "@daily-co/config-plugin-rn-daily-js",
@@ -317,7 +343,7 @@ npm install --save-exact @daily-co/react-native-webrtc@118.0.3-daily.3
             "minSdkVersion": 24
           },
           "ios": {
-            "deploymentTarget": "13.4"
+            "deploymentTarget": "15.1"
           }
         }
       ]
