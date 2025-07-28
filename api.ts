@@ -41,6 +41,8 @@ export interface CostBreakdown {
   tts?: number;
   /** This is the cost of Vapi. */
   vapi?: number;
+  /** This is the cost of chat interactions. */
+  chat?: number;
   /** This is the total cost of the call. */
   total?: number;
   /** This is the LLM prompt tokens used for the call. */
@@ -205,12 +207,12 @@ export interface Recording {
 }
 
 export interface NodeArtifact {
-  /** This is the node id. */
+  /** These are the messages that were spoken during the node. */
+  messages?: (UserMessage | SystemMessage | BotMessage | ToolCallMessage | ToolCallResultMessage)[];
+  /** This is the node name. */
   nodeName?: string;
-  /** This is the messages that were spoken during the node. */
-  messages?: object[];
-  /** This is the object containing the variables extracted from the node. */
-  variables?: object;
+  /** These are the variable values that were extracted from the node. */
+  variableValues?: object;
 }
 
 export interface Artifact {
@@ -246,8 +248,8 @@ export interface Artifact {
   pcapUrl?: string;
   /** This is the history of workflow nodes that were executed during the call. */
   nodes?: NodeArtifact[];
-  /** This is the state of variables at the end of the workflow execution. */
-  variables?: object;
+  /** These are the variable values at the end of the workflow execution. */
+  variableValues?: object;
 }
 
 export interface FallbackTranscriberPlan {
@@ -262,6 +264,7 @@ export interface FallbackTranscriberPlan {
     | FallbackTalkscriberTranscriber
     | FallbackSpeechmaticsTranscriber
     | FallbackOpenAITranscriber
+    | FallbackCartesiaTranscriber
   )[];
 }
 
@@ -280,12 +283,47 @@ export interface AssemblyAITranscriber {
    */
   confidenceThreshold?: number;
   /**
-   * Uses Assembly AI's new Universal Streaming API. See: https://www.assemblyai.com/docs/speech-to-text/universal-streaming
+   * This enables formatting of transcripts.
    *
-   * @default false
-   * @example false
+   * @default true
+   * @example true
    */
-  enableUniversalStreamingApi?: boolean;
+  formatTurns?: boolean;
+  /**
+   * This is the end of turn confidence threshold. The minimum confidence that the end of turn is detected.
+   *
+   * @min 0
+   * @max 1
+   * @default 0.7
+   * @min 0
+   * @max 1
+   * @example 0.7
+   */
+  endOfTurnConfidenceThreshold?: number;
+  /**
+   * This is the minimum end of turn silence when confident in milliseconds.
+   *
+   * @default 160
+   * @min 0
+   * @example 160
+   */
+  minEndOfTurnSilenceWhenConfident?: number;
+  /**
+   * This is the maximum wait time for word finalization in milliseconds.
+   *
+   * @default 160
+   * @min 0
+   * @example 160
+   */
+  wordFinalizationMaxWaitTime?: number;
+  /**
+   * This is the maximum turn silence time in milliseconds.
+   *
+   * @default 400
+   * @min 0
+   * @example 400
+   */
+  maxTurnSilence?: number;
   /** The WebSocket URL that the transcriber connects to. */
   realtimeUrl?: string;
   /** Add up to 2500 characters of custom vocabulary. */
@@ -449,6 +487,213 @@ export interface AzureSpeechTranscriber {
     | 'zh-HK'
     | 'zh-TW'
     | 'zu-ZA';
+  /** Controls how phrase boundaries are detected, enabling either simple time/silence heuristics or more advanced semantic segmentation. */
+  segmentationStrategy?: 'Default' | 'Time' | 'Semantic';
+  /**
+   * Duration of detected silence after which the service finalizes a phrase. Configure to adjust sensitivity to pauses in speech.
+   * @min 100
+   * @max 5000
+   */
+  segmentationSilenceTimeoutMs?: number;
+  /**
+   * Maximum duration a segment can reach before being cut off when using time-based segmentation.
+   * @min 20000
+   * @max 70000
+   */
+  segmentationMaxTimeMs?: number;
+  /** This is the plan for voice provider fallbacks in the event that the primary voice provider fails. */
+  fallbackPlan?: FallbackTranscriberPlan;
+}
+
+export interface CartesiaTranscriber {
+  provider: 'cartesia';
+  model?: 'ink-whisper';
+  language?:
+    | 'aa'
+    | 'ab'
+    | 'ae'
+    | 'af'
+    | 'ak'
+    | 'am'
+    | 'an'
+    | 'ar'
+    | 'as'
+    | 'av'
+    | 'ay'
+    | 'az'
+    | 'ba'
+    | 'be'
+    | 'bg'
+    | 'bh'
+    | 'bi'
+    | 'bm'
+    | 'bn'
+    | 'bo'
+    | 'br'
+    | 'bs'
+    | 'ca'
+    | 'ce'
+    | 'ch'
+    | 'co'
+    | 'cr'
+    | 'cs'
+    | 'cu'
+    | 'cv'
+    | 'cy'
+    | 'da'
+    | 'de'
+    | 'dv'
+    | 'dz'
+    | 'ee'
+    | 'el'
+    | 'en'
+    | 'eo'
+    | 'es'
+    | 'et'
+    | 'eu'
+    | 'fa'
+    | 'ff'
+    | 'fi'
+    | 'fj'
+    | 'fo'
+    | 'fr'
+    | 'fy'
+    | 'ga'
+    | 'gd'
+    | 'gl'
+    | 'gn'
+    | 'gu'
+    | 'gv'
+    | 'ha'
+    | 'he'
+    | 'hi'
+    | 'ho'
+    | 'hr'
+    | 'ht'
+    | 'hu'
+    | 'hy'
+    | 'hz'
+    | 'ia'
+    | 'id'
+    | 'ie'
+    | 'ig'
+    | 'ii'
+    | 'ik'
+    | 'io'
+    | 'is'
+    | 'it'
+    | 'iu'
+    | 'ja'
+    | 'jv'
+    | 'ka'
+    | 'kg'
+    | 'ki'
+    | 'kj'
+    | 'kk'
+    | 'kl'
+    | 'km'
+    | 'kn'
+    | 'ko'
+    | 'kr'
+    | 'ks'
+    | 'ku'
+    | 'kv'
+    | 'kw'
+    | 'ky'
+    | 'la'
+    | 'lb'
+    | 'lg'
+    | 'li'
+    | 'ln'
+    | 'lo'
+    | 'lt'
+    | 'lu'
+    | 'lv'
+    | 'mg'
+    | 'mh'
+    | 'mi'
+    | 'mk'
+    | 'ml'
+    | 'mn'
+    | 'mr'
+    | 'ms'
+    | 'mt'
+    | 'my'
+    | 'na'
+    | 'nb'
+    | 'nd'
+    | 'ne'
+    | 'ng'
+    | 'nl'
+    | 'nn'
+    | 'no'
+    | 'nr'
+    | 'nv'
+    | 'ny'
+    | 'oc'
+    | 'oj'
+    | 'om'
+    | 'or'
+    | 'os'
+    | 'pa'
+    | 'pi'
+    | 'pl'
+    | 'ps'
+    | 'pt'
+    | 'qu'
+    | 'rm'
+    | 'rn'
+    | 'ro'
+    | 'ru'
+    | 'rw'
+    | 'sa'
+    | 'sc'
+    | 'sd'
+    | 'se'
+    | 'sg'
+    | 'si'
+    | 'sk'
+    | 'sl'
+    | 'sm'
+    | 'sn'
+    | 'so'
+    | 'sq'
+    | 'sr'
+    | 'ss'
+    | 'st'
+    | 'su'
+    | 'sv'
+    | 'sw'
+    | 'ta'
+    | 'te'
+    | 'tg'
+    | 'th'
+    | 'ti'
+    | 'tk'
+    | 'tl'
+    | 'tn'
+    | 'to'
+    | 'tr'
+    | 'ts'
+    | 'tt'
+    | 'tw'
+    | 'ty'
+    | 'ug'
+    | 'uk'
+    | 'ur'
+    | 'uz'
+    | 've'
+    | 'vi'
+    | 'vo'
+    | 'wa'
+    | 'wo'
+    | 'xh'
+    | 'yi'
+    | 'yue'
+    | 'yo'
+    | 'za'
+    | 'zh'
+    | 'zu';
   /** This is the plan for voice provider fallbacks in the event that the primary voice provider fails. */
   fallbackPlan?: FallbackTranscriberPlan;
 }
@@ -676,41 +921,6 @@ export interface DeepgramTranscriber {
    * @example false
    */
   smartFormat?: boolean;
-  /**
-   * This automatically switches the transcriber's language when the customer's language changes. Defaults to false.
-   *
-   * Usage:
-   * - If your customers switch languages mid-call, you can set this to true.
-   *
-   * Note:
-   * - To detect language changes, Vapi uses a custom trained model. Languages supported (X = limited support):
-   *   1. Arabic
-   *   2. Bengali
-   *   3. Cantonese
-   *   4. Chinese
-   *   5. Chinese Simplified (X)
-   *   6. Chinese Traditional (X)
-   *   7. English
-   *   8. Farsi (X)
-   *   9. French
-   *   10. German
-   *   11. Haitian Creole (X)
-   *   12. Hindi
-   *   13. Italian
-   *   14. Japanese
-   *   15. Korean
-   *   16. Portuguese
-   *   17. Russian
-   *   18. Spanish
-   *   19. Thai
-   *   20. Urdu
-   *   21. Vietnamese
-   * - To receive `language-change-detected` webhook events, add it to `assistant.serverMessages`.
-   *
-   * @default false
-   * @example false
-   */
-  codeSwitchingEnabled?: boolean;
   /**
    * If set to true, this will add mip_opt_out=true as a query parameter of all API requests. See https://developers.deepgram.com/docs/the-deepgram-model-improvement-partnership-program#want-to-opt-out
    *
@@ -1374,6 +1584,9 @@ export interface GoogleTranscriber {
   provider: 'google';
   /** This is the model that will be used for the transcription. */
   model?:
+    | 'gemini-2.5-pro'
+    | 'gemini-2.5-flash'
+    | 'gemini-2.5-flash-lite'
     | 'gemini-2.5-pro-preview-05-06'
     | 'gemini-2.5-flash-preview-05-20'
     | 'gemini-2.5-flash-preview-04-17'
@@ -1517,12 +1730,47 @@ export interface FallbackAssemblyAITranscriber {
    */
   confidenceThreshold?: number;
   /**
-   * Uses Assembly AI's new Universal Streaming API. See: https://www.assemblyai.com/docs/speech-to-text/universal-streaming
+   * This enables formatting of transcripts.
    *
-   * @default false
-   * @example false
+   * @default true
+   * @example true
    */
-  enableUniversalStreamingApi?: boolean;
+  formatTurns?: boolean;
+  /**
+   * This is the end of turn confidence threshold. The minimum confidence that the end of turn is detected.
+   *
+   * @min 0
+   * @max 1
+   * @default 0.7
+   * @min 0
+   * @max 1
+   * @example 0.7
+   */
+  endOfTurnConfidenceThreshold?: number;
+  /**
+   * This is the minimum end of turn silence when confident in milliseconds.
+   *
+   * @default 160
+   * @min 0
+   * @example 160
+   */
+  minEndOfTurnSilenceWhenConfident?: number;
+  /**
+   * This is the maximum wait time for word finalization in milliseconds.
+   *
+   * @default 160
+   * @min 0
+   * @example 160
+   */
+  wordFinalizationMaxWaitTime?: number;
+  /**
+   * This is the maximum turn silence time in milliseconds.
+   *
+   * @default 400
+   * @min 0
+   * @example 400
+   */
+  maxTurnSilence?: number;
   /** The WebSocket URL that the transcriber connects to. */
   realtimeUrl?: string;
   /** Add up to 2500 characters of custom vocabulary. */
@@ -1684,6 +1932,211 @@ export interface FallbackAzureSpeechTranscriber {
     | 'zh-HK'
     | 'zh-TW'
     | 'zu-ZA';
+  /** Controls how phrase boundaries are detected, enabling either simple time/silence heuristics or more advanced semantic segmentation. */
+  segmentationStrategy?: 'Default' | 'Time' | 'Semantic';
+  /**
+   * Duration of detected silence after which the service finalizes a phrase. Configure to adjust sensitivity to pauses in speech.
+   * @min 100
+   * @max 5000
+   */
+  segmentationSilenceTimeoutMs?: number;
+  /**
+   * Maximum duration a segment can reach before being cut off when using time-based segmentation.
+   * @min 20000
+   * @max 70000
+   */
+  segmentationMaxTimeMs?: number;
+}
+
+export interface FallbackCartesiaTranscriber {
+  provider: 'cartesia';
+  model?: 'ink-whisper';
+  language?:
+    | 'aa'
+    | 'ab'
+    | 'ae'
+    | 'af'
+    | 'ak'
+    | 'am'
+    | 'an'
+    | 'ar'
+    | 'as'
+    | 'av'
+    | 'ay'
+    | 'az'
+    | 'ba'
+    | 'be'
+    | 'bg'
+    | 'bh'
+    | 'bi'
+    | 'bm'
+    | 'bn'
+    | 'bo'
+    | 'br'
+    | 'bs'
+    | 'ca'
+    | 'ce'
+    | 'ch'
+    | 'co'
+    | 'cr'
+    | 'cs'
+    | 'cu'
+    | 'cv'
+    | 'cy'
+    | 'da'
+    | 'de'
+    | 'dv'
+    | 'dz'
+    | 'ee'
+    | 'el'
+    | 'en'
+    | 'eo'
+    | 'es'
+    | 'et'
+    | 'eu'
+    | 'fa'
+    | 'ff'
+    | 'fi'
+    | 'fj'
+    | 'fo'
+    | 'fr'
+    | 'fy'
+    | 'ga'
+    | 'gd'
+    | 'gl'
+    | 'gn'
+    | 'gu'
+    | 'gv'
+    | 'ha'
+    | 'he'
+    | 'hi'
+    | 'ho'
+    | 'hr'
+    | 'ht'
+    | 'hu'
+    | 'hy'
+    | 'hz'
+    | 'ia'
+    | 'id'
+    | 'ie'
+    | 'ig'
+    | 'ii'
+    | 'ik'
+    | 'io'
+    | 'is'
+    | 'it'
+    | 'iu'
+    | 'ja'
+    | 'jv'
+    | 'ka'
+    | 'kg'
+    | 'ki'
+    | 'kj'
+    | 'kk'
+    | 'kl'
+    | 'km'
+    | 'kn'
+    | 'ko'
+    | 'kr'
+    | 'ks'
+    | 'ku'
+    | 'kv'
+    | 'kw'
+    | 'ky'
+    | 'la'
+    | 'lb'
+    | 'lg'
+    | 'li'
+    | 'ln'
+    | 'lo'
+    | 'lt'
+    | 'lu'
+    | 'lv'
+    | 'mg'
+    | 'mh'
+    | 'mi'
+    | 'mk'
+    | 'ml'
+    | 'mn'
+    | 'mr'
+    | 'ms'
+    | 'mt'
+    | 'my'
+    | 'na'
+    | 'nb'
+    | 'nd'
+    | 'ne'
+    | 'ng'
+    | 'nl'
+    | 'nn'
+    | 'no'
+    | 'nr'
+    | 'nv'
+    | 'ny'
+    | 'oc'
+    | 'oj'
+    | 'om'
+    | 'or'
+    | 'os'
+    | 'pa'
+    | 'pi'
+    | 'pl'
+    | 'ps'
+    | 'pt'
+    | 'qu'
+    | 'rm'
+    | 'rn'
+    | 'ro'
+    | 'ru'
+    | 'rw'
+    | 'sa'
+    | 'sc'
+    | 'sd'
+    | 'se'
+    | 'sg'
+    | 'si'
+    | 'sk'
+    | 'sl'
+    | 'sm'
+    | 'sn'
+    | 'so'
+    | 'sq'
+    | 'sr'
+    | 'ss'
+    | 'st'
+    | 'su'
+    | 'sv'
+    | 'sw'
+    | 'ta'
+    | 'te'
+    | 'tg'
+    | 'th'
+    | 'ti'
+    | 'tk'
+    | 'tl'
+    | 'tn'
+    | 'to'
+    | 'tr'
+    | 'ts'
+    | 'tt'
+    | 'tw'
+    | 'ty'
+    | 'ug'
+    | 'uk'
+    | 'ur'
+    | 'uz'
+    | 've'
+    | 'vi'
+    | 'vo'
+    | 'wa'
+    | 'wo'
+    | 'xh'
+    | 'yi'
+    | 'yue'
+    | 'yo'
+    | 'za'
+    | 'zh'
+    | 'zu';
 }
 
 export interface FallbackCustomTranscriber {
@@ -1855,41 +2308,6 @@ export interface FallbackDeepgramTranscriber {
    * @example false
    */
   smartFormat?: boolean;
-  /**
-   * This automatically switches the transcriber's language when the customer's language changes. Defaults to false.
-   *
-   * Usage:
-   * - If your customers switch languages mid-call, you can set this to true.
-   *
-   * Note:
-   * - To detect language changes, Vapi uses a custom trained model. Languages supported (X = limited support):
-   *   1. Arabic
-   *   2. Bengali
-   *   3. Cantonese
-   *   4. Chinese
-   *   5. Chinese Simplified (X)
-   *   6. Chinese Traditional (X)
-   *   7. English
-   *   8. Farsi (X)
-   *   9. French
-   *   10. German
-   *   11. Haitian Creole (X)
-   *   12. Hindi
-   *   13. Italian
-   *   14. Japanese
-   *   15. Korean
-   *   16. Portuguese
-   *   17. Russian
-   *   18. Spanish
-   *   19. Thai
-   *   20. Urdu
-   *   21. Vietnamese
-   * - To receive `language-change-detected` webhook events, add it to `assistant.serverMessages`.
-   *
-   * @default false
-   * @example false
-   */
-  codeSwitchingEnabled?: boolean;
   /**
    * If set to true, this will add mip_opt_out=true as a query parameter of all API requests. See https://developers.deepgram.com/docs/the-deepgram-model-improvement-partnership-program#want-to-opt-out
    *
@@ -2543,6 +2961,9 @@ export interface FallbackGoogleTranscriber {
   provider: 'google';
   /** This is the model that will be used for the transcription. */
   model?:
+    | 'gemini-2.5-pro'
+    | 'gemini-2.5-flash'
+    | 'gemini-2.5-flash-lite'
     | 'gemini-2.5-pro-preview-05-06'
     | 'gemini-2.5-flash-preview-05-20'
     | 'gemini-2.5-flash-preview-04-17'
@@ -3053,6 +3474,42 @@ export interface ToolMessageDelayed {
   conditions?: Condition[];
 }
 
+export interface CreateDtmfToolDTO {
+  /**
+   * These are the messages that will be spoken to the user as the tool is running.
+   *
+   * For some tools, this is auto-filled based on special fields like `tool.destinations`. For others like the function tool, these can be custom configured.
+   */
+  messages?: (ToolMessageStart | ToolMessageComplete | ToolMessageFailed | ToolMessageDelayed)[];
+  /** The type of tool. "dtmf" for DTMF tool. */
+  type: 'dtmf';
+}
+
+export interface CreateEndCallToolDTO {
+  /**
+   * These are the messages that will be spoken to the user as the tool is running.
+   *
+   * For some tools, this is auto-filled based on special fields like `tool.destinations`. For others like the function tool, these can be custom configured.
+   */
+  messages?: (ToolMessageStart | ToolMessageComplete | ToolMessageFailed | ToolMessageDelayed)[];
+  /** The type of tool. "endCall" for End Call tool. */
+  type: 'endCall';
+}
+
+export interface CreateVoicemailToolDTO {
+  /**
+   * These are the messages that will be spoken to the user as the tool is running.
+   *
+   * For some tools, this is auto-filled based on special fields like `tool.destinations`. For others like the function tool, these can be custom configured.
+   */
+  messages?: (ToolMessageStart | ToolMessageComplete | ToolMessageFailed | ToolMessageDelayed)[];
+  /**
+   * The type of tool. "voicemail" for Voicemail tool.
+   * @deprecated
+   */
+  type: 'voicemail';
+}
+
 export interface JsonSchema {
   /**
    * This is the type of output you'd like.
@@ -3081,17 +3538,36 @@ export interface JsonSchema {
   /** This is the description to help the model understand what it needs to output. */
   description?: string;
   /**
+   * This is the pattern of the string. This is a regex that will be used to validate the data in question. To use a common format, use the `format` property instead.
+   *
+   * OpenAI documentation: https://platform.openai.com/docs/guides/structured-outputs#supported-properties
+   */
+  pattern?: string;
+  /**
+   * This is the format of the string. To pass a regex, use the `pattern` property instead.
+   *
+   * OpenAI documentation: https://platform.openai.com/docs/guides/structured-outputs?api-mode=chat&type-restrictions=string-restrictions
+   */
+  format?:
+    | 'date-time'
+    | 'time'
+    | 'date'
+    | 'duration'
+    | 'email'
+    | 'hostname'
+    | 'ipv4'
+    | 'ipv6'
+    | 'uuid';
+  /**
    * This is a list of properties that are required.
    *
    * This only makes sense if the type is "object".
    */
   required?: string[];
-  /** This the value that will be used in filling the property. */
-  value?: string;
-  /** This the target variable that will be filled with the value of this property. */
-  target?: string;
   /** This array specifies the allowed values that can be used to restrict the output of the model. */
   enum?: string[];
+  /** This is the title of the schema. */
+  title?: string;
 }
 
 export interface OpenAIFunctionParameters {
@@ -3138,66 +3614,6 @@ export interface OpenAIFunction {
   parameters?: OpenAIFunctionParameters;
 }
 
-export interface CreateDtmfToolDTO {
-  /**
-   * These are the messages that will be spoken to the user as the tool is running.
-   *
-   * For some tools, this is auto-filled based on special fields like `tool.destinations`. For others like the function tool, these can be custom configured.
-   */
-  messages?: (ToolMessageStart | ToolMessageComplete | ToolMessageFailed | ToolMessageDelayed)[];
-  /** The type of tool. "dtmf" for DTMF tool. */
-  type: 'dtmf';
-  /**
-   * This is the function definition of the tool.
-   *
-   * For `endCall`, `transferCall`, and `dtmf` tools, this is auto-filled based on tool-specific fields like `tool.destinations`. But, even in those cases, you can provide a custom function definition for advanced use cases.
-   *
-   * An example of an advanced use case is if you want to customize the message that's spoken for `endCall` tool. You can specify a function where it returns an argument "reason". Then, in `messages` array, you can have many "request-complete" messages. One of these messages will be triggered if the `messages[].conditions` matches the "reason" argument.
-   */
-  function?: OpenAIFunction;
-}
-
-export interface CreateEndCallToolDTO {
-  /**
-   * These are the messages that will be spoken to the user as the tool is running.
-   *
-   * For some tools, this is auto-filled based on special fields like `tool.destinations`. For others like the function tool, these can be custom configured.
-   */
-  messages?: (ToolMessageStart | ToolMessageComplete | ToolMessageFailed | ToolMessageDelayed)[];
-  /** The type of tool. "endCall" for End Call tool. */
-  type: 'endCall';
-  /**
-   * This is the function definition of the tool.
-   *
-   * For `endCall`, `transferCall`, and `dtmf` tools, this is auto-filled based on tool-specific fields like `tool.destinations`. But, even in those cases, you can provide a custom function definition for advanced use cases.
-   *
-   * An example of an advanced use case is if you want to customize the message that's spoken for `endCall` tool. You can specify a function where it returns an argument "reason". Then, in `messages` array, you can have many "request-complete" messages. One of these messages will be triggered if the `messages[].conditions` matches the "reason" argument.
-   */
-  function?: OpenAIFunction;
-}
-
-export interface CreateVoicemailToolDTO {
-  /**
-   * These are the messages that will be spoken to the user as the tool is running.
-   *
-   * For some tools, this is auto-filled based on special fields like `tool.destinations`. For others like the function tool, these can be custom configured.
-   */
-  messages?: (ToolMessageStart | ToolMessageComplete | ToolMessageFailed | ToolMessageDelayed)[];
-  /**
-   * The type of tool. "voicemail". This uses the model itself to determine if a voicemil was reached. Can be used alternatively/alongside with TwilioVoicemailDetection
-   * @deprecated
-   */
-  type: 'voicemail';
-  /**
-   * This is the function definition of the tool.
-   *
-   * For `endCall`, `transferCall`, and `dtmf` tools, this is auto-filled based on tool-specific fields like `tool.destinations`. But, even in those cases, you can provide a custom function definition for advanced use cases.
-   *
-   * An example of an advanced use case is if you want to customize the message that's spoken for `endCall` tool. You can specify a function where it returns an argument "reason". Then, in `messages` array, you can have many "request-complete" messages. One of these messages will be triggered if the `messages[].conditions` matches the "reason" argument.
-   */
-  function?: OpenAIFunction;
-}
-
 export interface CreateFunctionToolDTO {
   /**
    * These are the messages that will be spoken to the user as the tool is running.
@@ -3230,13 +3646,7 @@ export interface CreateFunctionToolDTO {
    *   - Webhook expects a response with tool call result.
    */
   server?: Server;
-  /**
-   * This is the function definition of the tool.
-   *
-   * For `endCall`, `transferCall`, and `dtmf` tools, this is auto-filled based on tool-specific fields like `tool.destinations`. But, even in those cases, you can provide a custom function definition for advanced use cases.
-   *
-   * An example of an advanced use case is if you want to customize the message that's spoken for `endCall` tool. You can specify a function where it returns an argument "reason". Then, in `messages` array, you can have many "request-complete" messages. One of these messages will be triggered if the `messages[].conditions` matches the "reason" argument.
-   */
+  /** This is the function definition of the tool. */
   function?: OpenAIFunction;
 }
 
@@ -3255,14 +3665,6 @@ export interface CreateGhlToolDTO {
   /** The type of tool. "ghl" for GHL tool. */
   type: 'ghl';
   metadata: GhlToolMetadata;
-  /**
-   * This is the function definition of the tool.
-   *
-   * For `endCall`, `transferCall`, and `dtmf` tools, this is auto-filled based on tool-specific fields like `tool.destinations`. But, even in those cases, you can provide a custom function definition for advanced use cases.
-   *
-   * An example of an advanced use case is if you want to customize the message that's spoken for `endCall` tool. You can specify a function where it returns an argument "reason". Then, in `messages` array, you can have many "request-complete" messages. One of these messages will be triggered if the `messages[].conditions` matches the "reason" argument.
-   */
-  function?: OpenAIFunction;
 }
 
 export interface MakeToolMetadata {
@@ -3280,14 +3682,6 @@ export interface CreateMakeToolDTO {
   /** The type of tool. "make" for Make tool. */
   type: 'make';
   metadata: MakeToolMetadata;
-  /**
-   * This is the function definition of the tool.
-   *
-   * For `endCall`, `transferCall`, and `dtmf` tools, this is auto-filled based on tool-specific fields like `tool.destinations`. But, even in those cases, you can provide a custom function definition for advanced use cases.
-   *
-   * An example of an advanced use case is if you want to customize the message that's spoken for `endCall` tool. You can specify a function where it returns an argument "reason". Then, in `messages` array, you can have many "request-complete" messages. One of these messages will be triggered if the `messages[].conditions` matches the "reason" argument.
-   */
-  function?: OpenAIFunction;
 }
 
 export interface CustomMessage {
@@ -3456,7 +3850,10 @@ export interface SummaryPlan {
    * You can customize by providing any messages you want.
    *
    * Here are the template variables available:
-   * - {{transcript}}: The transcript of the call from `call.artifact.transcript`- {{systemPrompt}}: The system prompt of the call from `assistant.model.messages[type=system].content`- {{endedReason}}: The ended reason of the call from `call.endedReason`
+   * - {{transcript}}: The transcript of the call from `call.artifact.transcript`
+   * - {{systemPrompt}}: The system prompt of the call from `assistant.model.messages[type=system].content`
+   * - {{messages}}: The messages of the call from `assistant.model.messages`
+   * - {{endedReason}}: The ended reason of the call from `call.endedReason`
    */
   messages?: object[];
   /**
@@ -3693,14 +4090,6 @@ export interface CreateTransferCallToolDTO {
     | TransferDestinationNumber
     | TransferDestinationSip
   )[];
-  /**
-   * This is the function definition of the tool.
-   *
-   * For `endCall`, `transferCall`, and `dtmf` tools, this is auto-filled based on tool-specific fields like `tool.destinations`. But, even in those cases, you can provide a custom function definition for advanced use cases.
-   *
-   * An example of an advanced use case is if you want to customize the message that's spoken for `endCall` tool. You can specify a function where it returns an argument "reason". Then, in `messages` array, you can have many "request-complete" messages. One of these messages will be triggered if the `messages[].conditions` matches the "reason" argument.
-   */
-  function?: OpenAIFunction;
 }
 
 export interface CreateCustomKnowledgeBaseDTO {
@@ -3763,6 +4152,9 @@ export interface KnowledgeBase {
   provider: 'google';
   /** The model to use for the knowledge base */
   model?:
+    | 'gemini-2.5-pro'
+    | 'gemini-2.5-flash'
+    | 'gemini-2.5-flash-lite'
     | 'gemini-2.5-pro-preview-05-06'
     | 'gemini-2.5-flash-preview-05-20'
     | 'gemini-2.5-flash-preview-04-17'
@@ -3795,14 +4187,6 @@ export interface CreateQueryToolDTO {
   type: 'query';
   /** The knowledge bases to query */
   knowledgeBases?: KnowledgeBase[];
-  /**
-   * This is the function definition of the tool.
-   *
-   * For `endCall`, `transferCall`, and `dtmf` tools, this is auto-filled based on tool-specific fields like `tool.destinations`. But, even in those cases, you can provide a custom function definition for advanced use cases.
-   *
-   * An example of an advanced use case is if you want to customize the message that's spoken for `endCall` tool. You can specify a function where it returns an argument "reason". Then, in `messages` array, you can have many "request-complete" messages. One of these messages will be triggered if the `messages[].conditions` matches the "reason" argument.
-   */
-  function?: OpenAIFunction;
 }
 
 export interface CreateGoogleCalendarCreateEventToolDTO {
@@ -3812,16 +4196,8 @@ export interface CreateGoogleCalendarCreateEventToolDTO {
    * For some tools, this is auto-filled based on special fields like `tool.destinations`. For others like the function tool, these can be custom configured.
    */
   messages?: (ToolMessageStart | ToolMessageComplete | ToolMessageFailed | ToolMessageDelayed)[];
-  /** The type of tool. "google.calendar.event.create" for Google Calendar tool. */
+  /** The type of tool. "google.calendar.event.create" for Google Calendar Create Event tool. */
   type: 'google.calendar.event.create';
-  /**
-   * This is the function definition of the tool.
-   *
-   * For `endCall`, `transferCall`, and `dtmf` tools, this is auto-filled based on tool-specific fields like `tool.destinations`. But, even in those cases, you can provide a custom function definition for advanced use cases.
-   *
-   * An example of an advanced use case is if you want to customize the message that's spoken for `endCall` tool. You can specify a function where it returns an argument "reason". Then, in `messages` array, you can have many "request-complete" messages. One of these messages will be triggered if the `messages[].conditions` matches the "reason" argument.
-   */
-  function?: OpenAIFunction;
 }
 
 export interface CreateGoogleSheetsRowAppendToolDTO {
@@ -3831,16 +4207,8 @@ export interface CreateGoogleSheetsRowAppendToolDTO {
    * For some tools, this is auto-filled based on special fields like `tool.destinations`. For others like the function tool, these can be custom configured.
    */
   messages?: (ToolMessageStart | ToolMessageComplete | ToolMessageFailed | ToolMessageDelayed)[];
-  /** The type of tool. "google.sheets.row.append" for Google Sheets tool. */
+  /** The type of tool. "google.sheets.row.append" for Google Sheets Row Append tool. */
   type: 'google.sheets.row.append';
-  /**
-   * This is the function definition of the tool.
-   *
-   * For `endCall`, `transferCall`, and `dtmf` tools, this is auto-filled based on tool-specific fields like `tool.destinations`. But, even in those cases, you can provide a custom function definition for advanced use cases.
-   *
-   * An example of an advanced use case is if you want to customize the message that's spoken for `endCall` tool. You can specify a function where it returns an argument "reason". Then, in `messages` array, you can have many "request-complete" messages. One of these messages will be triggered if the `messages[].conditions` matches the "reason" argument.
-   */
-  function?: OpenAIFunction;
 }
 
 export interface CreateGoogleCalendarCheckAvailabilityToolDTO {
@@ -3850,16 +4218,8 @@ export interface CreateGoogleCalendarCheckAvailabilityToolDTO {
    * For some tools, this is auto-filled based on special fields like `tool.destinations`. For others like the function tool, these can be custom configured.
    */
   messages?: (ToolMessageStart | ToolMessageComplete | ToolMessageFailed | ToolMessageDelayed)[];
-  /** The type of tool. "google.calendar.availability.check" for Google Calendar availability check tool. */
+  /** The type of tool. "google.calendar.availability.check" for Google Calendar Check Availability tool. */
   type: 'google.calendar.availability.check';
-  /**
-   * This is the function definition of the tool.
-   *
-   * For `endCall`, `transferCall`, and `dtmf` tools, this is auto-filled based on tool-specific fields like `tool.destinations`. But, even in those cases, you can provide a custom function definition for advanced use cases.
-   *
-   * An example of an advanced use case is if you want to customize the message that's spoken for `endCall` tool. You can specify a function where it returns an argument "reason". Then, in `messages` array, you can have many "request-complete" messages. One of these messages will be triggered if the `messages[].conditions` matches the "reason" argument.
-   */
-  function?: OpenAIFunction;
 }
 
 export interface CreateSlackSendMessageToolDTO {
@@ -3869,16 +4229,13 @@ export interface CreateSlackSendMessageToolDTO {
    * For some tools, this is auto-filled based on special fields like `tool.destinations`. For others like the function tool, these can be custom configured.
    */
   messages?: (ToolMessageStart | ToolMessageComplete | ToolMessageFailed | ToolMessageDelayed)[];
-  /** The type of tool. "slack.message.send" for Slack send message tool. */
+  /** The type of tool. "slack.message.send" for Slack Send Message tool. */
   type: 'slack.message.send';
-  /**
-   * This is the function definition of the tool.
-   *
-   * For `endCall`, `transferCall`, and `dtmf` tools, this is auto-filled based on tool-specific fields like `tool.destinations`. But, even in those cases, you can provide a custom function definition for advanced use cases.
-   *
-   * An example of an advanced use case is if you want to customize the message that's spoken for `endCall` tool. You can specify a function where it returns an argument "reason". Then, in `messages` array, you can have many "request-complete" messages. One of these messages will be triggered if the `messages[].conditions` matches the "reason" argument.
-   */
-  function?: OpenAIFunction;
+}
+
+export interface McpToolMetadata {
+  /** This is the protocol used for MCP communication. Defaults to Streamable HTTP. */
+  protocol?: 'sse' | 'shttp';
 }
 
 export interface CreateMcpToolDTO {
@@ -3902,14 +4259,7 @@ export interface CreateMcpToolDTO {
    *   - Webhook expects a response with tool call result.
    */
   server?: Server;
-  /**
-   * This is the function definition of the tool.
-   *
-   * For `endCall`, `transferCall`, and `dtmf` tools, this is auto-filled based on tool-specific fields like `tool.destinations`. But, even in those cases, you can provide a custom function definition for advanced use cases.
-   *
-   * An example of an advanced use case is if you want to customize the message that's spoken for `endCall` tool. You can specify a function where it returns an argument "reason". Then, in `messages` array, you can have many "request-complete" messages. One of these messages will be triggered if the `messages[].conditions` matches the "reason" argument.
-   */
-  function?: OpenAIFunction;
+  metadata?: McpToolMetadata;
 }
 
 export interface CreateGoHighLevelCalendarAvailabilityToolDTO {
@@ -3919,16 +4269,8 @@ export interface CreateGoHighLevelCalendarAvailabilityToolDTO {
    * For some tools, this is auto-filled based on special fields like `tool.destinations`. For others like the function tool, these can be custom configured.
    */
   messages?: (ToolMessageStart | ToolMessageComplete | ToolMessageFailed | ToolMessageDelayed)[];
-  /** The type of tool. "gohighlevel.calendar.availability.check" for GoHighLevel Calendar availability check tool. */
+  /** The type of tool. "gohighlevel.calendar.availability.check" for GoHighLevel Calendar Availability Check tool. */
   type: 'gohighlevel.calendar.availability.check';
-  /**
-   * This is the function definition of the tool.
-   *
-   * For `endCall`, `transferCall`, and `dtmf` tools, this is auto-filled based on tool-specific fields like `tool.destinations`. But, even in those cases, you can provide a custom function definition for advanced use cases.
-   *
-   * An example of an advanced use case is if you want to customize the message that's spoken for `endCall` tool. You can specify a function where it returns an argument "reason". Then, in `messages` array, you can have many "request-complete" messages. One of these messages will be triggered if the `messages[].conditions` matches the "reason" argument.
-   */
-  function?: OpenAIFunction;
 }
 
 export interface CreateGoHighLevelCalendarEventCreateToolDTO {
@@ -3938,16 +4280,8 @@ export interface CreateGoHighLevelCalendarEventCreateToolDTO {
    * For some tools, this is auto-filled based on special fields like `tool.destinations`. For others like the function tool, these can be custom configured.
    */
   messages?: (ToolMessageStart | ToolMessageComplete | ToolMessageFailed | ToolMessageDelayed)[];
-  /** The type of tool. "gohighlevel.calendar.event.create" for GoHighLevel Calendar event create tool. */
+  /** The type of tool. "gohighlevel.calendar.event.create" for GoHighLevel Calendar Event Create tool. */
   type: 'gohighlevel.calendar.event.create';
-  /**
-   * This is the function definition of the tool.
-   *
-   * For `endCall`, `transferCall`, and `dtmf` tools, this is auto-filled based on tool-specific fields like `tool.destinations`. But, even in those cases, you can provide a custom function definition for advanced use cases.
-   *
-   * An example of an advanced use case is if you want to customize the message that's spoken for `endCall` tool. You can specify a function where it returns an argument "reason". Then, in `messages` array, you can have many "request-complete" messages. One of these messages will be triggered if the `messages[].conditions` matches the "reason" argument.
-   */
-  function?: OpenAIFunction;
 }
 
 export interface CreateGoHighLevelContactCreateToolDTO {
@@ -3957,16 +4291,8 @@ export interface CreateGoHighLevelContactCreateToolDTO {
    * For some tools, this is auto-filled based on special fields like `tool.destinations`. For others like the function tool, these can be custom configured.
    */
   messages?: (ToolMessageStart | ToolMessageComplete | ToolMessageFailed | ToolMessageDelayed)[];
-  /** The type of tool. "gohighlevel.contact.create" for GoHighLevel contact create tool. */
+  /** The type of tool. "gohighlevel.contact.create" for GoHighLevel Contact Create tool. */
   type: 'gohighlevel.contact.create';
-  /**
-   * This is the function definition of the tool.
-   *
-   * For `endCall`, `transferCall`, and `dtmf` tools, this is auto-filled based on tool-specific fields like `tool.destinations`. But, even in those cases, you can provide a custom function definition for advanced use cases.
-   *
-   * An example of an advanced use case is if you want to customize the message that's spoken for `endCall` tool. You can specify a function where it returns an argument "reason". Then, in `messages` array, you can have many "request-complete" messages. One of these messages will be triggered if the `messages[].conditions` matches the "reason" argument.
-   */
-  function?: OpenAIFunction;
 }
 
 export interface CreateGoHighLevelContactGetToolDTO {
@@ -3976,16 +4302,8 @@ export interface CreateGoHighLevelContactGetToolDTO {
    * For some tools, this is auto-filled based on special fields like `tool.destinations`. For others like the function tool, these can be custom configured.
    */
   messages?: (ToolMessageStart | ToolMessageComplete | ToolMessageFailed | ToolMessageDelayed)[];
-  /** The type of tool. "gohighlevel.contact.get" for GoHighLevel contact get tool. */
+  /** The type of tool. "gohighlevel.contact.get" for GoHighLevel Contact Get tool. */
   type: 'gohighlevel.contact.get';
-  /**
-   * This is the function definition of the tool.
-   *
-   * For `endCall`, `transferCall`, and `dtmf` tools, this is auto-filled based on tool-specific fields like `tool.destinations`. But, even in those cases, you can provide a custom function definition for advanced use cases.
-   *
-   * An example of an advanced use case is if you want to customize the message that's spoken for `endCall` tool. You can specify a function where it returns an argument "reason". Then, in `messages` array, you can have many "request-complete" messages. One of these messages will be triggered if the `messages[].conditions` matches the "reason" argument.
-   */
-  function?: OpenAIFunction;
 }
 
 export interface AnyscaleModel {
@@ -4287,12 +4605,17 @@ export interface CustomLLMModel {
    * Default is `variable`.
    */
   metadataSendMode?: 'off' | 'variable' | 'destructured';
+  /**
+   * Custom headers to send with requests. These headers can override default OpenAI headers except for Authorization (which should be specified using a custom-llm credential).
+   * @example {"X-Custom-Header":"value"}
+   */
+  headers?: Record<string, string>;
   /** These is the URL we'll use for the OpenAI client's `baseURL`. Ex. https://openrouter.ai/api/v1 */
   url: string;
   /**
    * This sets the timeout for the connection to the custom provider without needing to stream any tokens back. Default is 20 seconds.
-   * @min 20
-   * @max 600
+   * @min 0
+   * @max 300
    */
   timeoutSeconds?: number;
   /** This is the name of the model. Ex. cognitivecomputations/dolphin-mixtral-8x7b */
@@ -4555,6 +4878,9 @@ export interface GoogleModel {
   knowledgeBaseId?: string;
   /** This is the Google model that will be used. */
   model:
+    | 'gemini-2.5-pro'
+    | 'gemini-2.5-flash'
+    | 'gemini-2.5-flash-lite'
     | 'gemini-2.5-pro-preview-05-06'
     | 'gemini-2.5-flash-preview-05-20'
     | 'gemini-2.5-flash-preview-04-17'
@@ -4821,13 +5147,10 @@ export interface OpenAIModel {
     | 'gpt-4.1'
     | 'gpt-4.1-mini'
     | 'gpt-4.1-nano'
-    | 'gpt-4.5-preview'
     | 'chatgpt-4o-latest'
     | 'o3'
     | 'o3-mini'
     | 'o4-mini'
-    | 'o1-preview'
-    | 'o1-preview-2024-09-12'
     | 'o1-mini'
     | 'o1-mini-2024-09-12'
     | 'gpt-4o-realtime-preview-2024-10-01'
@@ -4922,13 +5245,10 @@ export interface OpenAIModel {
     | 'gpt-4.1'
     | 'gpt-4.1-mini'
     | 'gpt-4.1-nano'
-    | 'gpt-4.5-preview'
     | 'chatgpt-4o-latest'
     | 'o3'
     | 'o3-mini'
     | 'o4-mini'
-    | 'o1-preview'
-    | 'o1-preview-2024-09-12'
     | 'o1-mini'
     | 'o1-mini-2024-09-12'
     | 'gpt-4o-realtime-preview-2024-10-01'
@@ -5300,18 +5620,12 @@ export interface WorkflowOpenAIModel {
     | 'gpt-4.1'
     | 'gpt-4.1-mini'
     | 'gpt-4.1-nano'
-    | 'gpt-4.5-preview'
     | 'chatgpt-4o-latest'
     | 'o3'
     | 'o3-mini'
     | 'o4-mini'
-    | 'o1-preview'
-    | 'o1-preview-2024-09-12'
     | 'o1-mini'
     | 'o1-mini-2024-09-12'
-    | 'gpt-4o-realtime-preview-2024-10-01'
-    | 'gpt-4o-realtime-preview-2024-12-17'
-    | 'gpt-4o-mini-realtime-preview-2024-12-17'
     | 'gpt-4o-mini-2024-07-18'
     | 'gpt-4o-mini'
     | 'gpt-4o'
@@ -5442,6 +5756,90 @@ export interface WorkflowAnthropicModel {
   maxTokens?: number;
 }
 
+export interface WorkflowGoogleModel {
+  /** This is the provider of the model (`google`). */
+  provider: 'google';
+  /**
+   * This is the name of the model. Ex. cognitivecomputations/dolphin-mixtral-8x7b
+   * @maxLength 100
+   */
+  model:
+    | 'gemini-2.5-pro'
+    | 'gemini-2.5-flash'
+    | 'gemini-2.5-flash-lite'
+    | 'gemini-2.5-pro-preview-05-06'
+    | 'gemini-2.5-flash-preview-05-20'
+    | 'gemini-2.5-flash-preview-04-17'
+    | 'gemini-2.0-flash-thinking-exp'
+    | 'gemini-2.0-pro-exp-02-05'
+    | 'gemini-2.0-flash'
+    | 'gemini-2.0-flash-lite'
+    | 'gemini-2.0-flash-lite-preview-02-05'
+    | 'gemini-2.0-flash-exp'
+    | 'gemini-2.0-flash-realtime-exp'
+    | 'gemini-1.5-flash'
+    | 'gemini-1.5-flash-002'
+    | 'gemini-1.5-pro'
+    | 'gemini-1.5-pro-002'
+    | 'gemini-1.0-pro';
+  /**
+   * This is the temperature of the model.
+   * @min 0
+   * @max 2
+   */
+  temperature?: number;
+  /**
+   * This is the max tokens of the model.
+   * @min 50
+   * @max 10000
+   */
+  maxTokens?: number;
+}
+
+export interface WorkflowCustomModel {
+  /** This is the provider of the model (`custom-llm`). */
+  provider: 'custom-llm';
+  /**
+   * This determines whether metadata is sent in requests to the custom provider.
+   *
+   * - `off` will not send any metadata. payload will look like `{ messages }`
+   * - `variable` will send `assistant.metadata` as a variable on the payload. payload will look like `{ messages, metadata }`
+   * - `destructured` will send `assistant.metadata` fields directly on the payload. payload will look like `{ messages, ...metadata }`
+   *
+   * Further, `variable` and `destructured` will send `call`, `phoneNumber`, and `customer` objects in the payload.
+   *
+   * Default is `variable`.
+   */
+  metadataSendMode?: 'off' | 'variable' | 'destructured';
+  /** These is the URL we'll use for the OpenAI client's `baseURL`. Ex. https://openrouter.ai/api/v1 */
+  url: string;
+  /** These are the headers we'll use for the OpenAI client's `headers`. */
+  headers?: object;
+  /**
+   * This sets the timeout for the connection to the custom provider without needing to stream any tokens back. Default is 20 seconds.
+   * @min 20
+   * @max 600
+   */
+  timeoutSeconds?: number;
+  /**
+   * This is the name of the model. Ex. cognitivecomputations/dolphin-mixtral-8x7b
+   * @maxLength 100
+   */
+  model: string;
+  /**
+   * This is the temperature of the model.
+   * @min 0
+   * @max 2
+   */
+  temperature?: number;
+  /**
+   * This is the max tokens of the model.
+   * @min 50
+   * @max 10000
+   */
+  maxTokens?: number;
+}
+
 export interface GlobalNodePlan {
   /**
    * This is the flag to determine if this node is a global node
@@ -5460,7 +5858,155 @@ export interface GlobalNodePlan {
   enterCondition?: string;
 }
 
-export type VariableExtractionPlan = object;
+export interface VariableExtractionAlias {
+  /**
+   * This is the key of the variable.
+   *
+   * This variable will be accessible during the call as `{{key}}` and stored in `call.artifact.variableValues` after the call.
+   *
+   * Rules:
+   * - Must start with a letter (a-z, A-Z).
+   * - Subsequent characters can be letters, numbers, or underscores.
+   * - Minimum length of 1 and maximum length of 40.
+   * @minLength 1
+   * @maxLength 40
+   * @pattern /^[a-zA-Z][a-zA-Z0-9_]*$/
+   */
+  key: string;
+  /**
+   * This is the value of the variable.
+   *
+   * This can reference existing variables, use filters, and perform transformations.
+   *
+   * Examples: "{{name}}", "{{customer.email}}", "Hello {{name | upcase}}"
+   * @maxLength 10000
+   */
+  value: string;
+}
+
+export interface VariableExtractionPlan {
+  /**
+   * This is the schema to extract.
+   *
+   * Examples:
+   * 1. To extract object properties, you can use the following schema:
+   * ```json
+   * {
+   *   "type": "object",
+   *   "properties": {
+   *     "name": {
+   *       "type": "string"
+   *     },
+   *     "age": {
+   *       "type": "number"
+   *     }
+   *   }
+   * }
+   * ```
+   *
+   * These will be extracted as `{{ name }}` and `{{ age }}` respectively. To emphasize, object properties are extracted as direct global variables.
+   *
+   * 2. To extract nested properties, you can use the following schema:
+   * ```json
+   * {
+   *   "type": "object",
+   *   "properties": {
+   *     "name": {
+   *       "type": "object",
+   *       "properties": {
+   *         "first": {
+   *           "type": "string"
+   *         },
+   *         "last": {
+   *           "type": "string"
+   *         }
+   *       }
+   *     }
+   *   }
+   * }
+   * ```
+   *
+   * These will be extracted as `{{ name }}`. And, `{{ name.first }}` and `{{ name.last }}` will be accessible.
+   *
+   * 3. To extract array items, you can use the following schema:
+   * ```json
+   * {
+   *   "type": "array",
+   *   "title": "zipCodes",
+   *   "items": {
+   *     "type": "string"
+   *   }
+   * }
+   * ```
+   *
+   * This will be extracted as `{{ zipCodes }}`. To access the array items, you can use `{{ zipCodes[0] }}` and `{{ zipCodes[1] }}`.
+   *
+   * 4. To extract array of objects, you can use the following schema:
+   *
+   * ```json
+   * {
+   *   "type": "array",
+   *   "name": "people",
+   *   "items": {
+   *     "type": "object",
+   *     "properties": {
+   *       "name": {
+   *         "type": "string"
+   *       },
+   *       "age": {
+   *         "type": "number"
+   *       },
+   *       "zipCodes": {
+   *         "type": "array",
+   *         "items": {
+   *           "type": "string"
+   *         }
+   *       }
+   *     }
+   *   }
+   * }
+   * ```
+   *
+   * This will be extracted as `{{ people }}`. To access the array items, you can use `{{ people[n].name }}`, `{{ people[n].age }}`, `{{ people[n].zipCodes }}`, `{{ people[n].zipCodes[0] }}` and `{{ people[n].zipCodes[1] }}`.
+   */
+  schema?: JsonSchema;
+  /**
+   * These are additional variables to create.
+   *
+   * These will be accessible during the call as `{{key}}` and stored in `call.artifact.variableValues` after the call.
+   *
+   * Example:
+   * ```json
+   * {
+   *   "aliases": [
+   *     {
+   *       "key": "customerName",
+   *       "value": "{{name}}"
+   *     },
+   *     {
+   *       "key": "fullName",
+   *       "value": "{{firstName}} {{lastName}}"
+   *     },
+   *     {
+   *       "key": "greeting",
+   *       "value": "Hello {{name}}, welcome to {{company}}!"
+   *     },
+   *     {
+   *       "key": "customerCity",
+   *       "value": "{{addresses[0].city}}"
+   *     },
+   *     {
+   *       "key": "something",
+   *       "value": "{{any liquid}}"
+   *     }
+   *   ]
+   * }
+   * ```
+   *
+   * This will create variables `customerName`, `fullName`, `greeting`, `customerCity`, and `something`. To access these variables, you can reference them as `{{customerName}}`, `{{fullName}}`, `{{greeting}}`, `{{customerCity}}`, and `{{something}}`.
+   */
+  aliases?: VariableExtractionAlias[];
+}
 
 export interface ConversationNode {
   /**
@@ -5474,9 +6020,17 @@ export interface ConversationNode {
    * - Workflow continues.
    */
   type: 'conversation';
-  /** This is the model for the Conversation Task. */
-  model?: WorkflowOpenAIModel | WorkflowAnthropicModel;
-  /** These are the options for the assistant's transcriber. */
+  /**
+   * This is the model for the node.
+   *
+   * This overrides `workflow.model`.
+   */
+  model?: WorkflowOpenAIModel | WorkflowAnthropicModel | WorkflowGoogleModel | WorkflowCustomModel;
+  /**
+   * This is the transcriber for the node.
+   *
+   * This overrides `workflow.transcriber`.
+   */
   transcriber?:
     | AssemblyAITranscriber
     | AzureSpeechTranscriber
@@ -5487,8 +6041,13 @@ export interface ConversationNode {
     | GoogleTranscriber
     | SpeechmaticsTranscriber
     | TalkscriberTranscriber
-    | OpenAITranscriber;
-  /** These are the options for the assistant's voice. */
+    | OpenAITranscriber
+    | CartesiaTranscriber;
+  /**
+   * This is the voice for the node.
+   *
+   * This overrides `workflow.voice`.
+   */
   voice?:
     | AzureVoice
     | CartesiaVoice
@@ -5504,12 +6063,94 @@ export interface ConversationNode {
     | SmallestAIVoice
     | TavusVoice
     | VapiVoice
-    | SesameVoice;
+    | SesameVoice
+    | InworldVoice
+    | MinimaxVoice;
+  /**
+   * These are the tools that the conversation node can use during the call. To use existing tools, use `toolIds`.
+   *
+   * Both `tools` and `toolIds` can be used together.
+   */
+  tools?: (
+    | CreateApiRequestToolDTO
+    | CreateBashToolDTO
+    | CreateComputerToolDTO
+    | CreateDtmfToolDTO
+    | CreateEndCallToolDTO
+    | CreateFunctionToolDTO
+    | CreateGoHighLevelCalendarAvailabilityToolDTO
+    | CreateGoHighLevelCalendarEventCreateToolDTO
+    | CreateGoHighLevelContactCreateToolDTO
+    | CreateGoHighLevelContactGetToolDTO
+    | CreateGoogleCalendarCheckAvailabilityToolDTO
+    | CreateGoogleCalendarCreateEventToolDTO
+    | CreateGoogleSheetsRowAppendToolDTO
+    | CreateMcpToolDTO
+    | CreateQueryToolDTO
+    | CreateSlackSendMessageToolDTO
+    | CreateSmsToolDTO
+    | CreateTextEditorToolDTO
+    | CreateTransferCallToolDTO
+  )[];
+  /**
+   * These are the tools that the conversation node can use during the call. To use transient tools, use `tools`.
+   *
+   * Both `tools` and `toolIds` can be used together.
+   */
+  toolIds?: string[];
   /** @maxLength 5000 */
   prompt?: string;
   /** This is the plan for the global node. */
   globalNodePlan?: GlobalNodePlan;
-  /** This is the plan that controls the variable extraction from the user's response. */
+  /**
+   * This is the plan that controls the variable extraction from the user's responses.
+   *
+   * Usage:
+   * Use `schema` to specify what you want to extract from the user's responses.
+   * ```json
+   * {
+   *   "schema": {
+   *     "type": "object",
+   *     "properties": {
+   *       "user": {
+   *         "type": "object",
+   *         "properties": {
+   *           "name": {
+   *             "type": "string"
+   *           },
+   *           "age": {
+   *             "type": "number"
+   *           }
+   *         }
+   *       }
+   *     }
+   *   }
+   * }
+   * ```
+   *
+   * This will be extracted as `{{ user.name }}` and `{{ user.age }}` respectively.
+   *
+   * (Optional) Use `aliases` to create new variables.
+   *
+   * ```json
+   * {
+   *   "aliases": [
+   *     {
+   *       "key": "userAge",
+   *       "value": "{{user.age}}"
+   *     },
+   *     {
+   *       "key": "userName",
+   *       "value": "{{user.name}}"
+   *     }
+   *   ]
+   * }
+   * ```
+   *
+   * This will be extracted as `{{ userAge }}` and `{{ userName }}` respectively.
+   *
+   * Note: The `schema` field is required for Conversation nodes if you want to extract variables from the user's responses. `aliases` is just a convenience.
+   */
   variableExtractionPlan?: VariableExtractionPlan;
   /** @maxLength 80 */
   name: string;
@@ -5571,18 +6212,8 @@ export interface AIEdgeCondition {
   prompt: string;
 }
 
-export interface LogicEdgeCondition {
-  type: 'logic';
-  /** @maxLength 1000 */
-  liquid: string;
-}
-
-export interface FailedEdgeCondition {
-  type: 'failed';
-}
-
 export interface Edge {
-  condition?: AIEdgeCondition | LogicEdgeCondition | FailedEdgeCondition;
+  condition?: AIEdgeCondition;
   /** @maxLength 80 */
   from: string;
   /** @maxLength 80 */
@@ -5591,14 +6222,972 @@ export interface Edge {
   metadata?: object;
 }
 
+export interface CompliancePlan {
+  /**
+   * When this is enabled, no logs, recordings, or transcriptions will be stored.
+   * At the end of the call, you will still receive an end-of-call-report message to store on your server. Defaults to false.
+   * @example {"hipaaEnabled":false}
+   */
+  hipaaEnabled?: boolean;
+  /**
+   * When this is enabled, the user will be restricted to use PCI-compliant providers, and no logs or transcripts are stored.
+   * At the end of the call, you will receive an end-of-call-report message to store on your server. Defaults to false.
+   * @example {"pciEnabled":false}
+   */
+  pciEnabled?: boolean;
+}
+
+export interface StructuredDataPlan {
+  /**
+   * These are the messages used to generate the structured data.
+   *
+   * @default: ```
+   * [
+   *   {
+   *     "role": "system",
+   *     "content": "You are an expert data extractor. You will be given a transcript of a call. Extract structured data per the JSON Schema. DO NOT return anything except the structured data.\n\nJson Schema:\\n{{schema}}\n\nOnly respond with the JSON."
+   *   },
+   *   {
+   *     "role": "user",
+   *     "content": "Here is the transcript:\n\n{{transcript}}\n\n. Here is the ended reason of the call:\n\n{{endedReason}}\n\n"
+   *   }
+   * ]```
+   *
+   * You can customize by providing any messages you want.
+   *
+   * Here are the template variables available:
+   * - {{transcript}}: the transcript of the call from `call.artifact.transcript`- {{systemPrompt}}: the system prompt of the call from `assistant.model.messages[type=system].content`- {{messages}}: the messages of the call from `assistant.model.messages`- {{schema}}: the schema of the structured data from `structuredDataPlan.schema`- {{endedReason}}: the ended reason of the call from `call.endedReason`
+   */
+  messages?: object[];
+  /**
+   * This determines whether structured data is generated and stored in `call.analysis.structuredData`. Defaults to false.
+   *
+   * Usage:
+   * - If you want to extract structured data, set this to true and provide a `schema`.
+   *
+   * @default false
+   */
+  enabled?: boolean;
+  /**
+   * This is the schema of the structured data. The output is stored in `call.analysis.structuredData`.
+   *
+   * Complete guide on JSON Schema can be found [here](https://ajv.js.org/json-schema.html#json-data-type).
+   */
+  schema?: JsonSchema;
+  /**
+   * This is how long the request is tried before giving up. When request times out, `call.analysis.structuredData` will be empty.
+   *
+   * Usage:
+   * - To guarantee the structured data is generated, set this value high. Note, this will delay the end of call report in cases where model is slow to respond.
+   *
+   * @default 5 seconds
+   * @min 1
+   * @max 60
+   */
+  timeoutSeconds?: number;
+}
+
+export interface StructuredDataMultiPlan {
+  /** This is the key of the structured data plan in the catalog. */
+  key: string;
+  /** This is an individual structured data plan in the catalog. */
+  plan: StructuredDataPlan;
+}
+
+export interface SuccessEvaluationPlan {
+  /**
+   * This enforces the rubric of the evaluation. The output is stored in `call.analysis.successEvaluation`.
+   *
+   * Options include:
+   * - 'NumericScale': A scale of 1 to 10.
+   * - 'DescriptiveScale': A scale of Excellent, Good, Fair, Poor.
+   * - 'Checklist': A checklist of criteria and their status.
+   * - 'Matrix': A grid that evaluates multiple criteria across different performance levels.
+   * - 'PercentageScale': A scale of 0% to 100%.
+   * - 'LikertScale': A scale of Strongly Agree, Agree, Neutral, Disagree, Strongly Disagree.
+   * - 'AutomaticRubric': Automatically break down evaluation into several criteria, each with its own score.
+   * - 'PassFail': A simple 'true' if call passed, 'false' if not.
+   *
+   * Default is 'PassFail'.
+   */
+  rubric?:
+    | 'NumericScale'
+    | 'DescriptiveScale'
+    | 'Checklist'
+    | 'Matrix'
+    | 'PercentageScale'
+    | 'LikertScale'
+    | 'AutomaticRubric'
+    | 'PassFail';
+  /**
+   * These are the messages used to generate the success evaluation.
+   *
+   * @default: ```
+   * [
+   *   {
+   *     "role": "system",
+   *     "content": "You are an expert call evaluator. You will be given a transcript of a call and the system prompt of the AI participant. Determine if the call was successful based on the objectives inferred from the system prompt. DO NOT return anything except the result.\n\nRubric:\\n{{rubric}}\n\nOnly respond with the result."
+   *   },
+   *   {
+   *     "role": "user",
+   *     "content": "Here is the transcript:\n\n{{transcript}}\n\n"
+   *   },
+   *   {
+   *     "role": "user",
+   *     "content": "Here was the system prompt of the call:\n\n{{systemPrompt}}\n\n. Here is the ended reason of the call:\n\n{{endedReason}}\n\n"
+   *   }
+   * ]```
+   *
+   * You can customize by providing any messages you want.
+   *
+   * Here are the template variables available:
+   * - {{transcript}}: the transcript of the call from `call.artifact.transcript`- {{systemPrompt}}: the system prompt of the call from `assistant.model.messages[type=system].content`- {{messages}}: the messages of the call from `assistant.model.messages`- {{rubric}}: the rubric of the success evaluation from `successEvaluationPlan.rubric`- {{endedReason}}: the ended reason of the call from `call.endedReason`
+   */
+  messages?: object[];
+  /**
+   * This determines whether a success evaluation is generated and stored in `call.analysis.successEvaluation`. Defaults to true.
+   *
+   * Usage:
+   * - If you want to disable the success evaluation, set this to false.
+   *
+   * @default true
+   */
+  enabled?: boolean;
+  /**
+   * This is how long the request is tried before giving up. When request times out, `call.analysis.successEvaluation` will be empty.
+   *
+   * Usage:
+   * - To guarantee the success evaluation is generated, set this value high. Note, this will delay the end of call report in cases where model is slow to respond.
+   *
+   * @default 5 seconds
+   * @min 1
+   * @max 60
+   */
+  timeoutSeconds?: number;
+}
+
+export interface AnalysisPlan {
+  /**
+   * The minimum number of messages required to run the analysis plan.
+   * If the number of messages is less than this, analysis will be skipped.
+   * @default 2
+   * @min 0
+   */
+  minMessagesThreshold?: number;
+  /** This is the plan for generating the summary of the call. This outputs to `call.analysis.summary`. */
+  summaryPlan?: SummaryPlan;
+  /** This is the plan for generating the structured data from the call. This outputs to `call.analysis.structuredData`. */
+  structuredDataPlan?: StructuredDataPlan;
+  /** This is an array of structured data plan catalogs. Each entry includes a `key` and a `plan` for generating the structured data from the call. This outputs to `call.analysis.structuredDataMulti`. */
+  structuredDataMultiPlan?: StructuredDataMultiPlan[];
+  /** This is the plan for generating the success evaluation of the call. This outputs to `call.analysis.successEvaluation`. */
+  successEvaluationPlan?: SuccessEvaluationPlan;
+  /**
+   * This is an array of outcome UUIDs to be calculated during analysis.
+   * The outcomes will be calculated and stored in `call.analysis.outcomes`.
+   */
+  outcomeIds?: string[];
+}
+
+export interface RegexOption {
+  /**
+   * This is the type of the regex option. Options are:
+   * - `ignore-case`: Ignores the case of the text being matched. Add
+   * - `whole-word`: Matches whole words only.
+   * - `multi-line`: Matches across multiple lines.
+   */
+  type: 'ignore-case' | 'whole-word' | 'multi-line';
+  /**
+   * This is whether to enable the option.
+   *
+   * @default false
+   */
+  enabled: boolean;
+}
+
+export interface AssistantCustomEndpointingRule {
+  /**
+   * This endpointing rule is based on the last assistant message before customer started speaking.
+   *
+   * Flow:
+   * - Assistant speaks
+   * - Customer starts speaking
+   * - Customer transcription comes in
+   * - This rule is evaluated on the last assistant message
+   * - If a match is found based on `regex`, the endpointing timeout is set to `timeoutSeconds`
+   *
+   * Usage:
+   * - If you have yes/no questions in your use case like "are you interested in a loan?", you can set a shorter timeout.
+   * - If you have questions where the customer may pause to look up information like "what's my account number?", you can set a longer timeout.
+   */
+  type: 'assistant';
+  /**
+   * This is the regex pattern to match.
+   *
+   * Note:
+   * - This works by using the `RegExp.test` method in Node.JS. Eg. `/hello/.test("hello there")` will return `true`.
+   *
+   * Hot tip:
+   * - In JavaScript, escape `\` when sending the regex pattern. Eg. `"hello\sthere"` will be sent over the wire as `"hellosthere"`. Send `"hello\\sthere"` instead.
+   * - `RegExp.test` does substring matching, so `/cat/.test("I love cats")` will return `true`. To do full string matching, send "^cat$".
+   */
+  regex: string;
+  /**
+   * These are the options for the regex match. Defaults to all disabled.
+   *
+   * @default []
+   */
+  regexOptions?: RegexOption[];
+  /**
+   * This is the endpointing timeout in seconds, if the rule is matched.
+   * @min 0
+   * @max 15
+   */
+  timeoutSeconds: number;
+}
+
+export interface CustomerCustomEndpointingRule {
+  /**
+   * This endpointing rule is based on current customer message as they are speaking.
+   *
+   * Flow:
+   * - Assistant speaks
+   * - Customer starts speaking
+   * - Customer transcription comes in
+   * - This rule is evaluated on the current customer transcription
+   * - If a match is found based on `regex`, the endpointing timeout is set to `timeoutSeconds`
+   *
+   * Usage:
+   * - If you want to wait longer while customer is speaking numbers, you can set a longer timeout.
+   */
+  type: 'customer';
+  /**
+   * This is the regex pattern to match.
+   *
+   * Note:
+   * - This works by using the `RegExp.test` method in Node.JS. Eg. `/hello/.test("hello there")` will return `true`.
+   *
+   * Hot tip:
+   * - In JavaScript, escape `\` when sending the regex pattern. Eg. `"hello\sthere"` will be sent over the wire as `"hellosthere"`. Send `"hello\\sthere"` instead.
+   * - `RegExp.test` does substring matching, so `/cat/.test("I love cats")` will return `true`. To do full string matching, send "^cat$".
+   */
+  regex: string;
+  /**
+   * These are the options for the regex match. Defaults to all disabled.
+   *
+   * @default []
+   */
+  regexOptions?: RegexOption[];
+  /**
+   * This is the endpointing timeout in seconds, if the rule is matched.
+   * @min 0
+   * @max 15
+   */
+  timeoutSeconds: number;
+}
+
+export interface BothCustomEndpointingRule {
+  /**
+   * This endpointing rule is based on both the last assistant message and the current customer message as they are speaking.
+   *
+   * Flow:
+   * - Assistant speaks
+   * - Customer starts speaking
+   * - Customer transcription comes in
+   * - This rule is evaluated on the last assistant message and the current customer transcription
+   * - If assistant message matches `assistantRegex` AND customer message matches `customerRegex`, the endpointing timeout is set to `timeoutSeconds`
+   *
+   * Usage:
+   * - If you want to wait longer while customer is speaking numbers, you can set a longer timeout.
+   */
+  type: 'both';
+  /**
+   * This is the regex pattern to match the assistant's message.
+   *
+   * Note:
+   * - This works by using the `RegExp.test` method in Node.JS. Eg. `/hello/.test("hello there")` will return `true`.
+   *
+   * Hot tip:
+   * - In JavaScript, escape `\` when sending the regex pattern. Eg. `"hello\sthere"` will be sent over the wire as `"hellosthere"`. Send `"hello\\sthere"` instead.
+   * - `RegExp.test` does substring matching, so `/cat/.test("I love cats")` will return `true`. To do full string matching, send "^cat$".
+   */
+  assistantRegex: string;
+  /**
+   * These are the options for the assistant's message regex match. Defaults to all disabled.
+   *
+   * @default []
+   */
+  assistantRegexOptions?: RegexOption[];
+  customerRegex: string;
+  /**
+   * These are the options for the customer's message regex match. Defaults to all disabled.
+   *
+   * @default []
+   */
+  customerRegexOptions?: RegexOption[];
+  /**
+   * This is the endpointing timeout in seconds, if the rule is matched.
+   * @min 0
+   * @max 15
+   */
+  timeoutSeconds: number;
+}
+
+export interface VapiSmartEndpointingPlan {
+  /**
+   * This is the provider for the smart endpointing plan.
+   * @example "vapi"
+   */
+  provider: 'vapi' | 'livekit' | 'custom-endpointing-model';
+}
+
+export interface LivekitSmartEndpointingPlan {
+  /**
+   * This is the provider for the smart endpointing plan.
+   * @example "livekit"
+   */
+  provider: 'vapi' | 'livekit' | 'custom-endpointing-model';
+  /**
+   * This expression describes how long the bot will wait to start speaking based on the likelihood that the user has reached an endpoint.
+   *
+   * This is a millisecond valued function. It maps probabilities (real numbers on [0,1]) to milliseconds that the bot should wait before speaking ([0, \infty]). Any negative values that are returned are set to zero (the bot can't start talking in the past).
+   *
+   * A probability of zero represents very high confidence that the caller has stopped speaking, and would like the bot to speak to them. A probability of one represents very high confidence that the caller is still speaking.
+   *
+   * Under the hood, this is parsed into a mathjs expression. Whatever you use to write your expression needs to be valid with respect to mathjs
+   *
+   * @default "20 + 500 * sqrt(x) + 2500 * x^3"
+   */
+  waitFunction?: string;
+}
+
+export interface CustomEndpointingModelSmartEndpointingPlan {
+  /**
+   * This is the provider for the smart endpointing plan. Use `custom-endpointing-model` for custom endpointing providers that are not natively supported.
+   * @example "custom-endpointing-model"
+   */
+  provider: 'vapi' | 'livekit' | 'custom-endpointing-model';
+  /**
+   * This is where the endpointing request will be sent. If not provided, will be sent to `assistant.server`. If that does not exist either, will be sent to `org.server`.
+   *
+   * Request Example:
+   *
+   * POST https://{server.url}
+   * Content-Type: application/json
+   *
+   * {
+   *   "message": {
+   *     "type": "call.endpointing.request",
+   *     "messages": [
+   *       {
+   *         "role": "user",
+   *         "message": "Hello, how are you?",
+   *         "time": 1234567890,
+   *         "secondsFromStart": 0
+   *       }
+   *     ],
+   *     ...other metadata about the call...
+   *   }
+   * }
+   *
+   * Response Expected:
+   * {
+   *   "timeoutSeconds": 0.5
+   * }
+   *
+   * The timeout is the number of seconds to wait before considering the user's speech as finished. The endpointing timeout is automatically reset each time a new transcript is received (and another `call.endpointing.request` is sent).
+   */
+  server?: Server;
+}
+
+export interface TranscriptionEndpointingPlan {
+  /**
+   * The minimum number of seconds to wait after transcription ending with punctuation before sending a request to the model. Defaults to 0.1.
+   *
+   * This setting exists because the transcriber punctuates the transcription when it's more confident that customer has completed a thought.
+   *
+   * @default 0.1
+   * @min 0
+   * @max 3
+   * @example 0.1
+   */
+  onPunctuationSeconds?: number;
+  /**
+   * The minimum number of seconds to wait after transcription ending without punctuation before sending a request to the model. Defaults to 1.5.
+   *
+   * This setting exists to catch the cases where the transcriber was not confident enough to punctuate the transcription, but the customer is done and has been silent for a long time.
+   *
+   * @default 1.5
+   * @min 0
+   * @max 3
+   * @example 1.5
+   */
+  onNoPunctuationSeconds?: number;
+  /**
+   * The minimum number of seconds to wait after transcription ending with a number before sending a request to the model. Defaults to 0.4.
+   *
+   * This setting exists because the transcriber will sometimes punctuate the transcription ending with a number, even though the customer hasn't uttered the full number. This happens commonly for long numbers when the customer reads the number in chunks.
+   *
+   * @default 0.5
+   * @min 0
+   * @max 3
+   * @example 0.5
+   */
+  onNumberSeconds?: number;
+}
+
+export interface StartSpeakingPlan {
+  /**
+   * This is how long assistant waits before speaking. Defaults to 0.4.
+   *
+   * This is the minimum it will wait but if there is latency is the pipeline, this minimum will be exceeded. This is intended as a stopgap in case the pipeline is moving too fast.
+   *
+   * Example:
+   * - If model generates tokens and voice generates bytes within 100ms, the pipeline still waits 300ms before outputting speech.
+   *
+   * Usage:
+   * - If the customer is taking long pauses, set this to a higher value.
+   * - If the assistant is accidentally jumping in too much, set this to a higher value.
+   *
+   * @default 0.4
+   * @min 0
+   * @max 5
+   * @example 0.4
+   */
+  waitSeconds?: number;
+  /**
+   * @deprecated
+   * @example false
+   */
+  smartEndpointingEnabled?: boolean | 'livekit';
+  /**
+   * This is the plan for smart endpointing. Pick between Vapi smart endpointing or LiveKit smart endpointing (or nothing). We strongly recommend using livekit endpointing when working in English. LiveKit endpointing is not supported in other languages, yet.
+   *
+   * If this is set, it will override and take precedence over `transcriptionEndpointingPlan`.
+   * This plan will still be overridden by any matching `customEndpointingRules`.
+   */
+  smartEndpointingPlan?:
+    | VapiSmartEndpointingPlan
+    | LivekitSmartEndpointingPlan
+    | CustomEndpointingModelSmartEndpointingPlan;
+  /**
+   * These are the custom endpointing rules to set an endpointing timeout based on a regex on the customer's speech or the assistant's last message.
+   *
+   * Usage:
+   * - If you have yes/no questions like "are you interested in a loan?", you can set a shorter timeout.
+   * - If you have questions where the customer may pause to look up information like "what's my account number?", you can set a longer timeout.
+   * - If you want to wait longer while customer is enumerating a list of numbers, you can set a longer timeout.
+   *
+   * These rules have the highest precedence and will override both `smartEndpointingPlan` and `transcriptionEndpointingPlan` when a rule is matched.
+   *
+   * The rules are evaluated in order and the first one that matches will be used.
+   *
+   * Order of precedence for endpointing:
+   * 1. customEndpointingRules (if any match)
+   * 2. smartEndpointingPlan (if set)
+   * 3. transcriptionEndpointingPlan
+   *
+   * @default []
+   */
+  customEndpointingRules?: (
+    | AssistantCustomEndpointingRule
+    | CustomerCustomEndpointingRule
+    | BothCustomEndpointingRule
+  )[];
+  /**
+   * This determines how a customer speech is considered done (endpointing) using the transcription of customer's speech.
+   *
+   * Once an endpoint is triggered, the request is sent to `assistant.model`.
+   *
+   * Note: This plan is only used if `smartEndpointingPlan` is not set. If both are provided, `smartEndpointingPlan` takes precedence.
+   * This plan will also be overridden by any matching `customEndpointingRules`.
+   */
+  transcriptionEndpointingPlan?: TranscriptionEndpointingPlan;
+}
+
+export interface StopSpeakingPlan {
+  /**
+   * This is the number of words that the customer has to say before the assistant will stop talking.
+   *
+   * Words like "stop", "actually", "no", etc. will always interrupt immediately regardless of this value.
+   *
+   * Words like "okay", "yeah", "right" will never interrupt.
+   *
+   * When set to 0, `voiceSeconds` is used in addition to the transcriptions to determine the customer has started speaking.
+   *
+   * Defaults to 0.
+   *
+   * @default 0
+   * @min 0
+   * @max 10
+   * @example 0
+   */
+  numWords?: number;
+  /**
+   * This is the seconds customer has to speak before the assistant stops talking. This uses the VAD (Voice Activity Detection) spike to determine if the customer has started speaking.
+   *
+   * Considerations:
+   * - A lower value might be more responsive but could potentially pick up non-speech sounds.
+   * - A higher value reduces false positives but might slightly delay the detection of speech onset.
+   *
+   * This is only used if `numWords` is set to 0.
+   *
+   * Defaults to 0.2
+   *
+   * @default 0.2
+   * @min 0
+   * @max 0.5
+   * @example 0.2
+   */
+  voiceSeconds?: number;
+  /**
+   * This is the seconds to wait before the assistant will start talking again after being interrupted.
+   *
+   * Defaults to 1.
+   *
+   * @default 1
+   * @min 0
+   * @max 10
+   * @example 1
+   */
+  backoffSeconds?: number;
+  /**
+   * These are the phrases that will never interrupt the assistant, even if numWords threshold is met.
+   * These are typically acknowledgement or backchanneling phrases.
+   * @default ["i understand","i see","i got it","i hear you","im listening","im with you","right","okay","ok","sure","alright","got it","understood","yeah","yes","uh-huh","mm-hmm","gotcha","mhmm","ah","yeah okay","yeah sure"]
+   * @example ["i understand","i see","i got it","i hear you","im listening","im with you","right","okay","ok","sure","alright","got it","understood","yeah","yes","uh-huh","mm-hmm","gotcha","mhmm","ah","yeah okay","yeah sure"]
+   */
+  acknowledgementPhrases?: string[];
+  /**
+   * These are the phrases that will always interrupt the assistant immediately, regardless of numWords.
+   * These are typically phrases indicating disagreement or desire to stop.
+   * @default ["stop","shut","up","enough","quiet","silence","but","dont","not","no","hold","wait","cut","pause","nope","nah","nevermind","never","bad","actually"]
+   * @example ["stop","shut","up","enough","quiet","silence","but","dont","not","no","hold","wait","cut","pause","nope","nah","nevermind","never","bad","actually"]
+   */
+  interruptionPhrases?: string[];
+}
+
+export interface MonitorPlan {
+  /**
+   * This determines whether the assistant's calls allow live listening. Defaults to true.
+   *
+   * Fetch `call.monitor.listenUrl` to get the live listening URL.
+   *
+   * @default true
+   * @example false
+   */
+  listenEnabled?: boolean;
+  /**
+   * This enables authentication on the `call.monitor.listenUrl`.
+   *
+   * If `listenAuthenticationEnabled` is `true`, the `call.monitor.listenUrl` will require an `Authorization: Bearer <vapi-public-api-key>` header.
+   *
+   * @default false
+   * @example false
+   */
+  listenAuthenticationEnabled?: boolean;
+  /**
+   * This determines whether the assistant's calls allow live control. Defaults to true.
+   *
+   * Fetch `call.monitor.controlUrl` to get the live control URL.
+   *
+   * To use, send any control message via a POST request to `call.monitor.controlUrl`. Here are the types of controls supported: https://docs.vapi.ai/api-reference/messages/client-inbound-message
+   *
+   * @default true
+   * @example false
+   */
+  controlEnabled?: boolean;
+  /**
+   * This enables authentication on the `call.monitor.controlUrl`.
+   *
+   * If `controlAuthenticationEnabled` is `true`, the `call.monitor.controlUrl` will require an `Authorization: Bearer <vapi-public-api-key>` header.
+   *
+   * @default false
+   * @example false
+   */
+  controlAuthenticationEnabled?: boolean;
+}
+
+export interface SmartDenoisingPlan {
+  /**
+   * Whether smart denoising using Krisp is enabled.
+   * @default false
+   */
+  enabled?: boolean;
+}
+
+export interface FourierDenoisingPlan {
+  /**
+   * Whether Fourier denoising is enabled. Note that this is experimental and may not work as expected.
+   * @default false
+   */
+  enabled?: boolean;
+  /**
+   * Whether automatic media detection is enabled. When enabled, the filter will automatically
+   * detect consistent background TV/music/radio and switch to more aggressive filtering settings.
+   * Only applies when enabled is true.
+   * @default true
+   * @example true
+   */
+  mediaDetectionEnabled?: boolean;
+  /**
+   * Static threshold in dB used as fallback when no baseline is established.
+   * @min -80
+   * @max 0
+   * @default -35
+   * @example -35
+   */
+  staticThreshold?: number;
+  /**
+   * How far below the rolling baseline to filter audio, in dB.
+   * Lower values (e.g., -10) are more aggressive, higher values (e.g., -20) are more conservative.
+   * @min -30
+   * @max -5
+   * @default -15
+   * @example -15
+   */
+  baselineOffsetDb?: number;
+  /**
+   * Rolling window size in milliseconds for calculating the audio baseline.
+   * Larger windows adapt more slowly but are more stable.
+   * @min 1000
+   * @max 30000
+   * @default 3000
+   * @example 3000
+   */
+  windowSizeMs?: number;
+  /**
+   * Percentile to use for baseline calculation (1-99).
+   * Higher percentiles (e.g., 85) focus on louder speech, lower percentiles (e.g., 50) include quieter speech.
+   * @min 1
+   * @max 99
+   * @default 85
+   * @example 85
+   */
+  baselinePercentile?: number;
+}
+
+export interface BackgroundSpeechDenoisingPlan {
+  /** Whether smart denoising using Krisp is enabled. */
+  smartDenoisingPlan?: SmartDenoisingPlan;
+  /**
+   * Whether Fourier denoising is enabled. Note that this is experimental and may not work as expected.
+   *
+   * This can be combined with smart denoising, and will be run afterwards.
+   */
+  fourierDenoisingPlan?: FourierDenoisingPlan;
+}
+
+export interface KeypadInputPlan {
+  /**
+   * This keeps track of whether the user has enabled keypad input.
+   * By default, it is off.
+   *
+   * @default false
+   */
+  enabled?: boolean;
+  /**
+   * This is the time in seconds to wait before processing the input.
+   * If the input is not received within this time, the input will be ignored.
+   * If set to "off", the input will be processed when the user enters a delimiter or immediately if no delimiter is used.
+   *
+   * @default 2
+   * @min 0
+   * @max 10
+   */
+  timeoutSeconds?: number;
+  /**
+   * This is the delimiter(s) that will be used to process the input.
+   * Can be '#', '*', or an empty array.
+   */
+  delimiters?: '#' | '*' | '';
+}
+
 export interface WorkflowUserEditable {
   nodes: (ConversationNode | ToolNode)[];
-  model?: WorkflowOpenAIModel | WorkflowAnthropicModel;
+  /**
+   * This is the model for the workflow.
+   *
+   * This can be overridden at node level using `nodes[n].model`.
+   */
+  model?: WorkflowOpenAIModel | WorkflowAnthropicModel | WorkflowGoogleModel | WorkflowCustomModel;
+  /**
+   * This is the transcriber for the workflow.
+   *
+   * This can be overridden at node level using `nodes[n].transcriber`.
+   */
+  transcriber?:
+    | AssemblyAITranscriber
+    | AzureSpeechTranscriber
+    | CustomTranscriber
+    | DeepgramTranscriber
+    | ElevenLabsTranscriber
+    | GladiaTranscriber
+    | GoogleTranscriber
+    | SpeechmaticsTranscriber
+    | TalkscriberTranscriber
+    | OpenAITranscriber
+    | CartesiaTranscriber;
+  /**
+   * This is the voice for the workflow.
+   *
+   * This can be overridden at node level using `nodes[n].voice`.
+   */
+  voice?:
+    | AzureVoice
+    | CartesiaVoice
+    | CustomVoice
+    | DeepgramVoice
+    | ElevenLabsVoice
+    | HumeVoice
+    | LMNTVoice
+    | NeuphonicVoice
+    | OpenAIVoice
+    | PlayHTVoice
+    | RimeAIVoice
+    | SmallestAIVoice
+    | TavusVoice
+    | VapiVoice
+    | SesameVoice
+    | InworldVoice
+    | MinimaxVoice;
+  /**
+   * This is the plan for observability of workflow's calls.
+   *
+   * Currently, only Langfuse is supported.
+   */
+  observabilityPlan?: LangfuseObservabilityPlan;
+  /**
+   * This is the background sound in the call. Default for phone calls is 'office' and default for web calls is 'off'.
+   * You can also provide a custom sound by providing a URL to an audio file.
+   */
+  backgroundSound?: 'off' | 'office' | string;
+  /** This is a set of actions that will be performed on certain events. */
+  hooks?: (
+    | CallHookCallEnding
+    | CallHookAssistantSpeechInterrupted
+    | CallHookCustomerSpeechInterrupted
+    | CallHookCustomerSpeechTimeout
+  )[];
+  /** These are dynamic credentials that will be used for the workflow calls. By default, all the credentials are available for use in the call but you can supplement an additional credentials using this. Dynamic credentials override existing credentials. */
+  credentials?: (
+    | ({
+        provider: '11labs';
+      } & CreateElevenLabsCredentialDTO)
+    | ({
+        provider: 'anthropic';
+      } & CreateAnthropicCredentialDTO)
+    | ({
+        provider: 'anyscale';
+      } & CreateAnyscaleCredentialDTO)
+    | ({
+        provider: 'assembly-ai';
+      } & CreateAssemblyAICredentialDTO)
+    | ({
+        provider: 'azure-openai';
+      } & CreateAzureOpenAICredentialDTO)
+    | ({
+        provider: 'azure';
+      } & CreateAzureCredentialDTO)
+    | ({
+        provider: 'byo-sip-trunk';
+      } & CreateByoSipTrunkCredentialDTO)
+    | ({
+        provider: 'cartesia';
+      } & CreateCartesiaCredentialDTO)
+    | ({
+        provider: 'cerebras';
+      } & CreateCerebrasCredentialDTO)
+    | ({
+        provider: 'cloudflare';
+      } & CreateCloudflareCredentialDTO)
+    | ({
+        provider: 'custom-llm';
+      } & CreateCustomLLMCredentialDTO)
+    | ({
+        provider: 'deepgram';
+      } & CreateDeepgramCredentialDTO)
+    | ({
+        provider: 'deepinfra';
+      } & CreateDeepInfraCredentialDTO)
+    | ({
+        provider: 'deep-seek';
+      } & CreateDeepSeekCredentialDTO)
+    | ({
+        provider: 'gcp';
+      } & CreateGcpCredentialDTO)
+    | ({
+        provider: 'gladia';
+      } & CreateGladiaCredentialDTO)
+    | ({
+        provider: 'gohighlevel';
+      } & CreateGoHighLevelCredentialDTO)
+    | ({
+        provider: 'google';
+      } & CreateGoogleCredentialDTO)
+    | ({
+        provider: 'groq';
+      } & CreateGroqCredentialDTO)
+    | ({
+        provider: 'inflection-ai';
+      } & CreateInflectionAICredentialDTO)
+    | ({
+        provider: 'langfuse';
+      } & CreateLangfuseCredentialDTO)
+    | ({
+        provider: 'lmnt';
+      } & CreateLmntCredentialDTO)
+    | ({
+        provider: 'make';
+      } & CreateMakeCredentialDTO)
+    | ({
+        provider: 'openai';
+      } & CreateOpenAICredentialDTO)
+    | ({
+        provider: 'openrouter';
+      } & CreateOpenRouterCredentialDTO)
+    | ({
+        provider: 'perplexity-ai';
+      } & CreatePerplexityAICredentialDTO)
+    | ({
+        provider: 'playht';
+      } & CreatePlayHTCredentialDTO)
+    | ({
+        provider: 'rime-ai';
+      } & CreateRimeAICredentialDTO)
+    | ({
+        provider: 'runpod';
+      } & CreateRunpodCredentialDTO)
+    | ({
+        provider: 's3';
+      } & CreateS3CredentialDTO)
+    | ({
+        provider: 'supabase';
+      } & CreateSupabaseCredentialDTO)
+    | ({
+        provider: 'smallest-ai';
+      } & CreateSmallestAICredentialDTO)
+    | ({
+        provider: 'tavus';
+      } & CreateTavusCredentialDTO)
+    | ({
+        provider: 'together-ai';
+      } & CreateTogetherAICredentialDTO)
+    | ({
+        provider: 'twilio';
+      } & CreateTwilioCredentialDTO)
+    | ({
+        provider: 'vonage';
+      } & CreateVonageCredentialDTO)
+    | ({
+        provider: 'webhook';
+      } & CreateWebhookCredentialDTO)
+    | ({
+        provider: 'xai';
+      } & CreateXAiCredentialDTO)
+    | ({
+        provider: 'neuphonic';
+      } & CreateNeuphonicCredentialDTO)
+    | ({
+        provider: 'hume';
+      } & CreateHumeCredentialDTO)
+    | ({
+        provider: 'mistral';
+      } & CreateMistralCredentialDTO)
+    | ({
+        provider: 'speechmatics';
+      } & CreateSpeechmaticsCredentialDTO)
+    | ({
+        provider: 'trieve';
+      } & CreateTrieveCredentialDTO)
+    | ({
+        provider: 'google.calendar.oauth2-client';
+      } & CreateGoogleCalendarOAuth2ClientCredentialDTO)
+    | ({
+        provider: 'google.calendar.oauth2-authorization';
+      } & CreateGoogleCalendarOAuth2AuthorizationCredentialDTO)
+    | ({
+        provider: 'google.sheets.oauth2-authorization';
+      } & CreateGoogleSheetsOAuth2AuthorizationCredentialDTO)
+    | ({
+        provider: 'slack.oauth2-authorization';
+      } & CreateSlackOAuth2AuthorizationCredentialDTO)
+    | ({
+        provider: 'ghl.oauth2-authorization';
+      } & CreateGoHighLevelMCPCredentialDTO)
+    | ({
+        provider: 'inworld';
+      } & CreateInworldCredentialDTO)
+    | ({
+        provider: 'minimax';
+      } & CreateMinimaxCredentialDTO)
+  )[];
   /** @maxLength 80 */
   name: string;
   edges: Edge[];
   /** @maxLength 5000 */
   globalPrompt?: string;
+  /**
+   * This is where Vapi will send webhooks. You can find all webhooks available along with their shape in ServerMessage schema.
+   *
+   * The order of precedence is:
+   *
+   * 1. tool.server
+   * 2. workflow.server / assistant.server
+   * 3. phoneNumber.server
+   * 4. org.server
+   */
+  server?: Server;
+  /** This is the compliance plan for the workflow. It allows you to configure HIPAA and other compliance settings. */
+  compliancePlan?: CompliancePlan;
+  /** This is the plan for analysis of workflow's calls. Stored in `call.analysis`. */
+  analysisPlan?: AnalysisPlan;
+  /** This is the plan for artifacts generated during workflow's calls. Stored in `call.artifact`. */
+  artifactPlan?: ArtifactPlan;
+  /**
+   * This is the plan for when the workflow nodes should start talking.
+   *
+   * You should configure this if you're running into these issues:
+   * - The assistant is too slow to start talking after the customer is done speaking.
+   * - The assistant is too fast to start talking after the customer is done speaking.
+   * - The assistant is so fast that it's actually interrupting the customer.
+   */
+  startSpeakingPlan?: StartSpeakingPlan;
+  /**
+   * This is the plan for when workflow nodes should stop talking on customer interruption.
+   *
+   * You should configure this if you're running into these issues:
+   * - The assistant is too slow to recognize customer's interruption.
+   * - The assistant is too fast to recognize customer's interruption.
+   * - The assistant is getting interrupted by phrases that are just acknowledgments.
+   * - The assistant is getting interrupted by background noises.
+   * - The assistant is not properly stopping -- it starts talking right after getting interrupted.
+   */
+  stopSpeakingPlan?: StopSpeakingPlan;
+  /**
+   * This is the plan for real-time monitoring of the workflow's calls.
+   *
+   * Usage:
+   * - To enable live listening of the workflow's calls, set `monitorPlan.listenEnabled` to `true`.
+   * - To enable live control of the workflow's calls, set `monitorPlan.controlEnabled` to `true`.
+   */
+  monitorPlan?: MonitorPlan;
+  /**
+   * This enables filtering of noise and background speech while the user is talking.
+   *
+   * Features:
+   * - Smart denoising using Krisp
+   * - Fourier denoising
+   *
+   * Both can be used together. Order of precedence:
+   * - Smart denoising
+   * - Fourier denoising
+   */
+  backgroundSpeechDenoisingPlan?: BackgroundSpeechDenoisingPlan;
+  /** These are the credentials that will be used for the workflow calls. By default, all the credentials are available for use in the call but you can provide a subset using this. */
+  credentialIds?: string[];
+  /** This is the plan for keypad input handling during workflow calls. */
+  keypadInputPlan?: KeypadInputPlan;
 }
 
 export interface VapiModel {
@@ -5781,22 +7370,6 @@ export interface ExactReplacement {
   value: string;
 }
 
-export interface RegexOption {
-  /**
-   * This is the type of the regex option. Options are:
-   * - `ignore-case`: Ignores the case of the text being matched. Add
-   * - `whole-word`: Matches whole words only.
-   * - `multi-line`: Matches across multiple lines.
-   */
-  type: 'ignore-case' | 'whole-word' | 'multi-line';
-  /**
-   * This is whether to enable the option.
-   *
-   * @default false
-   */
-  enabled: boolean;
-}
-
 export interface RegexReplacement {
   /**
    * This is the regex replacement type. You can use this to replace a word or phrase that matches a pattern.
@@ -5969,6 +7542,9 @@ export interface FallbackPlan {
     | FallbackRimeAIVoice
     | FallbackSmallestAIVoice
     | FallbackTavusVoice
+    | FallbackNeuphonicVoice
+    | FallbackSesameVoice
+    | FallbackInworldVoice
   )[];
 }
 
@@ -6185,6 +7761,19 @@ export interface DeepgramVoice {
   fallbackPlan?: FallbackPlan;
 }
 
+export interface ElevenLabsPronunciationDictionaryLocator {
+  /**
+   * This is the ElevenLabs Pronunciation Dictionary ID
+   * This is the ID of the pronunciation dictionary to use.
+   */
+  pronunciationDictionaryId: string;
+  /**
+   * This is the ElevenLabs Pronunciation Dictionary Version ID
+   * This is the version ID of the pronunciation dictionary to use.
+   */
+  versionId: string;
+}
+
 export interface ElevenLabsVoice {
   /**
    * This is the flag to toggle voice caching for the assistant.
@@ -6275,10 +7864,12 @@ export interface ElevenLabsVoice {
     | 'eleven_flash_v2'
     | 'eleven_flash_v2_5'
     | 'eleven_monolingual_v1';
-  /** This is the plan for chunking the model output before it is sent to the voice provider. */
-  chunkPlan?: ChunkPlan;
   /** This is the language (ISO 639-1) that is enforced for the model. Currently only Turbo v2.5 supports language enforcement. For other models, an error will be returned if language code is provided. */
   language?: string;
+  /** This is the plan for chunking the model output before it is sent to the voice provider. */
+  chunkPlan?: ChunkPlan;
+  /** This is the pronunciation dictionary locators to use. */
+  pronunciationDictionaryLocators?: ElevenLabsPronunciationDictionaryLocator[];
   /** This is the plan for voice provider fallbacks in the event that the primary voice provider fails. */
   fallbackPlan?: FallbackPlan;
 }
@@ -6327,7 +7918,50 @@ export interface LMNTVoice {
   /** This is the voice provider that will be used. */
   provider: 'lmnt';
   /** This is the provider-specific ID that will be used. */
-  voiceId: 'lily' | 'daniel' | string;
+  voiceId:
+    | 'amy'
+    | 'ansel'
+    | 'autumn'
+    | 'ava'
+    | 'brandon'
+    | 'caleb'
+    | 'cassian'
+    | 'chloe'
+    | 'dalton'
+    | 'daniel'
+    | 'dustin'
+    | 'elowen'
+    | 'evander'
+    | 'huxley'
+    | 'james'
+    | 'juniper'
+    | 'kennedy'
+    | 'lauren'
+    | 'leah'
+    | 'lily'
+    | 'lucas'
+    | 'magnus'
+    | 'miles'
+    | 'morgan'
+    | 'natalie'
+    | 'nathan'
+    | 'noah'
+    | 'nyssa'
+    | 'oliver'
+    | 'paige'
+    | 'ryan'
+    | 'sadie'
+    | 'sophie'
+    | 'stella'
+    | 'terrence'
+    | 'tyler'
+    | 'vesper'
+    | 'violet'
+    | 'warrick'
+    | 'zain'
+    | 'zeke'
+    | 'zoe'
+    | string;
   /**
    * This is the speed multiplier that will be used.
    * @min 0.25
@@ -6335,6 +7969,197 @@ export interface LMNTVoice {
    * @example null
    */
   speed?: number;
+  /**
+   * Two letter ISO 639-1 language code. Use "auto" for auto-detection.
+   * @example "en"
+   */
+  language?:
+    | 'aa'
+    | 'ab'
+    | 'ae'
+    | 'af'
+    | 'ak'
+    | 'am'
+    | 'an'
+    | 'ar'
+    | 'as'
+    | 'av'
+    | 'ay'
+    | 'az'
+    | 'ba'
+    | 'be'
+    | 'bg'
+    | 'bh'
+    | 'bi'
+    | 'bm'
+    | 'bn'
+    | 'bo'
+    | 'br'
+    | 'bs'
+    | 'ca'
+    | 'ce'
+    | 'ch'
+    | 'co'
+    | 'cr'
+    | 'cs'
+    | 'cu'
+    | 'cv'
+    | 'cy'
+    | 'da'
+    | 'de'
+    | 'dv'
+    | 'dz'
+    | 'ee'
+    | 'el'
+    | 'en'
+    | 'eo'
+    | 'es'
+    | 'et'
+    | 'eu'
+    | 'fa'
+    | 'ff'
+    | 'fi'
+    | 'fj'
+    | 'fo'
+    | 'fr'
+    | 'fy'
+    | 'ga'
+    | 'gd'
+    | 'gl'
+    | 'gn'
+    | 'gu'
+    | 'gv'
+    | 'ha'
+    | 'he'
+    | 'hi'
+    | 'ho'
+    | 'hr'
+    | 'ht'
+    | 'hu'
+    | 'hy'
+    | 'hz'
+    | 'ia'
+    | 'id'
+    | 'ie'
+    | 'ig'
+    | 'ii'
+    | 'ik'
+    | 'io'
+    | 'is'
+    | 'it'
+    | 'iu'
+    | 'ja'
+    | 'jv'
+    | 'ka'
+    | 'kg'
+    | 'ki'
+    | 'kj'
+    | 'kk'
+    | 'kl'
+    | 'km'
+    | 'kn'
+    | 'ko'
+    | 'kr'
+    | 'ks'
+    | 'ku'
+    | 'kv'
+    | 'kw'
+    | 'ky'
+    | 'la'
+    | 'lb'
+    | 'lg'
+    | 'li'
+    | 'ln'
+    | 'lo'
+    | 'lt'
+    | 'lu'
+    | 'lv'
+    | 'mg'
+    | 'mh'
+    | 'mi'
+    | 'mk'
+    | 'ml'
+    | 'mn'
+    | 'mr'
+    | 'ms'
+    | 'mt'
+    | 'my'
+    | 'na'
+    | 'nb'
+    | 'nd'
+    | 'ne'
+    | 'ng'
+    | 'nl'
+    | 'nn'
+    | 'no'
+    | 'nr'
+    | 'nv'
+    | 'ny'
+    | 'oc'
+    | 'oj'
+    | 'om'
+    | 'or'
+    | 'os'
+    | 'pa'
+    | 'pi'
+    | 'pl'
+    | 'ps'
+    | 'pt'
+    | 'qu'
+    | 'rm'
+    | 'rn'
+    | 'ro'
+    | 'ru'
+    | 'rw'
+    | 'sa'
+    | 'sc'
+    | 'sd'
+    | 'se'
+    | 'sg'
+    | 'si'
+    | 'sk'
+    | 'sl'
+    | 'sm'
+    | 'sn'
+    | 'so'
+    | 'sq'
+    | 'sr'
+    | 'ss'
+    | 'st'
+    | 'su'
+    | 'sv'
+    | 'sw'
+    | 'ta'
+    | 'te'
+    | 'tg'
+    | 'th'
+    | 'ti'
+    | 'tk'
+    | 'tl'
+    | 'tn'
+    | 'to'
+    | 'tr'
+    | 'ts'
+    | 'tt'
+    | 'tw'
+    | 'ty'
+    | 'ug'
+    | 'uk'
+    | 'ur'
+    | 'uz'
+    | 've'
+    | 'vi'
+    | 'vo'
+    | 'wa'
+    | 'wo'
+    | 'xh'
+    | 'yi'
+    | 'yue'
+    | 'yo'
+    | 'za'
+    | 'zh'
+    | 'zu'
+    | 'auto';
   /** This is the plan for chunking the model output before it is sent to the voice provider. */
   chunkPlan?: ChunkPlan;
   /** This is the plan for voice provider fallbacks in the event that the primary voice provider fails. */
@@ -6625,12 +8450,20 @@ export interface RimeAIVoice {
     | 'boulder'
     | 'gypsum'
     | 'zest'
+    | 'luna'
+    | 'celeste'
+    | 'orion'
+    | 'ursa'
+    | 'astra'
+    | 'esther'
+    | 'estelle'
+    | 'andromeda'
     | string;
   /**
-   * This is the model that will be used. Defaults to 'v1' when not specified.
-   * @example "mistv2"
+   * This is the model that will be used. Defaults to 'arcana' when not specified.
+   * @example "arcana"
    */
-  model?: 'v1' | 'mist' | 'mistv2';
+  model?: 'arcana' | 'mistv2' | 'mist';
   /**
    * This is the speed multiplier that will be used.
    * @min 0.1
@@ -6836,6 +8669,167 @@ export interface VapiVoice {
    * @default 1
    */
   speed?: number;
+  /** This is the plan for chunking the model output before it is sent to the voice provider. */
+  chunkPlan?: ChunkPlan;
+  /** This is the plan for voice provider fallbacks in the event that the primary voice provider fails. */
+  fallbackPlan?: FallbackPlan;
+}
+
+export interface InworldVoice {
+  /**
+   * This is the flag to toggle voice caching for the assistant.
+   * @default true
+   * @example true
+   */
+  cachingEnabled?: boolean;
+  /** This is the voice provider that will be used. */
+  provider: 'inworld';
+  /**
+   * Inworld Voice ID
+   * Available voices by language:
+   * • en: Alex, Ashley, Craig, Deborah, Dennis, Edward, Elizabeth, Hades, Julia, Pixie, Mark, Olivia, Priya, Ronald, Sarah, Shaun, Theodore, Timothy, Wendy, Dominus
+   * • zh: Yichen, Xiaoyin, Xinyi, Jing
+   * • nl: Erik, Katrien, Lennart, Lore
+   * • fr: Alain, Hélène, Mathieu, Étienne
+   * • de: Johanna, Josef
+   * • it: Gianni, Orietta
+   * • ja: Asuka, Satoshi
+   * • ko: Hyunwoo, Minji, Seojun, Yoona
+   * • pl: Szymon, Wojciech
+   * • pt: Heitor, Maitê
+   * • es: Diego, Lupita, Miguel, Rafael
+   * @maxLength 120
+   * @example "Alex"
+   */
+  voiceId:
+    | 'Alex'
+    | 'Ashley'
+    | 'Craig'
+    | 'Deborah'
+    | 'Dennis'
+    | 'Edward'
+    | 'Elizabeth'
+    | 'Hades'
+    | 'Julia'
+    | 'Pixie'
+    | 'Mark'
+    | 'Olivia'
+    | 'Priya'
+    | 'Ronald'
+    | 'Sarah'
+    | 'Shaun'
+    | 'Theodore'
+    | 'Timothy'
+    | 'Wendy'
+    | 'Dominus'
+    | 'Yichen'
+    | 'Xiaoyin'
+    | 'Xinyi'
+    | 'Jing'
+    | 'Erik'
+    | 'Katrien'
+    | 'Lennart'
+    | 'Lore'
+    | 'Alain'
+    | 'Hélène'
+    | 'Mathieu'
+    | 'Étienne'
+    | 'Johanna'
+    | 'Josef'
+    | 'Gianni'
+    | 'Orietta'
+    | 'Asuka'
+    | 'Satoshi'
+    | 'Hyunwoo'
+    | 'Minji'
+    | 'Seojun'
+    | 'Yoona'
+    | 'Szymon'
+    | 'Wojciech'
+    | 'Heitor'
+    | 'Maitê'
+    | 'Diego'
+    | 'Lupita'
+    | 'Miguel'
+    | 'Rafael';
+  /**
+   * This is the model that will be used.
+   * @default "inworld-tts-1"
+   */
+  model?: 'inworld-tts-1';
+  /**
+   * Language code for Inworld TTS synthesis
+   * @default "en"
+   */
+  languageCode?: 'en' | 'zh' | 'ko' | 'nl' | 'fr' | 'es' | 'ja' | 'de' | 'it' | 'pl' | 'pt';
+  /** This is the plan for chunking the model output before it is sent to the voice provider. */
+  chunkPlan?: ChunkPlan;
+  /** This is the plan for voice provider fallbacks in the event that the primary voice provider fails. */
+  fallbackPlan?: FallbackPlan;
+}
+
+export interface MinimaxVoice {
+  /**
+   * This is the flag to toggle voice caching for the assistant.
+   * @default true
+   * @example true
+   */
+  cachingEnabled?: boolean;
+  /** This is the voice provider that will be used. */
+  provider: 'minimax';
+  /**
+   * This is the Minimax Voice ID
+   * This is the provider-specific ID that will be used. Use a voice from MINIMAX_PREDEFINED_VOICES or a custom cloned voice ID.
+   */
+  voiceId: string;
+  /**
+   * This is the model that will be used. Options are 'speech-02-hd' and 'speech-02-turbo'.
+   * speech-02-hd is optimized for high-fidelity applications like voiceovers and audiobooks.
+   * speech-02-turbo is designed for real-time applications with low latency.
+   *
+   * @default "speech-02-turbo"
+   * @default "speech-02-turbo"
+   * @example "speech-02-turbo"
+   */
+  model?: 'speech-02-hd' | 'speech-02-turbo';
+  /**
+   * The emotion to use for the voice. If not provided, will use auto-detect mode.
+   * Options include: 'happy', 'sad', 'angry', 'fearful', 'surprised', 'disgusted', 'neutral'
+   * @example "happy"
+   */
+  emotion?: string;
+  /**
+   * Voice pitch adjustment. Range from -12 to 12 semitones.
+   * @default 0
+   * @min -12
+   * @max 12
+   * @default 0
+   * @example 0
+   */
+  pitch?: number;
+  /**
+   * Voice speed adjustment. Range from 0.5 to 2.0.
+   * @default 1.0
+   * @min 0.5
+   * @max 2
+   * @default 1
+   * @example 1
+   */
+  speed?: number;
+  /**
+   * Voice volume adjustment. Range from 0.5 to 2.0.
+   * @default 1.0
+   * @min 0.5
+   * @max 2
+   * @default 1
+   * @example 1
+   */
+  volume?: number;
+  /**
+   * The region for Minimax API. Defaults to "worldwide".
+   * @default "worldwide"
+   */
+  region?: 'worldwide' | 'china';
   /** This is the plan for chunking the model output before it is sent to the voice provider. */
   chunkPlan?: ChunkPlan;
   /** This is the plan for voice provider fallbacks in the event that the primary voice provider fails. */
@@ -7113,6 +9107,8 @@ export interface FallbackElevenLabsVoice {
     | 'eleven_monolingual_v1';
   /** This is the language (ISO 639-1) that is enforced for the model. Currently only Turbo v2.5 supports language enforcement. For other models, an error will be returned if language code is provided. */
   language?: string;
+  /** This is the pronunciation dictionary locators to use. */
+  pronunciationDictionaryLocators?: ElevenLabsPronunciationDictionaryLocator[];
   /** This is the plan for chunking the model output before it is sent to the voice provider. */
   chunkPlan?: ChunkPlan;
 }
@@ -7159,7 +9155,50 @@ export interface FallbackLMNTVoice {
   /** This is the voice provider that will be used. */
   provider: 'lmnt';
   /** This is the provider-specific ID that will be used. */
-  voiceId: 'lily' | 'daniel' | string;
+  voiceId:
+    | 'amy'
+    | 'ansel'
+    | 'autumn'
+    | 'ava'
+    | 'brandon'
+    | 'caleb'
+    | 'cassian'
+    | 'chloe'
+    | 'dalton'
+    | 'daniel'
+    | 'dustin'
+    | 'elowen'
+    | 'evander'
+    | 'huxley'
+    | 'james'
+    | 'juniper'
+    | 'kennedy'
+    | 'lauren'
+    | 'leah'
+    | 'lily'
+    | 'lucas'
+    | 'magnus'
+    | 'miles'
+    | 'morgan'
+    | 'natalie'
+    | 'nathan'
+    | 'noah'
+    | 'nyssa'
+    | 'oliver'
+    | 'paige'
+    | 'ryan'
+    | 'sadie'
+    | 'sophie'
+    | 'stella'
+    | 'terrence'
+    | 'tyler'
+    | 'vesper'
+    | 'violet'
+    | 'warrick'
+    | 'zain'
+    | 'zeke'
+    | 'zoe'
+    | string;
   /**
    * This is the speed multiplier that will be used.
    * @min 0.25
@@ -7167,6 +9206,197 @@ export interface FallbackLMNTVoice {
    * @example null
    */
   speed?: number;
+  /**
+   * Two letter ISO 639-1 language code. Use "auto" for auto-detection.
+   * @example "en"
+   */
+  language?:
+    | 'aa'
+    | 'ab'
+    | 'ae'
+    | 'af'
+    | 'ak'
+    | 'am'
+    | 'an'
+    | 'ar'
+    | 'as'
+    | 'av'
+    | 'ay'
+    | 'az'
+    | 'ba'
+    | 'be'
+    | 'bg'
+    | 'bh'
+    | 'bi'
+    | 'bm'
+    | 'bn'
+    | 'bo'
+    | 'br'
+    | 'bs'
+    | 'ca'
+    | 'ce'
+    | 'ch'
+    | 'co'
+    | 'cr'
+    | 'cs'
+    | 'cu'
+    | 'cv'
+    | 'cy'
+    | 'da'
+    | 'de'
+    | 'dv'
+    | 'dz'
+    | 'ee'
+    | 'el'
+    | 'en'
+    | 'eo'
+    | 'es'
+    | 'et'
+    | 'eu'
+    | 'fa'
+    | 'ff'
+    | 'fi'
+    | 'fj'
+    | 'fo'
+    | 'fr'
+    | 'fy'
+    | 'ga'
+    | 'gd'
+    | 'gl'
+    | 'gn'
+    | 'gu'
+    | 'gv'
+    | 'ha'
+    | 'he'
+    | 'hi'
+    | 'ho'
+    | 'hr'
+    | 'ht'
+    | 'hu'
+    | 'hy'
+    | 'hz'
+    | 'ia'
+    | 'id'
+    | 'ie'
+    | 'ig'
+    | 'ii'
+    | 'ik'
+    | 'io'
+    | 'is'
+    | 'it'
+    | 'iu'
+    | 'ja'
+    | 'jv'
+    | 'ka'
+    | 'kg'
+    | 'ki'
+    | 'kj'
+    | 'kk'
+    | 'kl'
+    | 'km'
+    | 'kn'
+    | 'ko'
+    | 'kr'
+    | 'ks'
+    | 'ku'
+    | 'kv'
+    | 'kw'
+    | 'ky'
+    | 'la'
+    | 'lb'
+    | 'lg'
+    | 'li'
+    | 'ln'
+    | 'lo'
+    | 'lt'
+    | 'lu'
+    | 'lv'
+    | 'mg'
+    | 'mh'
+    | 'mi'
+    | 'mk'
+    | 'ml'
+    | 'mn'
+    | 'mr'
+    | 'ms'
+    | 'mt'
+    | 'my'
+    | 'na'
+    | 'nb'
+    | 'nd'
+    | 'ne'
+    | 'ng'
+    | 'nl'
+    | 'nn'
+    | 'no'
+    | 'nr'
+    | 'nv'
+    | 'ny'
+    | 'oc'
+    | 'oj'
+    | 'om'
+    | 'or'
+    | 'os'
+    | 'pa'
+    | 'pi'
+    | 'pl'
+    | 'ps'
+    | 'pt'
+    | 'qu'
+    | 'rm'
+    | 'rn'
+    | 'ro'
+    | 'ru'
+    | 'rw'
+    | 'sa'
+    | 'sc'
+    | 'sd'
+    | 'se'
+    | 'sg'
+    | 'si'
+    | 'sk'
+    | 'sl'
+    | 'sm'
+    | 'sn'
+    | 'so'
+    | 'sq'
+    | 'sr'
+    | 'ss'
+    | 'st'
+    | 'su'
+    | 'sv'
+    | 'sw'
+    | 'ta'
+    | 'te'
+    | 'tg'
+    | 'th'
+    | 'ti'
+    | 'tk'
+    | 'tl'
+    | 'tn'
+    | 'to'
+    | 'tr'
+    | 'ts'
+    | 'tt'
+    | 'tw'
+    | 'ty'
+    | 'ug'
+    | 'uk'
+    | 'ur'
+    | 'uz'
+    | 've'
+    | 'vi'
+    | 'vo'
+    | 'wa'
+    | 'wo'
+    | 'xh'
+    | 'yi'
+    | 'yue'
+    | 'yo'
+    | 'za'
+    | 'zh'
+    | 'zu'
+    | 'auto';
   /** This is the plan for chunking the model output before it is sent to the voice provider. */
   chunkPlan?: ChunkPlan;
 }
@@ -7449,12 +9679,20 @@ export interface FallbackRimeAIVoice {
     | 'boulder'
     | 'gypsum'
     | 'zest'
+    | 'luna'
+    | 'celeste'
+    | 'orion'
+    | 'ursa'
+    | 'astra'
+    | 'esther'
+    | 'estelle'
+    | 'andromeda'
     | string;
   /**
-   * This is the model that will be used. Defaults to 'v1' when not specified.
-   * @example "mistv2"
+   * This is the model that will be used. Defaults to 'arcana' when not specified.
+   * @example "arcana"
    */
-  model?: 'v1' | 'mist' | 'mistv2';
+  model?: 'arcana' | 'mistv2' | 'mist';
   /**
    * This is the speed multiplier that will be used.
    * @min 0.1
@@ -7615,6 +9853,163 @@ export interface FallbackVapiVoice {
   chunkPlan?: ChunkPlan;
 }
 
+export interface FallbackInworldVoice {
+  /**
+   * This is the flag to toggle voice caching for the assistant.
+   * @default true
+   * @example true
+   */
+  cachingEnabled?: boolean;
+  /** This is the voice provider that will be used. */
+  provider: 'inworld';
+  /**
+   * Inworld Voice ID
+   * Available voices by language:
+   * • en: Alex, Ashley, Craig, Deborah, Dennis, Edward, Elizabeth, Hades, Julia, Pixie, Mark, Olivia, Priya, Ronald, Sarah, Shaun, Theodore, Timothy, Wendy, Dominus
+   * • zh: Yichen, Xiaoyin, Xinyi, Jing
+   * • nl: Erik, Katrien, Lennart, Lore
+   * • fr: Alain, Hélène, Mathieu, Étienne
+   * • de: Johanna, Josef
+   * • it: Gianni, Orietta
+   * • ja: Asuka, Satoshi
+   * • ko: Hyunwoo, Minji, Seojun, Yoona
+   * • pl: Szymon, Wojciech
+   * • pt: Heitor, Maitê
+   * • es: Diego, Lupita, Miguel, Rafael
+   * @maxLength 120
+   * @example "Alex"
+   */
+  voiceId:
+    | 'Alex'
+    | 'Ashley'
+    | 'Craig'
+    | 'Deborah'
+    | 'Dennis'
+    | 'Edward'
+    | 'Elizabeth'
+    | 'Hades'
+    | 'Julia'
+    | 'Pixie'
+    | 'Mark'
+    | 'Olivia'
+    | 'Priya'
+    | 'Ronald'
+    | 'Sarah'
+    | 'Shaun'
+    | 'Theodore'
+    | 'Timothy'
+    | 'Wendy'
+    | 'Dominus'
+    | 'Yichen'
+    | 'Xiaoyin'
+    | 'Xinyi'
+    | 'Jing'
+    | 'Erik'
+    | 'Katrien'
+    | 'Lennart'
+    | 'Lore'
+    | 'Alain'
+    | 'Hélène'
+    | 'Mathieu'
+    | 'Étienne'
+    | 'Johanna'
+    | 'Josef'
+    | 'Gianni'
+    | 'Orietta'
+    | 'Asuka'
+    | 'Satoshi'
+    | 'Hyunwoo'
+    | 'Minji'
+    | 'Seojun'
+    | 'Yoona'
+    | 'Szymon'
+    | 'Wojciech'
+    | 'Heitor'
+    | 'Maitê'
+    | 'Diego'
+    | 'Lupita'
+    | 'Miguel'
+    | 'Rafael';
+  /**
+   * This is the model that will be used.
+   * @default "inworld-tts-1"
+   */
+  model?: 'inworld-tts-1';
+  /**
+   * Language code for Inworld TTS synthesis
+   * @default "en"
+   */
+  languageCode?: 'en' | 'zh' | 'ko' | 'nl' | 'fr' | 'es' | 'ja' | 'de' | 'it' | 'pl' | 'pt';
+  /** This is the plan for chunking the model output before it is sent to the voice provider. */
+  chunkPlan?: ChunkPlan;
+}
+
+export interface FallbackMinimaxVoice {
+  /**
+   * This is the flag to toggle voice caching for the assistant.
+   * @default true
+   * @example true
+   */
+  cachingEnabled?: boolean;
+  /** This is the voice provider that will be used. */
+  provider: 'minimax';
+  /**
+   * This is the Minimax Voice ID
+   * This is the provider-specific ID that will be used. Use a voice from MINIMAX_PREDEFINED_VOICES or a custom cloned voice ID.
+   */
+  voiceId: string;
+  /**
+   * This is the model that will be used. Options are 'speech-02-hd' and 'speech-02-turbo'.
+   * speech-02-hd is optimized for high-fidelity applications like voiceovers and audiobooks.
+   * speech-02-turbo is designed for real-time applications with low latency.
+   *
+   * @default "speech-02-turbo"
+   * @default "speech-02-turbo"
+   * @example "speech-02-turbo"
+   */
+  model?: 'speech-02-hd' | 'speech-02-turbo';
+  /**
+   * The emotion to use for the voice. If not provided, will use auto-detect mode.
+   * Options include: 'happy', 'sad', 'angry', 'fearful', 'surprised', 'disgusted', 'neutral'
+   * @example "happy"
+   */
+  emotion?: string;
+  /**
+   * Voice pitch adjustment. Range from -12 to 12 semitones.
+   * @default 0
+   * @min -12
+   * @max 12
+   * @default 0
+   * @example 0
+   */
+  pitch?: number;
+  /**
+   * Voice speed adjustment. Range from 0.5 to 2.0.
+   * @default 1.0
+   * @min 0.5
+   * @max 2
+   * @default 1
+   * @example 1
+   */
+  speed?: number;
+  /**
+   * Voice volume adjustment. Range from 0.5 to 2.0.
+   * @default 1.0
+   * @min 0.5
+   * @max 2
+   * @default 1
+   * @example 1
+   */
+  volume?: number;
+  /**
+   * The region for Minimax API. Defaults to "worldwide".
+   * @default "worldwide"
+   */
+  region?: 'worldwide' | 'china';
+  /** This is the plan for chunking the model output before it is sent to the voice provider. */
+  chunkPlan?: ChunkPlan;
+}
+
 export interface TransportConfigurationTwilio {
   provider: 'twilio';
   /**
@@ -7744,6 +10139,11 @@ export interface CreateAzureCredentialDTO {
    * @maxLength 10000
    */
   apiKey?: string;
+  /**
+   * This is the order in which this storage provider is tried during upload retries. Lower numbers are tried first in increasing order.
+   * @min 1
+   */
+  fallbackIndex?: number;
   /** This is the bucket plan that can be provided to store call artifacts in Azure Blob Storage. */
   bucketPlan?: AzureBlobStorageBucketPlan;
   /**
@@ -7950,6 +10350,11 @@ export interface CreateCloudflareCredentialDTO {
   apiKey?: string;
   /** Cloudflare Account Email. */
   accountEmail?: string;
+  /**
+   * This is the order in which this storage provider is tried during upload retries. Lower numbers are tried first in increasing order.
+   * @min 1
+   */
+  fallbackIndex?: number;
   /** This is the bucket plan that can be provided to store call artifacts in R2 */
   bucketPlan?: CloudflareR2BucketPlan;
   /**
@@ -7961,7 +10366,7 @@ export interface CreateCloudflareCredentialDTO {
 }
 
 export interface OAuth2AuthenticationPlan {
-  type: 'oauth2' | 'aws-sts';
+  type: 'oauth2';
   /** This is the OAuth2 URL. */
   url: string;
   /** This is the OAuth2 client ID. */
@@ -8083,6 +10488,8 @@ export interface BucketPlan {
    * Usage:
    * - If `credential.type` is `aws`, then this is required.
    * - If `credential.type` is `gcp`, then this is optional since GCP allows buckets to be accessed without a region but region is required for data residency requirements. Read here: https://cloud.google.com/storage/docs/request-endpoints
+   *
+   * This overrides the `credential.region` field if it is provided.
    */
   region?: string;
   /**
@@ -8118,12 +10525,21 @@ export interface BucketPlan {
 export interface CreateGcpCredentialDTO {
   provider: 'gcp';
   /**
+   * This is the order in which this storage provider is tried during upload retries. Lower numbers are tried first in increasing order.
+   * @min 1
+   */
+  fallbackIndex?: number;
+  /**
    * This is the GCP key. This is the JSON that can be generated in the Google Cloud Console at https://console.cloud.google.com/iam-admin/serviceaccounts/details/<service-account-id>/keys.
    *
    * The schema is identical to the JSON that GCP outputs.
    */
   gcpKey: GcpKey;
-  /** This is the bucket plan that can be provided to store call artifacts in GCP. */
+  /**
+   * This is the region of the GCP resource.
+   * @maxLength 40
+   */
+  region?: string;
   bucketPlan?: BucketPlan;
   /**
    * This is the name of credential. This is just for your reference.
@@ -8300,6 +10716,11 @@ export interface CreateS3CredentialDTO {
   /** The path prefix for the uploaded recording. Ex. "recordings/" */
   s3PathPrefix: string;
   /**
+   * This is the order in which this storage provider is tried during upload retries. Lower numbers are tried first in increasing order.
+   * @min 1
+   */
+  fallbackIndex?: number;
+  /**
    * This is the name of credential. This is just for your reference.
    * @minLength 1
    * @maxLength 40
@@ -8364,6 +10785,11 @@ export interface SupabaseBucketPlan {
 export interface CreateSupabaseCredentialDTO {
   /** This is for supabase storage. */
   provider: 'supabase';
+  /**
+   * This is the order in which this storage provider is tried during upload retries. Lower numbers are tried first in increasing order.
+   * @min 1
+   */
+  fallbackIndex?: number;
   bucketPlan?: SupabaseBucketPlan;
   /**
    * This is the name of credential. This is just for your reference.
@@ -8441,8 +10867,14 @@ export interface CreateVonageCredentialDTO {
 
 export interface CreateWebhookCredentialDTO {
   provider: 'webhook';
-  /** This is the authentication plan. Currently supports OAuth2 RFC 6749. */
-  authenticationPlan: OAuth2AuthenticationPlan;
+  /** This is the authentication plan. Supports OAuth2 RFC 6749 and HMAC signing. */
+  authenticationPlan:
+    | ({
+        type: 'oauth2';
+      } & OAuth2AuthenticationPlan)
+    | ({
+        type: 'hmac';
+      } & HMACAuthenticationPlan);
   /**
    * This is the name of credential. This is just for your reference.
    * @minLength 1
@@ -8513,14 +10945,28 @@ export interface CreateSlackOAuth2AuthorizationCredentialDTO {
   name?: string;
 }
 
-export interface TransferAssistantHookAction {
+export interface CreateMinimaxCredentialDTO {
+  provider: 'minimax';
+  /** This is not returned in the API. */
+  apiKey: string;
+  /** This is the Minimax Group ID. */
+  groupId: string;
+  /**
+   * This is the name of credential. This is just for your reference.
+   * @minLength 1
+   * @maxLength 40
+   */
+  name?: string;
+}
+
+export interface TransferHookAction {
   /** This is the type of action - must be "transfer" */
   type: 'transfer';
   /** This is the destination details for the transfer - can be a phone number or SIP URI */
   destination?: TransferDestinationNumber | TransferDestinationSip;
 }
 
-export interface FunctionCallAssistantHookAction {
+export interface FunctionCallHookAction {
   /**
    * These are the messages that will be spoken to the user as the tool is running.
    *
@@ -8552,24 +10998,25 @@ export interface FunctionCallAssistantHookAction {
    *   - Webhook expects a response with tool call result.
    */
   server?: Server;
-  /**
-   * This is the function definition of the tool.
-   *
-   * For `endCall`, `transferCall`, and `dtmf` tools, this is auto-filled based on tool-specific fields like `tool.destinations`. But, even in those cases, you can provide a custom function definition for advanced use cases.
-   *
-   * An example of an advanced use case is if you want to customize the message that's spoken for `endCall` tool. You can specify a function where it returns an argument "reason". Then, in `messages` array, you can have many "request-complete" messages. One of these messages will be triggered if the `messages[].conditions` matches the "reason" argument.
-   */
+  /** This is the function definition of the tool. */
   function?: OpenAIFunction;
 }
 
-export interface SayAssistantHookAction {
+export interface SayHookAction {
   /** This is the type of action - must be "say" */
   type: 'say';
+  /**
+   * This is the prompt for the assistant to generate a response based on existing conversation.
+   * Can be a string or an array of chat messages.
+   */
+  prompt?:
+    | string
+    | (SystemMessage | UserMessage | AssistantMessage | ToolMessage | DeveloperMessage)[];
   /** This is the message to say */
-  exact: object;
+  exact?: object;
 }
 
-export interface AssistantHookFilter {
+export interface CallHookFilter {
   /**
    * This is the type of filter - currently only "oneOf" is supported
    * @maxLength 1000
@@ -8584,36 +11031,110 @@ export interface AssistantHookFilter {
   oneOf: string[];
 }
 
-export interface AssistantHookCallEnding {
+export interface CallHookCallEnding {
   /**
    * This is the event that triggers this hook
    * @maxLength 1000
    */
   on: 'call.ending';
   /** This is the set of actions to perform when the hook triggers */
-  do: (TransferAssistantHookAction | FunctionCallAssistantHookAction)[];
+  do: ToolCallHookAction[];
   /** This is the set of filters that must match for the hook to trigger */
-  filters?: AssistantHookFilter[];
+  filters?: CallHookFilter[];
 }
 
-export interface AssistantHookAssistantSpeechInterrupted {
+export interface CallHookAssistantSpeechInterrupted {
   /**
    * This is the event that triggers this hook
    * @maxLength 1000
    */
   on: 'assistant.speech.interrupted';
   /** This is the set of actions to perform when the hook triggers */
-  do: (TransferAssistantHookAction | FunctionCallAssistantHookAction | SayAssistantHookAction)[];
+  do: (SayHookAction | ToolCallHookAction)[];
 }
 
-export interface AssistantHookCustomerSpeechInterrupted {
+export interface CallHookCustomerSpeechInterrupted {
   /**
    * This is the event that triggers this hook
    * @maxLength 1000
    */
   on: 'customer.speech.interrupted';
   /** This is the set of actions to perform when the hook triggers */
-  do: (TransferAssistantHookAction | FunctionCallAssistantHookAction | SayAssistantHookAction)[];
+  do: (SayHookAction | ToolCallHookAction)[];
+}
+
+export interface ToolCallHookAction {
+  /** This is the type of action - must be "tool" */
+  type: 'tool';
+  /** This is the tool to call. To use an existing tool, send `toolId` instead. */
+  tool?:
+    | CreateApiRequestToolDTO
+    | CreateBashToolDTO
+    | CreateComputerToolDTO
+    | CreateDtmfToolDTO
+    | CreateEndCallToolDTO
+    | CreateFunctionToolDTO
+    | CreateGoHighLevelCalendarAvailabilityToolDTO
+    | CreateGoHighLevelCalendarEventCreateToolDTO
+    | CreateGoHighLevelContactCreateToolDTO
+    | CreateGoHighLevelContactGetToolDTO
+    | CreateGoogleCalendarCheckAvailabilityToolDTO
+    | CreateGoogleCalendarCreateEventToolDTO
+    | CreateGoogleSheetsRowAppendToolDTO
+    | CreateMcpToolDTO
+    | CreateQueryToolDTO
+    | CreateSlackSendMessageToolDTO
+    | CreateSmsToolDTO
+    | CreateTextEditorToolDTO
+    | CreateTransferCallToolDTO;
+  /** This is the tool to call. To use a transient tool, send `tool` instead. */
+  toolId?: string;
+}
+
+export interface CustomerSpeechTimeoutOptions {
+  /**
+   * This is the timeout in seconds before action is triggered.
+   * The clock starts when the assistant finishes speaking and remains active until the user speaks.
+   *
+   * @default 7.5
+   * @min 1
+   * @max 1000
+   */
+  timeoutSeconds: number;
+  /**
+   * This is the maximum number of times the hook will trigger in a call.
+   *
+   * @default 3
+   * @min 1
+   * @max 10
+   */
+  triggerMaxCount?: number;
+  /**
+   * This is whether the counter for hook trigger resets the user speaks.
+   *
+   * @default never
+   */
+  triggerResetMode?: object;
+}
+
+export interface CallHookCustomerSpeechTimeout {
+  /**
+   * Must be either "customer.speech.timeout" or match the pattern "customer.speech.timeout[property=value]"
+   * @maxLength 1000
+   */
+  on: string;
+  /** This is the set of actions to perform when the hook triggers */
+  do: (SayHookAction | ToolCallHookAction)[];
+  /** This is the set of filters that must match for the hook to trigger */
+  options?: CustomerSpeechTimeoutOptions;
+  /**
+   * This is the name of the hook, it can be set by the user to identify the hook.
+   * If no name is provided, the hook will be auto generated as UUID.
+   *
+   * @default UUID
+   * @maxLength 1000
+   */
+  name?: string;
 }
 
 export interface VoicemailDetectionBackoffPlan {
@@ -8787,168 +11308,6 @@ export interface VapiVoicemailDetectionPlan {
   backoffPlan?: VoicemailDetectionBackoffPlan;
 }
 
-export interface CompliancePlan {
-  /**
-   * When this is enabled, no logs, recordings, or transcriptions will be stored.
-   * At the end of the call, you will still receive an end-of-call-report message to store on your server. Defaults to false.
-   * @example {"hipaaEnabled":false}
-   */
-  hipaaEnabled?: boolean;
-  /**
-   * When this is enabled, the user will be restricted to use PCI-compliant providers, and no logs or transcripts are stored.
-   * At the end of the call, you will receive an end-of-call-report message to store on your server. Defaults to false.
-   * @example {"pciEnabled":false}
-   */
-  pciEnabled?: boolean;
-}
-
-export interface StructuredDataPlan {
-  /**
-   * These are the messages used to generate the structured data.
-   *
-   * @default: ```
-   * [
-   *   {
-   *     "role": "system",
-   *     "content": "You are an expert data extractor. You will be given a transcript of a call. Extract structured data per the JSON Schema. DO NOT return anything except the structured data.\n\nJson Schema:\\n{{schema}}\n\nOnly respond with the JSON."
-   *   },
-   *   {
-   *     "role": "user",
-   *     "content": "Here is the transcript:\n\n{{transcript}}\n\n. Here is the ended reason of the call:\n\n{{endedReason}}\n\n"
-   *   }
-   * ]```
-   *
-   * You can customize by providing any messages you want.
-   *
-   * Here are the template variables available:
-   * - {{transcript}}: the transcript of the call from `call.artifact.transcript`- {{systemPrompt}}: the system prompt of the call from `assistant.model.messages[type=system].content`- {{schema}}: the schema of the structured data from `structuredDataPlan.schema`- {{endedReason}}: the ended reason of the call from `call.endedReason`
-   */
-  messages?: object[];
-  /**
-   * This determines whether structured data is generated and stored in `call.analysis.structuredData`. Defaults to false.
-   *
-   * Usage:
-   * - If you want to extract structured data, set this to true and provide a `schema`.
-   *
-   * @default false
-   */
-  enabled?: boolean;
-  /**
-   * This is the schema of the structured data. The output is stored in `call.analysis.structuredData`.
-   *
-   * Complete guide on JSON Schema can be found [here](https://ajv.js.org/json-schema.html#json-data-type).
-   */
-  schema?: JsonSchema;
-  /**
-   * This is how long the request is tried before giving up. When request times out, `call.analysis.structuredData` will be empty.
-   *
-   * Usage:
-   * - To guarantee the structured data is generated, set this value high. Note, this will delay the end of call report in cases where model is slow to respond.
-   *
-   * @default 5 seconds
-   * @min 1
-   * @max 60
-   */
-  timeoutSeconds?: number;
-}
-
-export interface StructuredDataMultiPlan {
-  /** This is the key of the structured data plan in the catalog. */
-  key: string;
-  /** This is an individual structured data plan in the catalog. */
-  plan: StructuredDataPlan;
-}
-
-export interface SuccessEvaluationPlan {
-  /**
-   * This enforces the rubric of the evaluation. The output is stored in `call.analysis.successEvaluation`.
-   *
-   * Options include:
-   * - 'NumericScale': A scale of 1 to 10.
-   * - 'DescriptiveScale': A scale of Excellent, Good, Fair, Poor.
-   * - 'Checklist': A checklist of criteria and their status.
-   * - 'Matrix': A grid that evaluates multiple criteria across different performance levels.
-   * - 'PercentageScale': A scale of 0% to 100%.
-   * - 'LikertScale': A scale of Strongly Agree, Agree, Neutral, Disagree, Strongly Disagree.
-   * - 'AutomaticRubric': Automatically break down evaluation into several criteria, each with its own score.
-   * - 'PassFail': A simple 'true' if call passed, 'false' if not.
-   *
-   * Default is 'PassFail'.
-   */
-  rubric?:
-    | 'NumericScale'
-    | 'DescriptiveScale'
-    | 'Checklist'
-    | 'Matrix'
-    | 'PercentageScale'
-    | 'LikertScale'
-    | 'AutomaticRubric'
-    | 'PassFail';
-  /**
-   * These are the messages used to generate the success evaluation.
-   *
-   * @default: ```
-   * [
-   *   {
-   *     "role": "system",
-   *     "content": "You are an expert call evaluator. You will be given a transcript of a call and the system prompt of the AI participant. Determine if the call was successful based on the objectives inferred from the system prompt. DO NOT return anything except the result.\n\nRubric:\\n{{rubric}}\n\nOnly respond with the result."
-   *   },
-   *   {
-   *     "role": "user",
-   *     "content": "Here is the transcript:\n\n{{transcript}}\n\n"
-   *   },
-   *   {
-   *     "role": "user",
-   *     "content": "Here was the system prompt of the call:\n\n{{systemPrompt}}\n\n. Here is the ended reason of the call:\n\n{{endedReason}}\n\n"
-   *   }
-   * ]```
-   *
-   * You can customize by providing any messages you want.
-   *
-   * Here are the template variables available:
-   * - {{transcript}}: the transcript of the call from `call.artifact.transcript`- {{systemPrompt}}: the system prompt of the call from `assistant.model.messages[type=system].content`- {{rubric}}: the rubric of the success evaluation from `successEvaluationPlan.rubric`- {{endedReason}}: the ended reason of the call from `call.endedReason`
-   */
-  messages?: object[];
-  /**
-   * This determines whether a success evaluation is generated and stored in `call.analysis.successEvaluation`. Defaults to true.
-   *
-   * Usage:
-   * - If you want to disable the success evaluation, set this to false.
-   *
-   * @default true
-   */
-  enabled?: boolean;
-  /**
-   * This is how long the request is tried before giving up. When request times out, `call.analysis.successEvaluation` will be empty.
-   *
-   * Usage:
-   * - To guarantee the success evaluation is generated, set this value high. Note, this will delay the end of call report in cases where model is slow to respond.
-   *
-   * @default 5 seconds
-   * @min 1
-   * @max 60
-   */
-  timeoutSeconds?: number;
-}
-
-export interface AnalysisPlan {
-  /**
-   * The minimum number of messages required to run the analysis plan.
-   * If the number of messages is less than this, analysis will be skipped.
-   * @default 2
-   * @min 0
-   */
-  minMessagesThreshold?: number;
-  /** This is the plan for generating the summary of the call. This outputs to `call.analysis.summary`. */
-  summaryPlan?: SummaryPlan;
-  /** This is the plan for generating the structured data from the call. This outputs to `call.analysis.structuredData`. */
-  structuredDataPlan?: StructuredDataPlan;
-  /** This is an array of structured data plan catalogs. Each entry includes a `key` and a `plan` for generating the structured data from the call. This outputs to `call.analysis.structuredDataMulti`. */
-  structuredDataMultiPlan?: StructuredDataMultiPlan[];
-  /** This is the plan for generating the success evaluation of the call. This outputs to `call.analysis.successEvaluation`. */
-  successEvaluationPlan?: SuccessEvaluationPlan;
-}
-
 export interface MessagePlan {
   /**
    * This are the messages that the assistant will speak when the user hasn't responded for `idleTimeoutSeconds`. Each time the timeout is triggered, a random message will be chosen from this array.
@@ -8991,392 +11350,6 @@ export interface MessagePlan {
   silenceTimeoutMessage?: string;
 }
 
-export interface AssistantCustomEndpointingRule {
-  /**
-   * This endpointing rule is based on the last assistant message before customer started speaking.
-   *
-   * Flow:
-   * - Assistant speaks
-   * - Customer starts speaking
-   * - Customer transcription comes in
-   * - This rule is evaluated on the last assistant message
-   * - If a match is found based on `regex`, the endpointing timeout is set to `timeoutSeconds`
-   *
-   * Usage:
-   * - If you have yes/no questions in your use case like "are you interested in a loan?", you can set a shorter timeout.
-   * - If you have questions where the customer may pause to look up information like "what's my account number?", you can set a longer timeout.
-   */
-  type: 'assistant';
-  /**
-   * This is the regex pattern to match.
-   *
-   * Note:
-   * - This works by using the `RegExp.test` method in Node.JS. Eg. `/hello/.test("hello there")` will return `true`.
-   *
-   * Hot tip:
-   * - In JavaScript, escape `\` when sending the regex pattern. Eg. `"hello\sthere"` will be sent over the wire as `"hellosthere"`. Send `"hello\\sthere"` instead.
-   * - `RegExp.test` does substring matching, so `/cat/.test("I love cats")` will return `true`. To do full string matching, send "^cat$".
-   */
-  regex: string;
-  /**
-   * These are the options for the regex match. Defaults to all disabled.
-   *
-   * @default []
-   */
-  regexOptions?: RegexOption[];
-  /**
-   * This is the endpointing timeout in seconds, if the rule is matched.
-   * @min 0
-   * @max 15
-   */
-  timeoutSeconds: number;
-}
-
-export interface CustomerCustomEndpointingRule {
-  /**
-   * This endpointing rule is based on current customer message as they are speaking.
-   *
-   * Flow:
-   * - Assistant speaks
-   * - Customer starts speaking
-   * - Customer transcription comes in
-   * - This rule is evaluated on the current customer transcription
-   * - If a match is found based on `regex`, the endpointing timeout is set to `timeoutSeconds`
-   *
-   * Usage:
-   * - If you want to wait longer while customer is speaking numbers, you can set a longer timeout.
-   */
-  type: 'customer';
-  /**
-   * This is the regex pattern to match.
-   *
-   * Note:
-   * - This works by using the `RegExp.test` method in Node.JS. Eg. `/hello/.test("hello there")` will return `true`.
-   *
-   * Hot tip:
-   * - In JavaScript, escape `\` when sending the regex pattern. Eg. `"hello\sthere"` will be sent over the wire as `"hellosthere"`. Send `"hello\\sthere"` instead.
-   * - `RegExp.test` does substring matching, so `/cat/.test("I love cats")` will return `true`. To do full string matching, send "^cat$".
-   */
-  regex: string;
-  /**
-   * These are the options for the regex match. Defaults to all disabled.
-   *
-   * @default []
-   */
-  regexOptions?: RegexOption[];
-  /**
-   * This is the endpointing timeout in seconds, if the rule is matched.
-   * @min 0
-   * @max 15
-   */
-  timeoutSeconds: number;
-}
-
-export interface BothCustomEndpointingRule {
-  /**
-   * This endpointing rule is based on both the last assistant message and the current customer message as they are speaking.
-   *
-   * Flow:
-   * - Assistant speaks
-   * - Customer starts speaking
-   * - Customer transcription comes in
-   * - This rule is evaluated on the last assistant message and the current customer transcription
-   * - If assistant message matches `assistantRegex` AND customer message matches `customerRegex`, the endpointing timeout is set to `timeoutSeconds`
-   *
-   * Usage:
-   * - If you want to wait longer while customer is speaking numbers, you can set a longer timeout.
-   */
-  type: 'both';
-  /**
-   * This is the regex pattern to match the assistant's message.
-   *
-   * Note:
-   * - This works by using the `RegExp.test` method in Node.JS. Eg. `/hello/.test("hello there")` will return `true`.
-   *
-   * Hot tip:
-   * - In JavaScript, escape `\` when sending the regex pattern. Eg. `"hello\sthere"` will be sent over the wire as `"hellosthere"`. Send `"hello\\sthere"` instead.
-   * - `RegExp.test` does substring matching, so `/cat/.test("I love cats")` will return `true`. To do full string matching, send "^cat$".
-   */
-  assistantRegex: string;
-  /**
-   * These are the options for the assistant's message regex match. Defaults to all disabled.
-   *
-   * @default []
-   */
-  assistantRegexOptions?: RegexOption[];
-  customerRegex: string;
-  /**
-   * These are the options for the customer's message regex match. Defaults to all disabled.
-   *
-   * @default []
-   */
-  customerRegexOptions?: RegexOption[];
-  /**
-   * This is the endpointing timeout in seconds, if the rule is matched.
-   * @min 0
-   * @max 15
-   */
-  timeoutSeconds: number;
-}
-
-export interface VapiSmartEndpointingPlan {
-  /**
-   * This is the provider for the smart endpointing plan.
-   * @example "vapi"
-   */
-  provider: 'vapi' | 'livekit';
-}
-
-export interface LivekitSmartEndpointingPlan {
-  /**
-   * This is the provider for the smart endpointing plan.
-   * @example "livekit"
-   */
-  provider: 'vapi' | 'livekit';
-  /**
-   * This expression describes how long the bot will wait to start speaking based on the likelihood that the user has reached an endpoint.
-   *
-   * This is a millisecond valued function. It maps probabilities (real numbers on [0,1]) to milliseconds that the bot should wait before speaking ([0, \infty]). Any negative values that are returned are set to zero (the bot can't start talking in the past).
-   *
-   * A probability of zero represents very high confidence that the caller has stopped speaking, and would like the bot to speak to them. A probability of one represents very high confidence that the caller is still speaking.
-   *
-   * Under the hood, this is parsed into a mathjs expression. Whatever you use to write your expression needs to be valid with respect to mathjs
-   *
-   * @default "20 + 500 * sqrt(x) + 2500 * x^3"
-   */
-  waitFunction?: string;
-}
-
-export interface TranscriptionEndpointingPlan {
-  /**
-   * The minimum number of seconds to wait after transcription ending with punctuation before sending a request to the model. Defaults to 0.1.
-   *
-   * This setting exists because the transcriber punctuates the transcription when it's more confident that customer has completed a thought.
-   *
-   * @default 0.1
-   * @min 0
-   * @max 3
-   * @example 0.1
-   */
-  onPunctuationSeconds?: number;
-  /**
-   * The minimum number of seconds to wait after transcription ending without punctuation before sending a request to the model. Defaults to 1.5.
-   *
-   * This setting exists to catch the cases where the transcriber was not confident enough to punctuate the transcription, but the customer is done and has been silent for a long time.
-   *
-   * @default 1.5
-   * @min 0
-   * @max 3
-   * @example 1.5
-   */
-  onNoPunctuationSeconds?: number;
-  /**
-   * The minimum number of seconds to wait after transcription ending with a number before sending a request to the model. Defaults to 0.4.
-   *
-   * This setting exists because the transcriber will sometimes punctuate the transcription ending with a number, even though the customer hasn't uttered the full number. This happens commonly for long numbers when the customer reads the number in chunks.
-   *
-   * @default 0.5
-   * @min 0
-   * @max 3
-   * @example 0.5
-   */
-  onNumberSeconds?: number;
-}
-
-export interface StartSpeakingPlan {
-  /**
-   * This is how long assistant waits before speaking. Defaults to 0.4.
-   *
-   * This is the minimum it will wait but if there is latency is the pipeline, this minimum will be exceeded. This is intended as a stopgap in case the pipeline is moving too fast.
-   *
-   * Example:
-   * - If model generates tokens and voice generates bytes within 100ms, the pipeline still waits 300ms before outputting speech.
-   *
-   * Usage:
-   * - If the customer is taking long pauses, set this to a higher value.
-   * - If the assistant is accidentally jumping in too much, set this to a higher value.
-   *
-   * @default 0.4
-   * @min 0
-   * @max 5
-   * @example 0.4
-   */
-  waitSeconds?: number;
-  /**
-   * @deprecated
-   * @example false
-   */
-  smartEndpointingEnabled?: boolean | 'livekit';
-  /**
-   * This is the plan for smart endpointing. Pick between Vapi smart endpointing or LiveKit smart endpointing (or nothing). We strongly recommend using livekit endpointing when working in English. LiveKit endpointing is not supported in other languages, yet.
-   *
-   * If this is set, it will override and take precedence over `transcriptionEndpointingPlan`.
-   * This plan will still be overridden by any matching `customEndpointingRules`.
-   */
-  smartEndpointingPlan?: VapiSmartEndpointingPlan | LivekitSmartEndpointingPlan;
-  /**
-   * These are the custom endpointing rules to set an endpointing timeout based on a regex on the customer's speech or the assistant's last message.
-   *
-   * Usage:
-   * - If you have yes/no questions like "are you interested in a loan?", you can set a shorter timeout.
-   * - If you have questions where the customer may pause to look up information like "what's my account number?", you can set a longer timeout.
-   * - If you want to wait longer while customer is enumerating a list of numbers, you can set a longer timeout.
-   *
-   * These rules have the highest precedence and will override both `smartEndpointingPlan` and `transcriptionEndpointingPlan` when a rule is matched.
-   *
-   * The rules are evaluated in order and the first one that matches will be used.
-   *
-   * Order of precedence for endpointing:
-   * 1. customEndpointingRules (if any match)
-   * 2. smartEndpointingPlan (if set)
-   * 3. transcriptionEndpointingPlan
-   *
-   * @default []
-   */
-  customEndpointingRules?: (
-    | AssistantCustomEndpointingRule
-    | CustomerCustomEndpointingRule
-    | BothCustomEndpointingRule
-  )[];
-  /**
-   * This determines how a customer speech is considered done (endpointing) using the transcription of customer's speech.
-   *
-   * Once an endpoint is triggered, the request is sent to `assistant.model`.
-   *
-   * Note: This plan is only used if `smartEndpointingPlan` is not set. If both are provided, `smartEndpointingPlan` takes precedence.
-   * This plan will also be overridden by any matching `customEndpointingRules`.
-   */
-  transcriptionEndpointingPlan?: TranscriptionEndpointingPlan;
-}
-
-export interface StopSpeakingPlan {
-  /**
-   * This is the number of words that the customer has to say before the assistant will stop talking.
-   *
-   * Words like "stop", "actually", "no", etc. will always interrupt immediately regardless of this value.
-   *
-   * Words like "okay", "yeah", "right" will never interrupt.
-   *
-   * When set to 0, `voiceSeconds` is used in addition to the transcriptions to determine the customer has started speaking.
-   *
-   * Defaults to 0.
-   *
-   * @default 0
-   * @min 0
-   * @max 10
-   * @example 0
-   */
-  numWords?: number;
-  /**
-   * This is the seconds customer has to speak before the assistant stops talking. This uses the VAD (Voice Activity Detection) spike to determine if the customer has started speaking.
-   *
-   * Considerations:
-   * - A lower value might be more responsive but could potentially pick up non-speech sounds.
-   * - A higher value reduces false positives but might slightly delay the detection of speech onset.
-   *
-   * This is only used if `numWords` is set to 0.
-   *
-   * Defaults to 0.2
-   *
-   * @default 0.2
-   * @min 0
-   * @max 0.5
-   * @example 0.2
-   */
-  voiceSeconds?: number;
-  /**
-   * This is the seconds to wait before the assistant will start talking again after being interrupted.
-   *
-   * Defaults to 1.
-   *
-   * @default 1
-   * @min 0
-   * @max 10
-   * @example 1
-   */
-  backoffSeconds?: number;
-  /**
-   * These are the phrases that will never interrupt the assistant, even if numWords threshold is met.
-   * These are typically acknowledgement or backchanneling phrases.
-   * @default ["i understand","i see","i got it","i hear you","im listening","im with you","right","okay","ok","sure","alright","got it","understood","yeah","yes","uh-huh","mm-hmm","gotcha","mhmm","ah","yeah okay","yeah sure"]
-   * @example ["i understand","i see","i got it","i hear you","im listening","im with you","right","okay","ok","sure","alright","got it","understood","yeah","yes","uh-huh","mm-hmm","gotcha","mhmm","ah","yeah okay","yeah sure"]
-   */
-  acknowledgementPhrases?: string[];
-  /**
-   * These are the phrases that will always interrupt the assistant immediately, regardless of numWords.
-   * These are typically phrases indicating disagreement or desire to stop.
-   * @default ["stop","shut","up","enough","quiet","silence","but","dont","not","no","hold","wait","cut","pause","nope","nah","nevermind","never","bad","actually"]
-   * @example ["stop","shut","up","enough","quiet","silence","but","dont","not","no","hold","wait","cut","pause","nope","nah","nevermind","never","bad","actually"]
-   */
-  interruptionPhrases?: string[];
-}
-
-export interface MonitorPlan {
-  /**
-   * This determines whether the assistant's calls allow live listening. Defaults to true.
-   *
-   * Fetch `call.monitor.listenUrl` to get the live listening URL.
-   *
-   * @default true
-   * @example false
-   */
-  listenEnabled?: boolean;
-  /**
-   * This enables authentication on the `call.monitor.listenUrl`.
-   *
-   * If `listenAuthenticationEnabled` is `true`, the `call.monitor.listenUrl` will require an `Authorization: Bearer <vapi-public-api-key>` header.
-   *
-   * @default false
-   * @example false
-   */
-  listenAuthenticationEnabled?: boolean;
-  /**
-   * This determines whether the assistant's calls allow live control. Defaults to true.
-   *
-   * Fetch `call.monitor.controlUrl` to get the live control URL.
-   *
-   * To use, send any control message via a POST request to `call.monitor.controlUrl`. Here are the types of controls supported: https://docs.vapi.ai/api-reference/messages/client-inbound-message
-   *
-   * @default true
-   * @example false
-   */
-  controlEnabled?: boolean;
-  /**
-   * This enables authentication on the `call.monitor.controlUrl`.
-   *
-   * If `controlAuthenticationEnabled` is `true`, the `call.monitor.controlUrl` will require an `Authorization: Bearer <vapi-public-api-key>` header.
-   *
-   * @default false
-   * @example false
-   */
-  controlAuthenticationEnabled?: boolean;
-}
-
-export interface KeypadInputPlan {
-  /**
-   * This keeps track of whether the user has enabled keypad input.
-   * By default, it is off.
-   *
-   * @default false
-   */
-  enabled?: boolean;
-  /**
-   * This is the time in seconds to wait before processing the input.
-   * If the input is not received within this time, the input will be ignored.
-   * If set to "off", the input will be processed when the user enters a delimiter or immediately if no delimiter is used.
-   *
-   * @default 2
-   * @min 0
-   * @max 10
-   */
-  timeoutSeconds?: number;
-  /**
-   * This is the delimiter(s) that will be used to process the input.
-   * Can be '#', '*', or an empty array.
-   */
-  delimiters?: '#' | '*' | '';
-}
-
 export interface CreateAssistantDTO {
   /** These are the options for the assistant's transcriber. */
   transcriber?:
@@ -9389,7 +11362,8 @@ export interface CreateAssistantDTO {
     | GoogleTranscriber
     | SpeechmaticsTranscriber
     | TalkscriberTranscriber
-    | OpenAITranscriber;
+    | OpenAITranscriber
+    | CartesiaTranscriber;
   /** These are the options for the assistant's LLM. */
   model?:
     | AnthropicModel
@@ -9422,7 +11396,9 @@ export interface CreateAssistantDTO {
     | SmallestAIVoice
     | TavusVoice
     | VapiVoice
-    | SesameVoice;
+    | SesameVoice
+    | InworldVoice
+    | MinimaxVoice;
   /**
    * This is the first message that the assistant will say. This can also be a URL to a containerized audio file (mp3, wav, etc.).
    *
@@ -9500,16 +11476,12 @@ export interface CreateAssistantDTO {
     | 'transfer-destination-request'
     | 'transfer-update'
     | 'user-interrupted'
-    | 'voice-input';
-  /**
-   * How many seconds of silence to wait before ending the call. Defaults to 30.
-   *
-   * @default 30
-   * @min 10
-   * @max 3600
-   * @example 30
-   */
-  silenceTimeoutSeconds?: number;
+    | 'voice-input'
+    | 'chat.created'
+    | 'chat.deleted'
+    | 'session.created'
+    | 'session.updated'
+    | 'session.deleted';
   /**
    * This is the maximum number of seconds that the call will last. When the call reaches this duration, it will be ended.
    *
@@ -9530,6 +11502,7 @@ export interface CreateAssistantDTO {
    * Default `false` while in beta.
    *
    * @default false
+   * @deprecated
    * @example false
    */
   backgroundDenoisingEnabled?: boolean;
@@ -9545,8 +11518,9 @@ export interface CreateAssistantDTO {
   /** These are the configurations to be passed to the transport providers of assistant's calls, like Twilio. You can store multiple configurations for different transport providers. For a call, only the configuration matching the call transport provider is used. */
   transportConfigurations?: TransportConfigurationTwilio[];
   /**
-   * This is the plan for observability configuration of assistant's calls.
-   * Currently supports Langfuse for tracing and monitoring.
+   * This is the plan for observability of assistant's calls.
+   *
+   * Currently, only Langfuse is supported.
    */
   observabilityPlan?: LangfuseObservabilityPlan;
   /** These are dynamic credentials that will be used for the assistant calls. By default, all the credentials are available for use in the call but you can supplement an additional credentials using this. Dynamic credentials override existing credentials. */
@@ -9695,12 +11669,19 @@ export interface CreateAssistantDTO {
     | ({
         provider: 'ghl.oauth2-authorization';
       } & CreateGoHighLevelMCPCredentialDTO)
+    | ({
+        provider: 'inworld';
+      } & CreateInworldCredentialDTO)
+    | ({
+        provider: 'minimax';
+      } & CreateMinimaxCredentialDTO)
   )[];
   /** This is a set of actions that will be performed on certain events. */
   hooks?: (
-    | AssistantHookCallEnding
-    | AssistantHookAssistantSpeechInterrupted
-    | AssistantHookCustomerSpeechInterrupted
+    | CallHookCallEnding
+    | CallHookAssistantSpeechInterrupted
+    | CallHookCustomerSpeechInterrupted
+    | CallHookCustomerSpeechTimeout
   )[];
   /**
    * This is the name of the assistant.
@@ -9728,18 +11709,27 @@ export interface CreateAssistantDTO {
   compliancePlan?: CompliancePlan;
   /** This is for metadata you want to store on the assistant. */
   metadata?: object;
+  /**
+   * This enables filtering of noise and background speech while the user is talking.
+   *
+   * Features:
+   * - Smart denoising using Krisp
+   * - Fourier denoising
+   *
+   * Smart denoising can be combined with or used independently of Fourier denoising.
+   *
+   * Order of precedence:
+   * - Smart denoising
+   * - Fourier denoising
+   */
+  backgroundSpeechDenoisingPlan?: BackgroundSpeechDenoisingPlan;
   /** This is the plan for analysis of assistant's calls. Stored in `call.analysis`. */
   analysisPlan?: AnalysisPlan;
-  /**
-   * This is the plan for artifacts generated during assistant's calls. Stored in `call.artifact`.
-   *
-   * Note: `recordingEnabled` is currently at the root level. It will be moved to `artifactPlan` in the future, but will remain backwards compatible.
-   */
+  /** This is the plan for artifacts generated during assistant's calls. Stored in `call.artifact`. */
   artifactPlan?: ArtifactPlan;
   /**
    * This is the plan for static predefined messages that can be spoken by the assistant during the call, like `idleMessages`.
-   *
-   * Note: `firstMessage`, `voicemailMessage`, and `endCallMessage` are currently at the root level. They will be moved to `messagePlan` in the future, but will remain backwards compatible.
+   * @deprecated
    */
   messagePlan?: MessagePlan;
   /**
@@ -9768,8 +11758,6 @@ export interface CreateAssistantDTO {
    * Usage:
    * - To enable live listening of the assistant's calls, set `monitorPlan.listenEnabled` to `true`.
    * - To enable live control of the assistant's calls, set `monitorPlan.controlEnabled` to `true`.
-   *
-   * Note, `serverMessages`, `clientMessages`, `serverUrl` and `serverUrlSecret` are currently at the root level but will be moved to `monitorPlan` in the future. Will remain backwards compatible
    */
   monitorPlan?: MonitorPlan;
   /** These are the credentials that will be used for the assistant calls. By default, all the credentials are available for use in the call but you can provide a subset using this. */
@@ -9799,7 +11787,8 @@ export interface AssistantOverrides {
     | GoogleTranscriber
     | SpeechmaticsTranscriber
     | TalkscriberTranscriber
-    | OpenAITranscriber;
+    | OpenAITranscriber
+    | CartesiaTranscriber;
   /** These are the options for the assistant's LLM. */
   model?:
     | AnthropicModel
@@ -9832,7 +11821,9 @@ export interface AssistantOverrides {
     | SmallestAIVoice
     | TavusVoice
     | VapiVoice
-    | SesameVoice;
+    | SesameVoice
+    | InworldVoice
+    | MinimaxVoice;
   /**
    * This is the first message that the assistant will say. This can also be a URL to a containerized audio file (mp3, wav, etc.).
    *
@@ -9910,16 +11901,12 @@ export interface AssistantOverrides {
     | 'transfer-destination-request'
     | 'transfer-update'
     | 'user-interrupted'
-    | 'voice-input';
-  /**
-   * How many seconds of silence to wait before ending the call. Defaults to 30.
-   *
-   * @default 30
-   * @min 10
-   * @max 3600
-   * @example 30
-   */
-  silenceTimeoutSeconds?: number;
+    | 'voice-input'
+    | 'chat.created'
+    | 'chat.deleted'
+    | 'session.created'
+    | 'session.updated'
+    | 'session.deleted';
   /**
    * This is the maximum number of seconds that the call will last. When the call reaches this duration, it will be ended.
    *
@@ -9940,6 +11927,7 @@ export interface AssistantOverrides {
    * Default `false` while in beta.
    *
    * @default false
+   * @deprecated
    * @example false
    */
   backgroundDenoisingEnabled?: boolean;
@@ -9955,8 +11943,9 @@ export interface AssistantOverrides {
   /** These are the configurations to be passed to the transport providers of assistant's calls, like Twilio. You can store multiple configurations for different transport providers. For a call, only the configuration matching the call transport provider is used. */
   transportConfigurations?: TransportConfigurationTwilio[];
   /**
-   * This is the plan for observability configuration of assistant's calls.
-   * Currently supports Langfuse for tracing and monitoring.
+   * This is the plan for observability of assistant's calls.
+   *
+   * Currently, only Langfuse is supported.
    */
   observabilityPlan?: LangfuseObservabilityPlan;
   /** These are dynamic credentials that will be used for the assistant calls. By default, all the credentials are available for use in the call but you can supplement an additional credentials using this. Dynamic credentials override existing credentials. */
@@ -10105,12 +12094,19 @@ export interface AssistantOverrides {
     | ({
         provider: 'ghl.oauth2-authorization';
       } & CreateGoHighLevelMCPCredentialDTO)
+    | ({
+        provider: 'inworld';
+      } & CreateInworldCredentialDTO)
+    | ({
+        provider: 'minimax';
+      } & CreateMinimaxCredentialDTO)
   )[];
   /** This is a set of actions that will be performed on certain events. */
   hooks?: (
-    | AssistantHookCallEnding
-    | AssistantHookAssistantSpeechInterrupted
-    | AssistantHookCustomerSpeechInterrupted
+    | CallHookCallEnding
+    | CallHookAssistantSpeechInterrupted
+    | CallHookCustomerSpeechInterrupted
+    | CallHookCustomerSpeechTimeout
   )[];
   /**
    * These are values that will be used to replace the template variables in the assistant messages and other text-based fields.
@@ -10148,18 +12144,27 @@ export interface AssistantOverrides {
   compliancePlan?: CompliancePlan;
   /** This is for metadata you want to store on the assistant. */
   metadata?: object;
+  /**
+   * This enables filtering of noise and background speech while the user is talking.
+   *
+   * Features:
+   * - Smart denoising using Krisp
+   * - Fourier denoising
+   *
+   * Smart denoising can be combined with or used independently of Fourier denoising.
+   *
+   * Order of precedence:
+   * - Smart denoising
+   * - Fourier denoising
+   */
+  backgroundSpeechDenoisingPlan?: BackgroundSpeechDenoisingPlan;
   /** This is the plan for analysis of assistant's calls. Stored in `call.analysis`. */
   analysisPlan?: AnalysisPlan;
-  /**
-   * This is the plan for artifacts generated during assistant's calls. Stored in `call.artifact`.
-   *
-   * Note: `recordingEnabled` is currently at the root level. It will be moved to `artifactPlan` in the future, but will remain backwards compatible.
-   */
+  /** This is the plan for artifacts generated during assistant's calls. Stored in `call.artifact`. */
   artifactPlan?: ArtifactPlan;
   /**
    * This is the plan for static predefined messages that can be spoken by the assistant during the call, like `idleMessages`.
-   *
-   * Note: `firstMessage`, `voicemailMessage`, and `endCallMessage` are currently at the root level. They will be moved to `messagePlan` in the future, but will remain backwards compatible.
+   * @deprecated
    */
   messagePlan?: MessagePlan;
   /**
@@ -10188,8 +12193,6 @@ export interface AssistantOverrides {
    * Usage:
    * - To enable live listening of the assistant's calls, set `monitorPlan.listenEnabled` to `true`.
    * - To enable live control of the assistant's calls, set `monitorPlan.controlEnabled` to `true`.
-   *
-   * Note, `serverMessages`, `clientMessages`, `serverUrl` and `serverUrlSecret` are currently at the root level but will be moved to `monitorPlan` in the future. Will remain backwards compatible
    */
   monitorPlan?: MonitorPlan;
   /** These are the credentials that will be used for the assistant calls. By default, all the credentials are available for use in the call but you can provide a subset using this. */
@@ -10241,12 +12244,289 @@ export interface CreateSquadDTO {
 
 export interface CreateWorkflowDTO {
   nodes: (ConversationNode | ToolNode)[];
-  model?: WorkflowOpenAIModel | WorkflowAnthropicModel;
+  /**
+   * This is the model for the workflow.
+   *
+   * This can be overridden at node level using `nodes[n].model`.
+   */
+  model?: WorkflowOpenAIModel | WorkflowAnthropicModel | WorkflowGoogleModel | WorkflowCustomModel;
+  /**
+   * This is the transcriber for the workflow.
+   *
+   * This can be overridden at node level using `nodes[n].transcriber`.
+   */
+  transcriber?:
+    | AssemblyAITranscriber
+    | AzureSpeechTranscriber
+    | CustomTranscriber
+    | DeepgramTranscriber
+    | ElevenLabsTranscriber
+    | GladiaTranscriber
+    | GoogleTranscriber
+    | SpeechmaticsTranscriber
+    | TalkscriberTranscriber
+    | OpenAITranscriber
+    | CartesiaTranscriber;
+  /**
+   * This is the voice for the workflow.
+   *
+   * This can be overridden at node level using `nodes[n].voice`.
+   */
+  voice?:
+    | AzureVoice
+    | CartesiaVoice
+    | CustomVoice
+    | DeepgramVoice
+    | ElevenLabsVoice
+    | HumeVoice
+    | LMNTVoice
+    | NeuphonicVoice
+    | OpenAIVoice
+    | PlayHTVoice
+    | RimeAIVoice
+    | SmallestAIVoice
+    | TavusVoice
+    | VapiVoice
+    | SesameVoice
+    | InworldVoice
+    | MinimaxVoice;
+  /**
+   * This is the plan for observability of workflow's calls.
+   *
+   * Currently, only Langfuse is supported.
+   */
+  observabilityPlan?: LangfuseObservabilityPlan;
+  /**
+   * This is the background sound in the call. Default for phone calls is 'office' and default for web calls is 'off'.
+   * You can also provide a custom sound by providing a URL to an audio file.
+   */
+  backgroundSound?: 'off' | 'office' | string;
+  /** This is a set of actions that will be performed on certain events. */
+  hooks?: (
+    | CallHookCallEnding
+    | CallHookAssistantSpeechInterrupted
+    | CallHookCustomerSpeechInterrupted
+    | CallHookCustomerSpeechTimeout
+  )[];
+  /** These are dynamic credentials that will be used for the workflow calls. By default, all the credentials are available for use in the call but you can supplement an additional credentials using this. Dynamic credentials override existing credentials. */
+  credentials?: (
+    | ({
+        provider: '11labs';
+      } & CreateElevenLabsCredentialDTO)
+    | ({
+        provider: 'anthropic';
+      } & CreateAnthropicCredentialDTO)
+    | ({
+        provider: 'anyscale';
+      } & CreateAnyscaleCredentialDTO)
+    | ({
+        provider: 'assembly-ai';
+      } & CreateAssemblyAICredentialDTO)
+    | ({
+        provider: 'azure-openai';
+      } & CreateAzureOpenAICredentialDTO)
+    | ({
+        provider: 'azure';
+      } & CreateAzureCredentialDTO)
+    | ({
+        provider: 'byo-sip-trunk';
+      } & CreateByoSipTrunkCredentialDTO)
+    | ({
+        provider: 'cartesia';
+      } & CreateCartesiaCredentialDTO)
+    | ({
+        provider: 'cerebras';
+      } & CreateCerebrasCredentialDTO)
+    | ({
+        provider: 'cloudflare';
+      } & CreateCloudflareCredentialDTO)
+    | ({
+        provider: 'custom-llm';
+      } & CreateCustomLLMCredentialDTO)
+    | ({
+        provider: 'deepgram';
+      } & CreateDeepgramCredentialDTO)
+    | ({
+        provider: 'deepinfra';
+      } & CreateDeepInfraCredentialDTO)
+    | ({
+        provider: 'deep-seek';
+      } & CreateDeepSeekCredentialDTO)
+    | ({
+        provider: 'gcp';
+      } & CreateGcpCredentialDTO)
+    | ({
+        provider: 'gladia';
+      } & CreateGladiaCredentialDTO)
+    | ({
+        provider: 'gohighlevel';
+      } & CreateGoHighLevelCredentialDTO)
+    | ({
+        provider: 'google';
+      } & CreateGoogleCredentialDTO)
+    | ({
+        provider: 'groq';
+      } & CreateGroqCredentialDTO)
+    | ({
+        provider: 'inflection-ai';
+      } & CreateInflectionAICredentialDTO)
+    | ({
+        provider: 'langfuse';
+      } & CreateLangfuseCredentialDTO)
+    | ({
+        provider: 'lmnt';
+      } & CreateLmntCredentialDTO)
+    | ({
+        provider: 'make';
+      } & CreateMakeCredentialDTO)
+    | ({
+        provider: 'openai';
+      } & CreateOpenAICredentialDTO)
+    | ({
+        provider: 'openrouter';
+      } & CreateOpenRouterCredentialDTO)
+    | ({
+        provider: 'perplexity-ai';
+      } & CreatePerplexityAICredentialDTO)
+    | ({
+        provider: 'playht';
+      } & CreatePlayHTCredentialDTO)
+    | ({
+        provider: 'rime-ai';
+      } & CreateRimeAICredentialDTO)
+    | ({
+        provider: 'runpod';
+      } & CreateRunpodCredentialDTO)
+    | ({
+        provider: 's3';
+      } & CreateS3CredentialDTO)
+    | ({
+        provider: 'supabase';
+      } & CreateSupabaseCredentialDTO)
+    | ({
+        provider: 'smallest-ai';
+      } & CreateSmallestAICredentialDTO)
+    | ({
+        provider: 'tavus';
+      } & CreateTavusCredentialDTO)
+    | ({
+        provider: 'together-ai';
+      } & CreateTogetherAICredentialDTO)
+    | ({
+        provider: 'twilio';
+      } & CreateTwilioCredentialDTO)
+    | ({
+        provider: 'vonage';
+      } & CreateVonageCredentialDTO)
+    | ({
+        provider: 'webhook';
+      } & CreateWebhookCredentialDTO)
+    | ({
+        provider: 'xai';
+      } & CreateXAiCredentialDTO)
+    | ({
+        provider: 'neuphonic';
+      } & CreateNeuphonicCredentialDTO)
+    | ({
+        provider: 'hume';
+      } & CreateHumeCredentialDTO)
+    | ({
+        provider: 'mistral';
+      } & CreateMistralCredentialDTO)
+    | ({
+        provider: 'speechmatics';
+      } & CreateSpeechmaticsCredentialDTO)
+    | ({
+        provider: 'trieve';
+      } & CreateTrieveCredentialDTO)
+    | ({
+        provider: 'google.calendar.oauth2-client';
+      } & CreateGoogleCalendarOAuth2ClientCredentialDTO)
+    | ({
+        provider: 'google.calendar.oauth2-authorization';
+      } & CreateGoogleCalendarOAuth2AuthorizationCredentialDTO)
+    | ({
+        provider: 'google.sheets.oauth2-authorization';
+      } & CreateGoogleSheetsOAuth2AuthorizationCredentialDTO)
+    | ({
+        provider: 'slack.oauth2-authorization';
+      } & CreateSlackOAuth2AuthorizationCredentialDTO)
+    | ({
+        provider: 'ghl.oauth2-authorization';
+      } & CreateGoHighLevelMCPCredentialDTO)
+    | ({
+        provider: 'inworld';
+      } & CreateInworldCredentialDTO)
+    | ({
+        provider: 'minimax';
+      } & CreateMinimaxCredentialDTO)
+  )[];
   /** @maxLength 80 */
   name: string;
   edges: Edge[];
   /** @maxLength 5000 */
   globalPrompt?: string;
+  /**
+   * This is where Vapi will send webhooks. You can find all webhooks available along with their shape in ServerMessage schema.
+   *
+   * The order of precedence is:
+   *
+   * 1. tool.server
+   * 2. workflow.server / assistant.server
+   * 3. phoneNumber.server
+   * 4. org.server
+   */
+  server?: Server;
+  /** This is the compliance plan for the workflow. It allows you to configure HIPAA and other compliance settings. */
+  compliancePlan?: CompliancePlan;
+  /** This is the plan for analysis of workflow's calls. Stored in `call.analysis`. */
+  analysisPlan?: AnalysisPlan;
+  /** This is the plan for artifacts generated during workflow's calls. Stored in `call.artifact`. */
+  artifactPlan?: ArtifactPlan;
+  /**
+   * This is the plan for when the workflow nodes should start talking.
+   *
+   * You should configure this if you're running into these issues:
+   * - The assistant is too slow to start talking after the customer is done speaking.
+   * - The assistant is too fast to start talking after the customer is done speaking.
+   * - The assistant is so fast that it's actually interrupting the customer.
+   */
+  startSpeakingPlan?: StartSpeakingPlan;
+  /**
+   * This is the plan for when workflow nodes should stop talking on customer interruption.
+   *
+   * You should configure this if you're running into these issues:
+   * - The assistant is too slow to recognize customer's interruption.
+   * - The assistant is too fast to recognize customer's interruption.
+   * - The assistant is getting interrupted by phrases that are just acknowledgments.
+   * - The assistant is getting interrupted by background noises.
+   * - The assistant is not properly stopping -- it starts talking right after getting interrupted.
+   */
+  stopSpeakingPlan?: StopSpeakingPlan;
+  /**
+   * This is the plan for real-time monitoring of the workflow's calls.
+   *
+   * Usage:
+   * - To enable live listening of the workflow's calls, set `monitorPlan.listenEnabled` to `true`.
+   * - To enable live control of the workflow's calls, set `monitorPlan.controlEnabled` to `true`.
+   */
+  monitorPlan?: MonitorPlan;
+  /**
+   * This enables filtering of noise and background speech while the user is talking.
+   *
+   * Features:
+   * - Smart denoising using Krisp
+   * - Fourier denoising
+   *
+   * Both can be used together. Order of precedence:
+   * - Smart denoising
+   * - Fourier denoising
+   */
+  backgroundSpeechDenoisingPlan?: BackgroundSpeechDenoisingPlan;
+  /** These are the credentials that will be used for the workflow calls. By default, all the credentials are available for use in the call but you can provide a subset using this. */
+  credentialIds?: string[];
+  /** This is the plan for keypad input handling during workflow calls. */
+  keypadInputPlan?: KeypadInputPlan;
 }
 
 export interface WorkflowOverrides {
@@ -10399,6 +12679,16 @@ export interface CreateCustomerDTO {
    * @maxLength 40
    */
   name?: string;
+  /**
+   * This is the email of the customer.
+   * @maxLength 40
+   */
+  email?: string;
+  /**
+   * This is the external ID of the customer.
+   * @maxLength 40
+   */
+  externalId?: string;
 }
 
 export interface SchedulePlan {
@@ -10453,8 +12743,9 @@ export interface Call {
     | 'assistant-request-returned-invalid-assistant'
     | 'assistant-request-returned-no-assistant'
     | 'assistant-request-returned-forwarding-phone-number'
-    | 'call.start.error-get-org'
-    | 'call.start.error-get-subscription'
+    | 'scheduled-call-deleted'
+    | 'call.start.error-vapifault-get-org'
+    | 'call.start.error-vapifault-get-subscription'
     | 'call.start.error-get-assistant'
     | 'call.start.error-get-phone-number'
     | 'call.start.error-get-customer'
@@ -10462,6 +12753,11 @@ export interface Call {
     | 'call.start.error-vapi-number-international'
     | 'call.start.error-vapi-number-outbound-daily-limit'
     | 'call.start.error-get-transport'
+    | 'call.start.error-subscription-wallet-does-not-exist'
+    | 'call.start.error-subscription-frozen'
+    | 'call.start.error-subscription-insufficient-credits'
+    | 'call.start.error-subscription-upgrade-failed'
+    | 'call.start.error-subscription-concurrency-limit-reached'
     | 'assistant-not-valid'
     | 'database-error'
     | 'assistant-not-found'
@@ -10477,6 +12773,8 @@ export interface Call {
     | 'pipeline-error-neuphonic-voice-failed'
     | 'pipeline-error-hume-voice-failed'
     | 'pipeline-error-sesame-voice-failed'
+    | 'pipeline-error-inworld-voice-failed'
+    | 'pipeline-error-minimax-voice-failed'
     | 'pipeline-error-tavus-video-failed'
     | 'call.in-progress.error-vapifault-openai-voice-failed'
     | 'call.in-progress.error-vapifault-cartesia-voice-failed'
@@ -10490,6 +12788,8 @@ export interface Call {
     | 'call.in-progress.error-vapifault-neuphonic-voice-failed'
     | 'call.in-progress.error-vapifault-hume-voice-failed'
     | 'call.in-progress.error-vapifault-sesame-voice-failed'
+    | 'call.in-progress.error-vapifault-inworld-voice-failed'
+    | 'call.in-progress.error-vapifault-minimax-voice-failed'
     | 'call.in-progress.error-vapifault-tavus-video-failed'
     | 'pipeline-error-vapi-llm-failed'
     | 'pipeline-error-vapi-400-bad-request-validation-failed'
@@ -10529,7 +12829,6 @@ export interface Call {
     | 'call.in-progress.error-vapifault-azure-speech-transcriber-failed'
     | 'call.in-progress.error-pipeline-no-available-llm-model'
     | 'worker-shutdown'
-    | 'unknown-error'
     | 'vonage-disconnected'
     | 'vonage-failed-to-connect-call'
     | 'vonage-completed'
@@ -10540,6 +12839,8 @@ export interface Call {
     | 'call.in-progress.error-vapifault-transport-connected-but-call-not-active'
     | 'call.in-progress.error-vapifault-call-started-but-connection-to-transport-missing'
     | 'call.in-progress.error-vapifault-worker-died'
+    | 'call.in-progress.twilio-completed-call'
+    | 'call.in-progress.sip-completed-call'
     | 'call.in-progress.error-vapifault-openai-llm-failed'
     | 'call.in-progress.error-vapifault-azure-openai-llm-failed'
     | 'call.in-progress.error-vapifault-groq-llm-failed'
@@ -10549,6 +12850,7 @@ export interface Call {
     | 'call.in-progress.error-vapifault-inflection-ai-llm-failed'
     | 'call.in-progress.error-vapifault-cerebras-llm-failed'
     | 'call.in-progress.error-vapifault-deep-seek-llm-failed'
+    | 'call.in-progress.error-vapifault-chat-pipeline-failed-to-start'
     | 'pipeline-error-openai-400-bad-request-validation-failed'
     | 'pipeline-error-openai-401-unauthorized'
     | 'pipeline-error-openai-401-incorrect-api-key'
@@ -10816,6 +13118,7 @@ export interface Call {
     | 'pipeline-error-cartesia-socket-hang-up'
     | 'pipeline-error-cartesia-requested-payment'
     | 'pipeline-error-cartesia-500-server-error'
+    | 'pipeline-error-cartesia-502-server-error'
     | 'pipeline-error-cartesia-503-server-error'
     | 'pipeline-error-cartesia-522-server-error'
     | 'call.in-progress.error-vapifault-cartesia-socket-hang-up'
@@ -10845,6 +13148,7 @@ export interface Call {
     | 'pipeline-error-eleven-labs-max-character-limit-exceeded'
     | 'pipeline-error-eleven-labs-blocked-voice-potentially-against-terms-of-service-and-awaiting-verification'
     | 'pipeline-error-eleven-labs-500-server-error'
+    | 'pipeline-error-eleven-labs-503-server-error'
     | 'call.in-progress.error-vapifault-eleven-labs-voice-not-found'
     | 'call.in-progress.error-vapifault-eleven-labs-quota-exceeded'
     | 'call.in-progress.error-vapifault-eleven-labs-unauthorized-access'
@@ -10866,6 +13170,7 @@ export interface Call {
     | 'call.in-progress.error-vapifault-eleven-labs-max-character-limit-exceeded'
     | 'call.in-progress.error-vapifault-eleven-labs-blocked-voice-potentially-against-terms-of-service-and-awaiting-verification'
     | 'call.in-progress.error-providerfault-eleven-labs-500-server-error'
+    | 'call.in-progress.error-providerfault-eleven-labs-503-server-error'
     | 'pipeline-error-playht-request-timed-out'
     | 'pipeline-error-playht-invalid-voice'
     | 'pipeline-error-playht-unexpected-error'
@@ -10901,6 +13206,7 @@ export interface Call {
     | 'pipeline-error-deepgram-returning-500-invalid-json'
     | 'pipeline-error-deepgram-returning-502-network-error'
     | 'pipeline-error-deepgram-returning-502-bad-gateway-ehostunreach'
+    | 'pipeline-error-deepgram-returning-econnreset'
     | 'call.in-progress.error-vapifault-deepgram-returning-400-no-such-model-language-tier-combination'
     | 'call.in-progress.error-vapifault-deepgram-returning-401-invalid-credentials'
     | 'call.in-progress.error-vapifault-deepgram-returning-404-not-found'
@@ -10919,6 +13225,7 @@ export interface Call {
     | 'assistant-forwarded-call'
     | 'assistant-join-timed-out'
     | 'call.in-progress.error-assistant-did-not-receive-customer-audio'
+    | 'call.in-progress.error-transfer-failed'
     | 'customer-busy'
     | 'customer-ended-call'
     | 'customer-did-not-answer'
@@ -10987,6 +13294,8 @@ export interface Call {
    * @deprecated
    */
   phoneCallProviderId?: string;
+  /** This is the campaign ID that the call belongs to. */
+  campaignId?: string;
   /**
    * This is the assistant ID that will be used for the call. To use a transient assistant, use `assistant` instead.
    *
@@ -11496,6 +13805,11 @@ export interface Chat {
   /** This is the assistant that will be used for the chat. To use an existing assistant, use `assistantId` instead. */
   assistant?: CreateAssistantDTO;
   /**
+   * These are the variable values that will be used to replace template variables in the assistant messages.
+   * Only variable substitution is supported in chat contexts - other assistant properties cannot be overridden.
+   */
+  assistantOverrides?: AssistantOverrides;
+  /**
    * This is the name of the chat. This is just for your own reference.
    * @maxLength 40
    */
@@ -11545,6 +13859,10 @@ export interface Chat {
    * @format date-time
    */
   updatedAt: string;
+  /** These are the costs of individual components of the chat in USD. */
+  costs?: (ModelCost | ChatCost)[];
+  /** This is the cost of the chat in USD. */
+  cost?: number;
 }
 
 export interface CreateChatDTO {
@@ -11552,6 +13870,11 @@ export interface CreateChatDTO {
   assistantId?: string;
   /** This is the assistant that will be used for the chat. To use an existing assistant, use `assistantId` instead. */
   assistant?: CreateAssistantDTO;
+  /**
+   * These are the variable values that will be used to replace template variables in the assistant messages.
+   * Only variable substitution is supported in chat contexts - other assistant properties cannot be overridden.
+   */
+  assistantOverrides?: AssistantOverrides;
   /**
    * This is the name of the chat. This is just for your own reference.
    * @maxLength 40
@@ -11655,6 +13978,11 @@ export interface CreateChatStreamResponse {
   /** This is the unique identifier for the streaming response. */
   id: string;
   /**
+   * This is the ID of the session that will be used for the chat.
+   * Helps track conversation context across multiple messages.
+   */
+  sessionId?: string;
+  /**
    * This is the path to the content being updated.
    * Format: `chat.output[{contentIndex}].content` where contentIndex identifies the specific content item.
    * @example "chat.output[0].content"
@@ -11669,6 +13997,11 @@ export interface OpenAIResponsesRequest {
   assistantId?: string;
   /** This is the assistant that will be used for the chat. To use an existing assistant, use `assistantId` instead. */
   assistant?: CreateAssistantDTO;
+  /**
+   * These are the variable values that will be used to replace template variables in the assistant messages.
+   * Only variable substitution is supported in chat contexts - other assistant properties cannot be overridden.
+   */
+  assistantOverrides?: AssistantOverrides;
   /**
    * This is the name of the chat. This is just for your own reference.
    * @maxLength 40
@@ -11698,6 +14031,142 @@ export interface OpenAIResponsesRequest {
    * Mutually exclusive with sessionId.
    */
   previousChatId?: string;
+}
+
+export interface ChatAssistantOverrides {
+  /**
+   * Variable values for template substitution
+   * @example {"name":"John","company":"ACME Corp"}
+   */
+  variableValues?: object;
+}
+
+export interface CreateWebCustomerDTO {
+  /**
+   * This is the flag to toggle the E164 check for the `number` field. This is an advanced property which should be used if you know your use case requires it.
+   *
+   * Use cases:
+   * - `false`: To allow non-E164 numbers like `+001234567890`, `1234`, or `abc`. This is useful for dialing out to non-E164 numbers on your SIP trunks.
+   * - `true` (default): To allow only E164 numbers like `+14155551234`. This is standard for PSTN calls.
+   *
+   * If `false`, the `number` is still required to only contain alphanumeric characters (regex: `/^\+?[a-zA-Z0-9]+$/`).
+   *
+   * @default true (E164 check is enabled)
+   * @default true
+   */
+  numberE164CheckEnabled?: boolean;
+  /**
+   * This is the extension that will be dialed after the call is answered.
+   * @maxLength 10
+   * @example null
+   */
+  extension?: string;
+  /**
+   * These are the variable values that will be used to replace template variables in the assistant messages.
+   * Only variable substitution is supported in web chat - other assistant properties cannot be overridden.
+   */
+  assistantOverrides?: ChatAssistantOverrides;
+  /**
+   * This is the number of the customer.
+   * @minLength 3
+   * @maxLength 40
+   */
+  number?: string;
+  /** This is the SIP URI of the customer. */
+  sipUri?: string;
+  /**
+   * This is the name of the customer. This is just for your own reference.
+   *
+   * For SIP inbound calls, this is extracted from the `From` SIP header with format `"Display Name" <sip:username@domain>`.
+   * @maxLength 40
+   */
+  name?: string;
+  /**
+   * This is the email of the customer.
+   * @maxLength 40
+   */
+  email?: string;
+  /**
+   * This is the external ID of the customer.
+   * @maxLength 40
+   */
+  externalId?: string;
+}
+
+export interface CreateWebChatDTO {
+  /** The assistant ID to use for this chat */
+  assistantId: string;
+  /**
+   * This is the ID of the session that will be used for the chat.
+   * If provided, the conversation will continue from the previous state.
+   * If not provided or expired, a new session will be created.
+   */
+  sessionId?: string;
+  /**
+   * These are the variable values that will be used to replace template variables in the assistant messages.
+   * Only variable substitution is supported in web chat - other assistant properties cannot be overridden.
+   */
+  assistantOverrides?: ChatAssistantOverrides;
+  /**
+   * This is the customer information for the chat.
+   * Used to automatically manage sessions for repeat customers.
+   */
+  customer?: CreateWebCustomerDTO;
+  /**
+   * This is the input text for the chat.
+   * Can be a string or an array of chat messages.
+   */
+  input:
+    | string
+    | (SystemMessage | UserMessage | AssistantMessage | ToolMessage | DeveloperMessage)[];
+  /**
+   * This is a flag that determines whether the response should be streamed.
+   * When true, the response will be sent as chunks of text.
+   * @default false
+   */
+  stream?: boolean;
+}
+
+export interface WebChat {
+  /** This is the unique identifier for the chat. */
+  id: string;
+  /** This is the ID of the session for the chat. Send it in the next chat request to continue the conversation. */
+  sessionId?: string;
+  /** This is the output messages generated by the system in response to the input. */
+  output: (SystemMessage | UserMessage | AssistantMessage | ToolMessage | DeveloperMessage)[];
+}
+
+export interface OpenAIWebChatRequest {
+  /** The assistant ID to use for this chat */
+  assistantId: string;
+  /**
+   * This is the ID of the session that will be used for the chat.
+   * If provided, the conversation will continue from the previous state.
+   * If not provided or expired, a new session will be created.
+   */
+  sessionId?: string;
+  /**
+   * These are the variable values that will be used to replace template variables in the assistant messages.
+   * Only variable substitution is supported in web chat - other assistant properties cannot be overridden.
+   */
+  assistantOverrides?: ChatAssistantOverrides;
+  /**
+   * This is the customer information for the chat.
+   * Used to automatically manage sessions for repeat customers.
+   */
+  customer?: CreateWebCustomerDTO;
+  /**
+   * This is the input text for the chat.
+   * Can be a string or an array of chat messages.
+   */
+  input:
+    | string
+    | (SystemMessage | UserMessage | AssistantMessage | ToolMessage | DeveloperMessage)[];
+  /**
+   * Whether to stream the response or not.
+   * @default true
+   */
+  stream?: boolean;
 }
 
 export interface ResponseOutputText {
@@ -11820,6 +14289,111 @@ export interface ResponseErrorEvent {
    * @example 1
    */
   sequence_number: number;
+}
+
+export interface CreateCampaignDTO {
+  /**
+   * This is the name of the campaign. This is just for your own reference.
+   * @example "Q2 Sales Campaign"
+   */
+  name: string;
+  /** This is the assistant ID that will be used for the campaign calls. Note: Either assistantId or workflowId can be used, but not both. */
+  assistantId?: string;
+  /** This is the workflow ID that will be used for the campaign calls. Note: Either assistantId or workflowId can be used, but not both. */
+  workflowId?: string;
+  /** This is the phone number ID that will be used for the campaign calls. */
+  phoneNumberId: string;
+  /** This is the schedule plan for the campaign. */
+  schedulePlan?: SchedulePlan;
+  /** These are the customers that will be called in the campaign. */
+  customers: CreateCustomerDTO[];
+}
+
+export interface Campaign {
+  /** This is the status of the campaign. */
+  status: 'scheduled' | 'in-progress' | 'ended';
+  /** This is the explanation for how the campaign ended. */
+  endedReason?:
+    | 'campaign.scheduled.ended-by-user'
+    | 'campaign.in-progress.ended-by-user'
+    | 'campaign.ended.success';
+  /**
+   * This is the name of the campaign. This is just for your own reference.
+   * @example "Q2 Sales Campaign"
+   */
+  name: string;
+  /** This is the assistant ID that will be used for the campaign calls. Note: Either assistantId or workflowId can be used, but not both. */
+  assistantId?: string;
+  /** This is the workflow ID that will be used for the campaign calls. Note: Either assistantId or workflowId can be used, but not both. */
+  workflowId?: string;
+  /** This is the phone number ID that will be used for the campaign calls. */
+  phoneNumberId: string;
+  /** This is the schedule plan for the campaign. */
+  schedulePlan?: SchedulePlan;
+  /** These are the customers that will be called in the campaign. */
+  customers: CreateCustomerDTO[];
+  /** This is the unique identifier for the campaign. */
+  id: string;
+  /** This is the unique identifier for the org that this campaign belongs to. */
+  orgId: string;
+  /**
+   * This is the ISO 8601 date-time string of when the campaign was created.
+   * @format date-time
+   */
+  createdAt: string;
+  /**
+   * This is the ISO 8601 date-time string of when the campaign was last updated.
+   * @format date-time
+   */
+  updatedAt: string;
+  /** This is a map of call IDs to campaign call details. */
+  calls: object;
+  /** This is the number of calls that have been scheduled. */
+  callsCounterScheduled: number;
+  /** This is the number of calls that have been queued. */
+  callsCounterQueued: number;
+  /** This is the number of calls that have been in progress. */
+  callsCounterInProgress: number;
+  /** This is the number of calls whose ended reason is 'voicemail'. */
+  callsCounterEndedVoicemail: number;
+  /** This is the number of calls that have ended. */
+  callsCounterEnded: number;
+}
+
+export interface CampaignPaginatedResponse {
+  results: Campaign[];
+  metadata: PaginationMeta;
+}
+
+export interface UpdateCampaignDTO {
+  /** This is the name of the campaign. This is just for your own reference. */
+  name?: string;
+  /**
+   * This is the assistant ID that will be used for the campaign calls.
+   * Can only be updated if campaign is not in progress or has ended.
+   */
+  assistantId?: string;
+  /**
+   * This is the workflow ID that will be used for the campaign calls.
+   * Can only be updated if campaign is not in progress or has ended.
+   */
+  workflowId?: string;
+  /**
+   * This is the phone number ID that will be used for the campaign calls.
+   * Can only be updated if campaign is not in progress or has ended.
+   */
+  phoneNumberId?: string;
+  /**
+   * This is the schedule plan for the campaign.
+   * Can only be updated if campaign is not in progress or has ended.
+   */
+  schedulePlan?: SchedulePlan;
+  /**
+   * This is the status of the campaign.
+   * Can only be updated to 'ended' if you want to end the campaign.
+   * When set to 'ended', it will delete all scheduled calls. Calls in progress will be allowed to complete.
+   */
+  status?: 'ended';
 }
 
 export interface Session {
@@ -11998,7 +14572,8 @@ export interface Assistant {
     | GoogleTranscriber
     | SpeechmaticsTranscriber
     | TalkscriberTranscriber
-    | OpenAITranscriber;
+    | OpenAITranscriber
+    | CartesiaTranscriber;
   /** These are the options for the assistant's LLM. */
   model?:
     | AnthropicModel
@@ -12031,7 +14606,9 @@ export interface Assistant {
     | SmallestAIVoice
     | TavusVoice
     | VapiVoice
-    | SesameVoice;
+    | SesameVoice
+    | InworldVoice
+    | MinimaxVoice;
   /**
    * This is the first message that the assistant will say. This can also be a URL to a containerized audio file (mp3, wav, etc.).
    *
@@ -12109,16 +14686,12 @@ export interface Assistant {
     | 'transfer-destination-request'
     | 'transfer-update'
     | 'user-interrupted'
-    | 'voice-input';
-  /**
-   * How many seconds of silence to wait before ending the call. Defaults to 30.
-   *
-   * @default 30
-   * @min 10
-   * @max 3600
-   * @example 30
-   */
-  silenceTimeoutSeconds?: number;
+    | 'voice-input'
+    | 'chat.created'
+    | 'chat.deleted'
+    | 'session.created'
+    | 'session.updated'
+    | 'session.deleted';
   /**
    * This is the maximum number of seconds that the call will last. When the call reaches this duration, it will be ended.
    *
@@ -12139,6 +14712,7 @@ export interface Assistant {
    * Default `false` while in beta.
    *
    * @default false
+   * @deprecated
    * @example false
    */
   backgroundDenoisingEnabled?: boolean;
@@ -12154,8 +14728,9 @@ export interface Assistant {
   /** These are the configurations to be passed to the transport providers of assistant's calls, like Twilio. You can store multiple configurations for different transport providers. For a call, only the configuration matching the call transport provider is used. */
   transportConfigurations?: TransportConfigurationTwilio[];
   /**
-   * This is the plan for observability configuration of assistant's calls.
-   * Currently supports Langfuse for tracing and monitoring.
+   * This is the plan for observability of assistant's calls.
+   *
+   * Currently, only Langfuse is supported.
    */
   observabilityPlan?: LangfuseObservabilityPlan;
   /** These are dynamic credentials that will be used for the assistant calls. By default, all the credentials are available for use in the call but you can supplement an additional credentials using this. Dynamic credentials override existing credentials. */
@@ -12304,12 +14879,19 @@ export interface Assistant {
     | ({
         provider: 'ghl.oauth2-authorization';
       } & CreateGoHighLevelMCPCredentialDTO)
+    | ({
+        provider: 'inworld';
+      } & CreateInworldCredentialDTO)
+    | ({
+        provider: 'minimax';
+      } & CreateMinimaxCredentialDTO)
   )[];
   /** This is a set of actions that will be performed on certain events. */
   hooks?: (
-    | AssistantHookCallEnding
-    | AssistantHookAssistantSpeechInterrupted
-    | AssistantHookCustomerSpeechInterrupted
+    | CallHookCallEnding
+    | CallHookAssistantSpeechInterrupted
+    | CallHookCustomerSpeechInterrupted
+    | CallHookCustomerSpeechTimeout
   )[];
   /**
    * This is the name of the assistant.
@@ -12337,18 +14919,27 @@ export interface Assistant {
   compliancePlan?: CompliancePlan;
   /** This is for metadata you want to store on the assistant. */
   metadata?: object;
+  /**
+   * This enables filtering of noise and background speech while the user is talking.
+   *
+   * Features:
+   * - Smart denoising using Krisp
+   * - Fourier denoising
+   *
+   * Smart denoising can be combined with or used independently of Fourier denoising.
+   *
+   * Order of precedence:
+   * - Smart denoising
+   * - Fourier denoising
+   */
+  backgroundSpeechDenoisingPlan?: BackgroundSpeechDenoisingPlan;
   /** This is the plan for analysis of assistant's calls. Stored in `call.analysis`. */
   analysisPlan?: AnalysisPlan;
-  /**
-   * This is the plan for artifacts generated during assistant's calls. Stored in `call.artifact`.
-   *
-   * Note: `recordingEnabled` is currently at the root level. It will be moved to `artifactPlan` in the future, but will remain backwards compatible.
-   */
+  /** This is the plan for artifacts generated during assistant's calls. Stored in `call.artifact`. */
   artifactPlan?: ArtifactPlan;
   /**
    * This is the plan for static predefined messages that can be spoken by the assistant during the call, like `idleMessages`.
-   *
-   * Note: `firstMessage`, `voicemailMessage`, and `endCallMessage` are currently at the root level. They will be moved to `messagePlan` in the future, but will remain backwards compatible.
+   * @deprecated
    */
   messagePlan?: MessagePlan;
   /**
@@ -12377,8 +14968,6 @@ export interface Assistant {
    * Usage:
    * - To enable live listening of the assistant's calls, set `monitorPlan.listenEnabled` to `true`.
    * - To enable live control of the assistant's calls, set `monitorPlan.controlEnabled` to `true`.
-   *
-   * Note, `serverMessages`, `clientMessages`, `serverUrl` and `serverUrlSecret` are currently at the root level but will be moved to `monitorPlan` in the future. Will remain backwards compatible
    */
   monitorPlan?: MonitorPlan;
   /** These are the credentials that will be used for the assistant calls. By default, all the credentials are available for use in the call but you can provide a subset using this. */
@@ -12433,7 +15022,8 @@ export interface UpdateAssistantDTO {
     | GoogleTranscriber
     | SpeechmaticsTranscriber
     | TalkscriberTranscriber
-    | OpenAITranscriber;
+    | OpenAITranscriber
+    | CartesiaTranscriber;
   /** These are the options for the assistant's LLM. */
   model?:
     | AnthropicModel
@@ -12466,7 +15056,9 @@ export interface UpdateAssistantDTO {
     | SmallestAIVoice
     | TavusVoice
     | VapiVoice
-    | SesameVoice;
+    | SesameVoice
+    | InworldVoice
+    | MinimaxVoice;
   /**
    * This is the first message that the assistant will say. This can also be a URL to a containerized audio file (mp3, wav, etc.).
    *
@@ -12544,16 +15136,12 @@ export interface UpdateAssistantDTO {
     | 'transfer-destination-request'
     | 'transfer-update'
     | 'user-interrupted'
-    | 'voice-input';
-  /**
-   * How many seconds of silence to wait before ending the call. Defaults to 30.
-   *
-   * @default 30
-   * @min 10
-   * @max 3600
-   * @example 30
-   */
-  silenceTimeoutSeconds?: number;
+    | 'voice-input'
+    | 'chat.created'
+    | 'chat.deleted'
+    | 'session.created'
+    | 'session.updated'
+    | 'session.deleted';
   /**
    * This is the maximum number of seconds that the call will last. When the call reaches this duration, it will be ended.
    *
@@ -12574,6 +15162,7 @@ export interface UpdateAssistantDTO {
    * Default `false` while in beta.
    *
    * @default false
+   * @deprecated
    * @example false
    */
   backgroundDenoisingEnabled?: boolean;
@@ -12589,8 +15178,9 @@ export interface UpdateAssistantDTO {
   /** These are the configurations to be passed to the transport providers of assistant's calls, like Twilio. You can store multiple configurations for different transport providers. For a call, only the configuration matching the call transport provider is used. */
   transportConfigurations?: TransportConfigurationTwilio[];
   /**
-   * This is the plan for observability configuration of assistant's calls.
-   * Currently supports Langfuse for tracing and monitoring.
+   * This is the plan for observability of assistant's calls.
+   *
+   * Currently, only Langfuse is supported.
    */
   observabilityPlan?: LangfuseObservabilityPlan;
   /** These are dynamic credentials that will be used for the assistant calls. By default, all the credentials are available for use in the call but you can supplement an additional credentials using this. Dynamic credentials override existing credentials. */
@@ -12739,12 +15329,19 @@ export interface UpdateAssistantDTO {
     | ({
         provider: 'ghl.oauth2-authorization';
       } & CreateGoHighLevelMCPCredentialDTO)
+    | ({
+        provider: 'inworld';
+      } & CreateInworldCredentialDTO)
+    | ({
+        provider: 'minimax';
+      } & CreateMinimaxCredentialDTO)
   )[];
   /** This is a set of actions that will be performed on certain events. */
   hooks?: (
-    | AssistantHookCallEnding
-    | AssistantHookAssistantSpeechInterrupted
-    | AssistantHookCustomerSpeechInterrupted
+    | CallHookCallEnding
+    | CallHookAssistantSpeechInterrupted
+    | CallHookCustomerSpeechInterrupted
+    | CallHookCustomerSpeechTimeout
   )[];
   /**
    * This is the name of the assistant.
@@ -12772,18 +15369,27 @@ export interface UpdateAssistantDTO {
   compliancePlan?: CompliancePlan;
   /** This is for metadata you want to store on the assistant. */
   metadata?: object;
+  /**
+   * This enables filtering of noise and background speech while the user is talking.
+   *
+   * Features:
+   * - Smart denoising using Krisp
+   * - Fourier denoising
+   *
+   * Smart denoising can be combined with or used independently of Fourier denoising.
+   *
+   * Order of precedence:
+   * - Smart denoising
+   * - Fourier denoising
+   */
+  backgroundSpeechDenoisingPlan?: BackgroundSpeechDenoisingPlan;
   /** This is the plan for analysis of assistant's calls. Stored in `call.analysis`. */
   analysisPlan?: AnalysisPlan;
-  /**
-   * This is the plan for artifacts generated during assistant's calls. Stored in `call.artifact`.
-   *
-   * Note: `recordingEnabled` is currently at the root level. It will be moved to `artifactPlan` in the future, but will remain backwards compatible.
-   */
+  /** This is the plan for artifacts generated during assistant's calls. Stored in `call.artifact`. */
   artifactPlan?: ArtifactPlan;
   /**
    * This is the plan for static predefined messages that can be spoken by the assistant during the call, like `idleMessages`.
-   *
-   * Note: `firstMessage`, `voicemailMessage`, and `endCallMessage` are currently at the root level. They will be moved to `messagePlan` in the future, but will remain backwards compatible.
+   * @deprecated
    */
   messagePlan?: MessagePlan;
   /**
@@ -12812,8 +15418,6 @@ export interface UpdateAssistantDTO {
    * Usage:
    * - To enable live listening of the assistant's calls, set `monitorPlan.listenEnabled` to `true`.
    * - To enable live control of the assistant's calls, set `monitorPlan.controlEnabled` to `true`.
-   *
-   * Note, `serverMessages`, `clientMessages`, `serverUrl` and `serverUrlSecret` are currently at the root level but will be moved to `monitorPlan` in the future. Will remain backwards compatible
    */
   monitorPlan?: MonitorPlan;
   /** These are the credentials that will be used for the assistant calls. By default, all the credentials are available for use in the call but you can provide a subset using this. */
@@ -13929,6 +16533,222 @@ export interface PhoneNumberPaginatedResponse {
   metadata: PaginationMeta;
 }
 
+export interface ApiRequestTool {
+  /**
+   * These are the messages that will be spoken to the user as the tool is running.
+   *
+   * For some tools, this is auto-filled based on special fields like `tool.destinations`. For others like the function tool, these can be custom configured.
+   */
+  messages?: (ToolMessageStart | ToolMessageComplete | ToolMessageFailed | ToolMessageDelayed)[];
+  /** The type of tool. "apiRequest" for API request tool. */
+  type: 'apiRequest';
+  method: 'POST' | 'GET' | 'PUT' | 'PATCH' | 'DELETE';
+  /**
+   * This is the timeout in seconds for the request. Defaults to 20 seconds.
+   *
+   * @default 20
+   * @min 1
+   * @max 300
+   * @example 20
+   */
+  timeoutSeconds?: number;
+  /** This is the unique identifier for the tool. */
+  id: string;
+  /** This is the unique identifier for the organization that this tool belongs to. */
+  orgId: string;
+  /**
+   * This is the ISO 8601 date-time string of when the tool was created.
+   * @format date-time
+   */
+  createdAt: string;
+  /**
+   * This is the ISO 8601 date-time string of when the tool was last updated.
+   * @format date-time
+   */
+  updatedAt: string;
+  /**
+   * This is the name of the tool. This will be passed to the model.
+   *
+   * Must be a-z, A-Z, 0-9, or contain underscores and dashes, with a maximum length of 40.
+   * @maxLength 40
+   * @pattern /^[a-zA-Z0-9_-]{1,40}$/
+   */
+  name?: string;
+  /**
+   * This is the description of the tool. This will be passed to the model.
+   * @maxLength 1000
+   */
+  description?: string;
+  /** This is where the request will be sent. */
+  url: string;
+  /** This is the body of the request. */
+  body?: JsonSchema;
+  /** These are the headers to send with the request. */
+  headers?: JsonSchema;
+  /**
+   * This is the backoff plan if the request fails. Defaults to undefined (the request will not be retried).
+   *
+   * @default undefined (the request will not be retried)
+   */
+  backoffPlan?: BackoffPlan;
+  /**
+   * This is the plan to extract variables from the tool's response. These will be accessible during the call and stored in `call.artifact.variableValues` after the call.
+   *
+   * Usage:
+   * 1. Use `aliases` to extract variables from the tool's response body. (Most common case)
+   *
+   * ```json
+   * {
+   *   "aliases": [
+   *     {
+   *       "key": "customerName",
+   *       "value": "{{customer.name}}"
+   *     },
+   *     {
+   *       "key": "customerAge",
+   *       "value": "{{customer.age}}"
+   *     }
+   *   ]
+   * }
+   * ```
+   *
+   * The tool response body is made available to the liquid template.
+   *
+   * 2. Use `aliases` to extract variables from the tool's response body if the response is an array.
+   *
+   * ```json
+   * {
+   *   "aliases": [
+   *     {
+   *       "key": "customerName",
+   *       "value": "{{$[0].name}}"
+   *     },
+   *     {
+   *       "key": "customerAge",
+   *       "value": "{{$[0].age}}"
+   *     }
+   *   ]
+   * }
+   * ```
+   *
+   * $ is a shorthand for the tool's response body. `$[0]` is the first item in the array. `$[n]` is the nth item in the array. Note, $ is available regardless of the response body type (both object and array).
+   *
+   * 3. Use `aliases` to extract variables from the tool's response headers.
+   *
+   * ```json
+   * {
+   *   "aliases": [
+   *     {
+   *       "key": "customerName",
+   *       "value": "{{tool.response.headers.customer-name}}"
+   *     },
+   *     {
+   *       "key": "customerAge",
+   *       "value": "{{tool.response.headers.customer-age}}"
+   *     }
+   *   ]
+   * }
+   * ```
+   *
+   * `tool.response` is made available to the liquid template. Particularly, both `tool.response.headers` and `tool.response.body` are available. Note, `tool.response` is available regardless of the response body type (both object and array).
+   *
+   * 4. Use `schema` to extract a large portion of the tool's response body.
+   *
+   * 4.1. If you hit example.com and it returns `{"name": "John", "age": 30}`, then you can specify the schema as:
+   *
+   * ```json
+   * {
+   *   "schema": {
+   *     "type": "object",
+   *     "properties": {
+   *       "name": {
+   *         "type": "string"
+   *       },
+   *       "age": {
+   *         "type": "number"
+   *       }
+   *     }
+   *   }
+   * }
+   * ```
+   * These will be extracted as `{{ name }}` and `{{ age }}` respectively. To emphasize, object properties are extracted as direct global variables.
+   *
+   * 4.2. If you hit example.com and it returns `{"name": {"first": "John", "last": "Doe"}}`, then you can specify the schema as:
+   *
+   * ```json
+   * {
+   *   "schema": {
+   *     "type": "object",
+   *     "properties": {
+   *       "name": {
+   *         "type": "object",
+   *         "properties": {
+   *           "first": {
+   *             "type": "string"
+   *           },
+   *           "last": {
+   *             "type": "string"
+   *           }
+   *         }
+   *       }
+   *     }
+   *   }
+   * }
+   * ```
+   *
+   * These will be extracted as `{{ name }}`. And, `{{ name.first }}` and `{{ name.last }}` will be accessible.
+   *
+   * 4.3. If you hit example.com and it returns `["94123", "94124"]`, then you can specify the schema as:
+   *
+   * ```json
+   * {
+   *   "schema": {
+   *     "type": "array",
+   *     "title": "zipCodes",
+   *     "items": {
+   *       "type": "string"
+   *     }
+   *   }
+   * }
+   * ```
+   *
+   * This will be extracted as `{{ zipCodes }}`. To access the array items, you can use `{{ zipCodes[0] }}` and `{{ zipCodes[1] }}`.
+   *
+   * 4.4. If you hit example.com and it returns `[{"name": "John", "age": 30, "zipCodes": ["94123", "94124"]}, {"name": "Jane", "age": 25, "zipCodes": ["94125", "94126"]}]`, then you can specify the schema as:
+   *
+   * ```json
+   * {
+   *   "schema": {
+   *     "type": "array",
+   *     "title": "people",
+   *     "items": {
+   *       "type": "object",
+   *       "properties": {
+   *         "name": {
+   *           "type": "string"
+   *         },
+   *         "age": {
+   *           "type": "number"
+   *         },
+   *         "zipCodes": {
+   *           "type": "array",
+   *           "items": {
+   *             "type": "string"
+   *           }
+   *         }
+   *       }
+   *     }
+   *   }
+   * }
+   * ```
+   *
+   * This will be extracted as `{{ people }}`. To access the array items, you can use `{{ people[n].name }}`, `{{ people[n].age }}`, `{{ people[n].zipCodes }}`, `{{ people[n].zipCodes[0] }}` and `{{ people[n].zipCodes[1] }}`.
+   *
+   * Note: Both `aliases` and `schema` can be used together.
+   */
+  variableExtractionPlan?: VariableExtractionPlan;
+}
+
 export interface DtmfTool {
   /**
    * These are the messages that will be spoken to the user as the tool is running.
@@ -13952,14 +16772,6 @@ export interface DtmfTool {
    * @format date-time
    */
   updatedAt: string;
-  /**
-   * This is the function definition of the tool.
-   *
-   * For `endCall`, `transferCall`, and `dtmf` tools, this is auto-filled based on tool-specific fields like `tool.destinations`. But, even in those cases, you can provide a custom function definition for advanced use cases.
-   *
-   * An example of an advanced use case is if you want to customize the message that's spoken for `endCall` tool. You can specify a function where it returns an argument "reason". Then, in `messages` array, you can have many "request-complete" messages. One of these messages will be triggered if the `messages[].conditions` matches the "reason" argument.
-   */
-  function?: OpenAIFunction;
 }
 
 export interface EndCallTool {
@@ -13985,14 +16797,6 @@ export interface EndCallTool {
    * @format date-time
    */
   updatedAt: string;
-  /**
-   * This is the function definition of the tool.
-   *
-   * For `endCall`, `transferCall`, and `dtmf` tools, this is auto-filled based on tool-specific fields like `tool.destinations`. But, even in those cases, you can provide a custom function definition for advanced use cases.
-   *
-   * An example of an advanced use case is if you want to customize the message that's spoken for `endCall` tool. You can specify a function where it returns an argument "reason". Then, in `messages` array, you can have many "request-complete" messages. One of these messages will be triggered if the `messages[].conditions` matches the "reason" argument.
-   */
-  function?: OpenAIFunction;
 }
 
 export interface FunctionTool {
@@ -14041,13 +16845,7 @@ export interface FunctionTool {
    * @format date-time
    */
   updatedAt: string;
-  /**
-   * This is the function definition of the tool.
-   *
-   * For `endCall`, `transferCall`, and `dtmf` tools, this is auto-filled based on tool-specific fields like `tool.destinations`. But, even in those cases, you can provide a custom function definition for advanced use cases.
-   *
-   * An example of an advanced use case is if you want to customize the message that's spoken for `endCall` tool. You can specify a function where it returns an argument "reason". Then, in `messages` array, you can have many "request-complete" messages. One of these messages will be triggered if the `messages[].conditions` matches the "reason" argument.
-   */
+  /** This is the function definition of the tool. */
   function?: OpenAIFunction;
 }
 
@@ -14074,14 +16872,6 @@ export interface GhlTool {
    * @format date-time
    */
   updatedAt: string;
-  /**
-   * This is the function definition of the tool.
-   *
-   * For `endCall`, `transferCall`, and `dtmf` tools, this is auto-filled based on tool-specific fields like `tool.destinations`. But, even in those cases, you can provide a custom function definition for advanced use cases.
-   *
-   * An example of an advanced use case is if you want to customize the message that's spoken for `endCall` tool. You can specify a function where it returns an argument "reason". Then, in `messages` array, you can have many "request-complete" messages. One of these messages will be triggered if the `messages[].conditions` matches the "reason" argument.
-   */
-  function?: OpenAIFunction;
   metadata: GhlToolMetadata;
 }
 
@@ -14108,14 +16898,6 @@ export interface MakeTool {
    * @format date-time
    */
   updatedAt: string;
-  /**
-   * This is the function definition of the tool.
-   *
-   * For `endCall`, `transferCall`, and `dtmf` tools, this is auto-filled based on tool-specific fields like `tool.destinations`. But, even in those cases, you can provide a custom function definition for advanced use cases.
-   *
-   * An example of an advanced use case is if you want to customize the message that's spoken for `endCall` tool. You can specify a function where it returns an argument "reason". Then, in `messages` array, you can have many "request-complete" messages. One of these messages will be triggered if the `messages[].conditions` matches the "reason" argument.
-   */
-  function?: OpenAIFunction;
   metadata: MakeToolMetadata;
 }
 
@@ -14147,14 +16929,6 @@ export interface TransferCallTool {
    * @format date-time
    */
   updatedAt: string;
-  /**
-   * This is the function definition of the tool.
-   *
-   * For `endCall`, `transferCall`, and `dtmf` tools, this is auto-filled based on tool-specific fields like `tool.destinations`. But, even in those cases, you can provide a custom function definition for advanced use cases.
-   *
-   * An example of an advanced use case is if you want to customize the message that's spoken for `endCall` tool. You can specify a function where it returns an argument "reason". Then, in `messages` array, you can have many "request-complete" messages. One of these messages will be triggered if the `messages[].conditions` matches the "reason" argument.
-   */
-  function?: OpenAIFunction;
 }
 
 export interface OutputTool {
@@ -14180,14 +16954,6 @@ export interface OutputTool {
    * @format date-time
    */
   updatedAt: string;
-  /**
-   * This is the function definition of the tool.
-   *
-   * For `endCall`, `transferCall`, and `dtmf` tools, this is auto-filled based on tool-specific fields like `tool.destinations`. But, even in those cases, you can provide a custom function definition for advanced use cases.
-   *
-   * An example of an advanced use case is if you want to customize the message that's spoken for `endCall` tool. You can specify a function where it returns an argument "reason". Then, in `messages` array, you can have many "request-complete" messages. One of these messages will be triggered if the `messages[].conditions` matches the "reason" argument.
-   */
-  function?: OpenAIFunction;
 }
 
 export interface BashTool {
@@ -14227,14 +16993,6 @@ export interface BashTool {
    * @format date-time
    */
   updatedAt: string;
-  /**
-   * This is the function definition of the tool.
-   *
-   * For `endCall`, `transferCall`, and `dtmf` tools, this is auto-filled based on tool-specific fields like `tool.destinations`. But, even in those cases, you can provide a custom function definition for advanced use cases.
-   *
-   * An example of an advanced use case is if you want to customize the message that's spoken for `endCall` tool. You can specify a function where it returns an argument "reason". Then, in `messages` array, you can have many "request-complete" messages. One of these messages will be triggered if the `messages[].conditions` matches the "reason" argument.
-   */
-  function?: OpenAIFunction;
   /**
    * The name of the tool, fixed to 'bash'
    * @default "bash"
@@ -14279,14 +17037,6 @@ export interface ComputerTool {
    * @format date-time
    */
   updatedAt: string;
-  /**
-   * This is the function definition of the tool.
-   *
-   * For `endCall`, `transferCall`, and `dtmf` tools, this is auto-filled based on tool-specific fields like `tool.destinations`. But, even in those cases, you can provide a custom function definition for advanced use cases.
-   *
-   * An example of an advanced use case is if you want to customize the message that's spoken for `endCall` tool. You can specify a function where it returns an argument "reason". Then, in `messages` array, you can have many "request-complete" messages. One of these messages will be triggered if the `messages[].conditions` matches the "reason" argument.
-   */
-  function?: OpenAIFunction;
   /**
    * The name of the tool, fixed to 'computer'
    * @default "computer"
@@ -14338,14 +17088,6 @@ export interface TextEditorTool {
    */
   updatedAt: string;
   /**
-   * This is the function definition of the tool.
-   *
-   * For `endCall`, `transferCall`, and `dtmf` tools, this is auto-filled based on tool-specific fields like `tool.destinations`. But, even in those cases, you can provide a custom function definition for advanced use cases.
-   *
-   * An example of an advanced use case is if you want to customize the message that's spoken for `endCall` tool. You can specify a function where it returns an argument "reason". Then, in `messages` array, you can have many "request-complete" messages. One of these messages will be triggered if the `messages[].conditions` matches the "reason" argument.
-   */
-  function?: OpenAIFunction;
-  /**
    * The name of the tool, fixed to 'str_replace_editor'
    * @default "str_replace_editor"
    */
@@ -14377,14 +17119,6 @@ export interface QueryTool {
    * @format date-time
    */
   updatedAt: string;
-  /**
-   * This is the function definition of the tool.
-   *
-   * For `endCall`, `transferCall`, and `dtmf` tools, this is auto-filled based on tool-specific fields like `tool.destinations`. But, even in those cases, you can provide a custom function definition for advanced use cases.
-   *
-   * An example of an advanced use case is if you want to customize the message that's spoken for `endCall` tool. You can specify a function where it returns an argument "reason". Then, in `messages` array, you can have many "request-complete" messages. One of these messages will be triggered if the `messages[].conditions` matches the "reason" argument.
-   */
-  function?: OpenAIFunction;
 }
 
 export interface GoogleCalendarCreateEventTool {
@@ -14394,7 +17128,7 @@ export interface GoogleCalendarCreateEventTool {
    * For some tools, this is auto-filled based on special fields like `tool.destinations`. For others like the function tool, these can be custom configured.
    */
   messages?: (ToolMessageStart | ToolMessageComplete | ToolMessageFailed | ToolMessageDelayed)[];
-  /** The type of tool. "google.calendar.event.create" for Google Calendar tool. */
+  /** The type of tool. "google.calendar.event.create" for Google Calendar Create Event tool. */
   type: 'google.calendar.event.create';
   /** This is the unique identifier for the tool. */
   id: string;
@@ -14410,14 +17144,6 @@ export interface GoogleCalendarCreateEventTool {
    * @format date-time
    */
   updatedAt: string;
-  /**
-   * This is the function definition of the tool.
-   *
-   * For `endCall`, `transferCall`, and `dtmf` tools, this is auto-filled based on tool-specific fields like `tool.destinations`. But, even in those cases, you can provide a custom function definition for advanced use cases.
-   *
-   * An example of an advanced use case is if you want to customize the message that's spoken for `endCall` tool. You can specify a function where it returns an argument "reason". Then, in `messages` array, you can have many "request-complete" messages. One of these messages will be triggered if the `messages[].conditions` matches the "reason" argument.
-   */
-  function?: OpenAIFunction;
 }
 
 export interface GoogleSheetsRowAppendTool {
@@ -14427,7 +17153,7 @@ export interface GoogleSheetsRowAppendTool {
    * For some tools, this is auto-filled based on special fields like `tool.destinations`. For others like the function tool, these can be custom configured.
    */
   messages?: (ToolMessageStart | ToolMessageComplete | ToolMessageFailed | ToolMessageDelayed)[];
-  /** The type of tool. "google.sheets.row.append" for Google Sheets tool. */
+  /** The type of tool. "google.sheets.row.append" for Google Sheets Row Append tool. */
   type: 'google.sheets.row.append';
   /** This is the unique identifier for the tool. */
   id: string;
@@ -14443,14 +17169,6 @@ export interface GoogleSheetsRowAppendTool {
    * @format date-time
    */
   updatedAt: string;
-  /**
-   * This is the function definition of the tool.
-   *
-   * For `endCall`, `transferCall`, and `dtmf` tools, this is auto-filled based on tool-specific fields like `tool.destinations`. But, even in those cases, you can provide a custom function definition for advanced use cases.
-   *
-   * An example of an advanced use case is if you want to customize the message that's spoken for `endCall` tool. You can specify a function where it returns an argument "reason". Then, in `messages` array, you can have many "request-complete" messages. One of these messages will be triggered if the `messages[].conditions` matches the "reason" argument.
-   */
-  function?: OpenAIFunction;
 }
 
 export interface GoogleCalendarCheckAvailabilityTool {
@@ -14460,7 +17178,7 @@ export interface GoogleCalendarCheckAvailabilityTool {
    * For some tools, this is auto-filled based on special fields like `tool.destinations`. For others like the function tool, these can be custom configured.
    */
   messages?: (ToolMessageStart | ToolMessageComplete | ToolMessageFailed | ToolMessageDelayed)[];
-  /** The type of tool. "google.calendar.availability.check" for Google Calendar availability check tool. */
+  /** The type of tool. "google.calendar.availability.check" for Google Calendar Check Availability tool. */
   type: 'google.calendar.availability.check';
   /** This is the unique identifier for the tool. */
   id: string;
@@ -14476,14 +17194,6 @@ export interface GoogleCalendarCheckAvailabilityTool {
    * @format date-time
    */
   updatedAt: string;
-  /**
-   * This is the function definition of the tool.
-   *
-   * For `endCall`, `transferCall`, and `dtmf` tools, this is auto-filled based on tool-specific fields like `tool.destinations`. But, even in those cases, you can provide a custom function definition for advanced use cases.
-   *
-   * An example of an advanced use case is if you want to customize the message that's spoken for `endCall` tool. You can specify a function where it returns an argument "reason". Then, in `messages` array, you can have many "request-complete" messages. One of these messages will be triggered if the `messages[].conditions` matches the "reason" argument.
-   */
-  function?: OpenAIFunction;
 }
 
 export interface SlackSendMessageTool {
@@ -14493,7 +17203,7 @@ export interface SlackSendMessageTool {
    * For some tools, this is auto-filled based on special fields like `tool.destinations`. For others like the function tool, these can be custom configured.
    */
   messages?: (ToolMessageStart | ToolMessageComplete | ToolMessageFailed | ToolMessageDelayed)[];
-  /** The type of tool. "slack.message.send" for Slack send message tool. */
+  /** The type of tool. "slack.message.send" for Slack Send Message tool. */
   type: 'slack.message.send';
   /** This is the unique identifier for the tool. */
   id: string;
@@ -14509,14 +17219,6 @@ export interface SlackSendMessageTool {
    * @format date-time
    */
   updatedAt: string;
-  /**
-   * This is the function definition of the tool.
-   *
-   * For `endCall`, `transferCall`, and `dtmf` tools, this is auto-filled based on tool-specific fields like `tool.destinations`. But, even in those cases, you can provide a custom function definition for advanced use cases.
-   *
-   * An example of an advanced use case is if you want to customize the message that's spoken for `endCall` tool. You can specify a function where it returns an argument "reason". Then, in `messages` array, you can have many "request-complete" messages. One of these messages will be triggered if the `messages[].conditions` matches the "reason" argument.
-   */
-  function?: OpenAIFunction;
 }
 
 export interface SmsTool {
@@ -14542,14 +17244,6 @@ export interface SmsTool {
    * @format date-time
    */
   updatedAt: string;
-  /**
-   * This is the function definition of the tool.
-   *
-   * For `endCall`, `transferCall`, and `dtmf` tools, this is auto-filled based on tool-specific fields like `tool.destinations`. But, even in those cases, you can provide a custom function definition for advanced use cases.
-   *
-   * An example of an advanced use case is if you want to customize the message that's spoken for `endCall` tool. You can specify a function where it returns an argument "reason". Then, in `messages` array, you can have many "request-complete" messages. One of these messages will be triggered if the `messages[].conditions` matches the "reason" argument.
-   */
-  function?: OpenAIFunction;
 }
 
 export interface McpTool {
@@ -14587,14 +17281,7 @@ export interface McpTool {
    * @format date-time
    */
   updatedAt: string;
-  /**
-   * This is the function definition of the tool.
-   *
-   * For `endCall`, `transferCall`, and `dtmf` tools, this is auto-filled based on tool-specific fields like `tool.destinations`. But, even in those cases, you can provide a custom function definition for advanced use cases.
-   *
-   * An example of an advanced use case is if you want to customize the message that's spoken for `endCall` tool. You can specify a function where it returns an argument "reason". Then, in `messages` array, you can have many "request-complete" messages. One of these messages will be triggered if the `messages[].conditions` matches the "reason" argument.
-   */
-  function?: OpenAIFunction;
+  metadata?: McpToolMetadata;
 }
 
 export interface GoHighLevelCalendarAvailabilityTool {
@@ -14604,7 +17291,7 @@ export interface GoHighLevelCalendarAvailabilityTool {
    * For some tools, this is auto-filled based on special fields like `tool.destinations`. For others like the function tool, these can be custom configured.
    */
   messages?: (ToolMessageStart | ToolMessageComplete | ToolMessageFailed | ToolMessageDelayed)[];
-  /** The type of tool. "gohighlevel.calendar.availability.check" for GoHighLevel Calendar availability check tool. */
+  /** The type of tool. "gohighlevel.calendar.availability.check" for GoHighLevel Calendar Availability Check tool. */
   type: 'gohighlevel.calendar.availability.check';
   /** This is the unique identifier for the tool. */
   id: string;
@@ -14620,14 +17307,6 @@ export interface GoHighLevelCalendarAvailabilityTool {
    * @format date-time
    */
   updatedAt: string;
-  /**
-   * This is the function definition of the tool.
-   *
-   * For `endCall`, `transferCall`, and `dtmf` tools, this is auto-filled based on tool-specific fields like `tool.destinations`. But, even in those cases, you can provide a custom function definition for advanced use cases.
-   *
-   * An example of an advanced use case is if you want to customize the message that's spoken for `endCall` tool. You can specify a function where it returns an argument "reason". Then, in `messages` array, you can have many "request-complete" messages. One of these messages will be triggered if the `messages[].conditions` matches the "reason" argument.
-   */
-  function?: OpenAIFunction;
 }
 
 export interface GoHighLevelCalendarEventCreateTool {
@@ -14637,7 +17316,7 @@ export interface GoHighLevelCalendarEventCreateTool {
    * For some tools, this is auto-filled based on special fields like `tool.destinations`. For others like the function tool, these can be custom configured.
    */
   messages?: (ToolMessageStart | ToolMessageComplete | ToolMessageFailed | ToolMessageDelayed)[];
-  /** The type of tool. "gohighlevel.calendar.event.create" for GoHighLevel Calendar event create tool. */
+  /** The type of tool. "gohighlevel.calendar.event.create" for GoHighLevel Calendar Event Create tool. */
   type: 'gohighlevel.calendar.event.create';
   /** This is the unique identifier for the tool. */
   id: string;
@@ -14653,14 +17332,6 @@ export interface GoHighLevelCalendarEventCreateTool {
    * @format date-time
    */
   updatedAt: string;
-  /**
-   * This is the function definition of the tool.
-   *
-   * For `endCall`, `transferCall`, and `dtmf` tools, this is auto-filled based on tool-specific fields like `tool.destinations`. But, even in those cases, you can provide a custom function definition for advanced use cases.
-   *
-   * An example of an advanced use case is if you want to customize the message that's spoken for `endCall` tool. You can specify a function where it returns an argument "reason". Then, in `messages` array, you can have many "request-complete" messages. One of these messages will be triggered if the `messages[].conditions` matches the "reason" argument.
-   */
-  function?: OpenAIFunction;
 }
 
 export interface GoHighLevelContactCreateTool {
@@ -14670,7 +17341,7 @@ export interface GoHighLevelContactCreateTool {
    * For some tools, this is auto-filled based on special fields like `tool.destinations`. For others like the function tool, these can be custom configured.
    */
   messages?: (ToolMessageStart | ToolMessageComplete | ToolMessageFailed | ToolMessageDelayed)[];
-  /** The type of tool. "gohighlevel.contact.create" for GoHighLevel contact create tool. */
+  /** The type of tool. "gohighlevel.contact.create" for GoHighLevel Contact Create tool. */
   type: 'gohighlevel.contact.create';
   /** This is the unique identifier for the tool. */
   id: string;
@@ -14686,14 +17357,6 @@ export interface GoHighLevelContactCreateTool {
    * @format date-time
    */
   updatedAt: string;
-  /**
-   * This is the function definition of the tool.
-   *
-   * For `endCall`, `transferCall`, and `dtmf` tools, this is auto-filled based on tool-specific fields like `tool.destinations`. But, even in those cases, you can provide a custom function definition for advanced use cases.
-   *
-   * An example of an advanced use case is if you want to customize the message that's spoken for `endCall` tool. You can specify a function where it returns an argument "reason". Then, in `messages` array, you can have many "request-complete" messages. One of these messages will be triggered if the `messages[].conditions` matches the "reason" argument.
-   */
-  function?: OpenAIFunction;
 }
 
 export interface GoHighLevelContactGetTool {
@@ -14703,7 +17366,7 @@ export interface GoHighLevelContactGetTool {
    * For some tools, this is auto-filled based on special fields like `tool.destinations`. For others like the function tool, these can be custom configured.
    */
   messages?: (ToolMessageStart | ToolMessageComplete | ToolMessageFailed | ToolMessageDelayed)[];
-  /** The type of tool. "gohighlevel.contact.get" for GoHighLevel contact get tool. */
+  /** The type of tool. "gohighlevel.contact.get" for GoHighLevel Contact Get tool. */
   type: 'gohighlevel.contact.get';
   /** This is the unique identifier for the tool. */
   id: string;
@@ -14719,14 +17382,6 @@ export interface GoHighLevelContactGetTool {
    * @format date-time
    */
   updatedAt: string;
-  /**
-   * This is the function definition of the tool.
-   *
-   * For `endCall`, `transferCall`, and `dtmf` tools, this is auto-filled based on tool-specific fields like `tool.destinations`. But, even in those cases, you can provide a custom function definition for advanced use cases.
-   *
-   * An example of an advanced use case is if you want to customize the message that's spoken for `endCall` tool. You can specify a function where it returns an argument "reason". Then, in `messages` array, you can have many "request-complete" messages. One of these messages will be triggered if the `messages[].conditions` matches the "reason" argument.
-   */
-  function?: OpenAIFunction;
 }
 
 export interface CreateApiRequestToolDTO {
@@ -14738,7 +17393,7 @@ export interface CreateApiRequestToolDTO {
   messages?: (ToolMessageStart | ToolMessageComplete | ToolMessageFailed | ToolMessageDelayed)[];
   /** The type of tool. "apiRequest" for API request tool. */
   type: 'apiRequest';
-  method: 'POST' | 'GET';
+  method: 'POST' | 'GET' | 'PUT' | 'PATCH' | 'DELETE';
   /**
    * This is the timeout in seconds for the request. Defaults to 20 seconds.
    *
@@ -14750,7 +17405,10 @@ export interface CreateApiRequestToolDTO {
   timeoutSeconds?: number;
   /**
    * This is the name of the tool. This will be passed to the model.
+   *
+   * Must be a-z, A-Z, 0-9, or contain underscores and dashes, with a maximum length of 40.
    * @maxLength 40
+   * @pattern /^[a-zA-Z0-9_-]{1,40}$/
    */
   name?: string;
   /**
@@ -14762,7 +17420,7 @@ export interface CreateApiRequestToolDTO {
   url: string;
   /** This is the body of the request. */
   body?: JsonSchema;
-  /** These are the headers to send in the request. */
+  /** These are the headers to send with the request. */
   headers?: JsonSchema;
   /**
    * This is the backoff plan if the request fails. Defaults to undefined (the request will not be retried).
@@ -14771,13 +17429,161 @@ export interface CreateApiRequestToolDTO {
    */
   backoffPlan?: BackoffPlan;
   /**
-   * This is the function definition of the tool.
+   * This is the plan to extract variables from the tool's response. These will be accessible during the call and stored in `call.artifact.variableValues` after the call.
    *
-   * For `endCall`, `transferCall`, and `dtmf` tools, this is auto-filled based on tool-specific fields like `tool.destinations`. But, even in those cases, you can provide a custom function definition for advanced use cases.
+   * Usage:
+   * 1. Use `aliases` to extract variables from the tool's response body. (Most common case)
    *
-   * An example of an advanced use case is if you want to customize the message that's spoken for `endCall` tool. You can specify a function where it returns an argument "reason". Then, in `messages` array, you can have many "request-complete" messages. One of these messages will be triggered if the `messages[].conditions` matches the "reason" argument.
+   * ```json
+   * {
+   *   "aliases": [
+   *     {
+   *       "key": "customerName",
+   *       "value": "{{customer.name}}"
+   *     },
+   *     {
+   *       "key": "customerAge",
+   *       "value": "{{customer.age}}"
+   *     }
+   *   ]
+   * }
+   * ```
+   *
+   * The tool response body is made available to the liquid template.
+   *
+   * 2. Use `aliases` to extract variables from the tool's response body if the response is an array.
+   *
+   * ```json
+   * {
+   *   "aliases": [
+   *     {
+   *       "key": "customerName",
+   *       "value": "{{$[0].name}}"
+   *     },
+   *     {
+   *       "key": "customerAge",
+   *       "value": "{{$[0].age}}"
+   *     }
+   *   ]
+   * }
+   * ```
+   *
+   * $ is a shorthand for the tool's response body. `$[0]` is the first item in the array. `$[n]` is the nth item in the array. Note, $ is available regardless of the response body type (both object and array).
+   *
+   * 3. Use `aliases` to extract variables from the tool's response headers.
+   *
+   * ```json
+   * {
+   *   "aliases": [
+   *     {
+   *       "key": "customerName",
+   *       "value": "{{tool.response.headers.customer-name}}"
+   *     },
+   *     {
+   *       "key": "customerAge",
+   *       "value": "{{tool.response.headers.customer-age}}"
+   *     }
+   *   ]
+   * }
+   * ```
+   *
+   * `tool.response` is made available to the liquid template. Particularly, both `tool.response.headers` and `tool.response.body` are available. Note, `tool.response` is available regardless of the response body type (both object and array).
+   *
+   * 4. Use `schema` to extract a large portion of the tool's response body.
+   *
+   * 4.1. If you hit example.com and it returns `{"name": "John", "age": 30}`, then you can specify the schema as:
+   *
+   * ```json
+   * {
+   *   "schema": {
+   *     "type": "object",
+   *     "properties": {
+   *       "name": {
+   *         "type": "string"
+   *       },
+   *       "age": {
+   *         "type": "number"
+   *       }
+   *     }
+   *   }
+   * }
+   * ```
+   * These will be extracted as `{{ name }}` and `{{ age }}` respectively. To emphasize, object properties are extracted as direct global variables.
+   *
+   * 4.2. If you hit example.com and it returns `{"name": {"first": "John", "last": "Doe"}}`, then you can specify the schema as:
+   *
+   * ```json
+   * {
+   *   "schema": {
+   *     "type": "object",
+   *     "properties": {
+   *       "name": {
+   *         "type": "object",
+   *         "properties": {
+   *           "first": {
+   *             "type": "string"
+   *           },
+   *           "last": {
+   *             "type": "string"
+   *           }
+   *         }
+   *       }
+   *     }
+   *   }
+   * }
+   * ```
+   *
+   * These will be extracted as `{{ name }}`. And, `{{ name.first }}` and `{{ name.last }}` will be accessible.
+   *
+   * 4.3. If you hit example.com and it returns `["94123", "94124"]`, then you can specify the schema as:
+   *
+   * ```json
+   * {
+   *   "schema": {
+   *     "type": "array",
+   *     "title": "zipCodes",
+   *     "items": {
+   *       "type": "string"
+   *     }
+   *   }
+   * }
+   * ```
+   *
+   * This will be extracted as `{{ zipCodes }}`. To access the array items, you can use `{{ zipCodes[0] }}` and `{{ zipCodes[1] }}`.
+   *
+   * 4.4. If you hit example.com and it returns `[{"name": "John", "age": 30, "zipCodes": ["94123", "94124"]}, {"name": "Jane", "age": 25, "zipCodes": ["94125", "94126"]}]`, then you can specify the schema as:
+   *
+   * ```json
+   * {
+   *   "schema": {
+   *     "type": "array",
+   *     "title": "people",
+   *     "items": {
+   *       "type": "object",
+   *       "properties": {
+   *         "name": {
+   *           "type": "string"
+   *         },
+   *         "age": {
+   *           "type": "number"
+   *         },
+   *         "zipCodes": {
+   *           "type": "array",
+   *           "items": {
+   *             "type": "string"
+   *           }
+   *         }
+   *       }
+   *     }
+   *   }
+   * }
+   * ```
+   *
+   * This will be extracted as `{{ people }}`. To access the array items, you can use `{{ people[n].name }}`, `{{ people[n].age }}`, `{{ people[n].zipCodes }}`, `{{ people[n].zipCodes[0] }}` and `{{ people[n].zipCodes[1] }}`.
+   *
+   * Note: Both `aliases` and `schema` can be used together.
    */
-  function?: OpenAIFunction;
+  variableExtractionPlan?: VariableExtractionPlan;
 }
 
 export interface CreateOutputToolDTO {
@@ -14789,14 +17595,6 @@ export interface CreateOutputToolDTO {
   messages?: (ToolMessageStart | ToolMessageComplete | ToolMessageFailed | ToolMessageDelayed)[];
   /** The type of tool. "output" for Output tool. */
   type: 'output';
-  /**
-   * This is the function definition of the tool.
-   *
-   * For `endCall`, `transferCall`, and `dtmf` tools, this is auto-filled based on tool-specific fields like `tool.destinations`. But, even in those cases, you can provide a custom function definition for advanced use cases.
-   *
-   * An example of an advanced use case is if you want to customize the message that's spoken for `endCall` tool. You can specify a function where it returns an argument "reason". Then, in `messages` array, you can have many "request-complete" messages. One of these messages will be triggered if the `messages[].conditions` matches the "reason" argument.
-   */
-  function?: OpenAIFunction;
 }
 
 export interface CreateBashToolDTO {
@@ -14827,14 +17625,6 @@ export interface CreateBashToolDTO {
    * @default "bash"
    */
   name: 'bash';
-  /**
-   * This is the function definition of the tool.
-   *
-   * For `endCall`, `transferCall`, and `dtmf` tools, this is auto-filled based on tool-specific fields like `tool.destinations`. But, even in those cases, you can provide a custom function definition for advanced use cases.
-   *
-   * An example of an advanced use case is if you want to customize the message that's spoken for `endCall` tool. You can specify a function where it returns an argument "reason". Then, in `messages` array, you can have many "request-complete" messages. One of these messages will be triggered if the `messages[].conditions` matches the "reason" argument.
-   */
-  function?: OpenAIFunction;
 }
 
 export interface CreateComputerToolDTO {
@@ -14871,14 +17661,6 @@ export interface CreateComputerToolDTO {
   displayHeightPx: number;
   /** Optional display number */
   displayNumber?: number;
-  /**
-   * This is the function definition of the tool.
-   *
-   * For `endCall`, `transferCall`, and `dtmf` tools, this is auto-filled based on tool-specific fields like `tool.destinations`. But, even in those cases, you can provide a custom function definition for advanced use cases.
-   *
-   * An example of an advanced use case is if you want to customize the message that's spoken for `endCall` tool. You can specify a function where it returns an argument "reason". Then, in `messages` array, you can have many "request-complete" messages. One of these messages will be triggered if the `messages[].conditions` matches the "reason" argument.
-   */
-  function?: OpenAIFunction;
 }
 
 export interface CreateTextEditorToolDTO {
@@ -14909,14 +17691,6 @@ export interface CreateTextEditorToolDTO {
    * @default "str_replace_editor"
    */
   name: 'str_replace_editor';
-  /**
-   * This is the function definition of the tool.
-   *
-   * For `endCall`, `transferCall`, and `dtmf` tools, this is auto-filled based on tool-specific fields like `tool.destinations`. But, even in those cases, you can provide a custom function definition for advanced use cases.
-   *
-   * An example of an advanced use case is if you want to customize the message that's spoken for `endCall` tool. You can specify a function where it returns an argument "reason". Then, in `messages` array, you can have many "request-complete" messages. One of these messages will be triggered if the `messages[].conditions` matches the "reason" argument.
-   */
-  function?: OpenAIFunction;
 }
 
 export interface CreateSmsToolDTO {
@@ -14928,14 +17702,206 @@ export interface CreateSmsToolDTO {
   messages?: (ToolMessageStart | ToolMessageComplete | ToolMessageFailed | ToolMessageDelayed)[];
   /** The type of tool. "sms" for Twilio SMS sending tool. */
   type: 'sms';
+}
+
+export interface UpdateApiRequestToolDTO {
   /**
-   * This is the function definition of the tool.
+   * These are the messages that will be spoken to the user as the tool is running.
    *
-   * For `endCall`, `transferCall`, and `dtmf` tools, this is auto-filled based on tool-specific fields like `tool.destinations`. But, even in those cases, you can provide a custom function definition for advanced use cases.
-   *
-   * An example of an advanced use case is if you want to customize the message that's spoken for `endCall` tool. You can specify a function where it returns an argument "reason". Then, in `messages` array, you can have many "request-complete" messages. One of these messages will be triggered if the `messages[].conditions` matches the "reason" argument.
+   * For some tools, this is auto-filled based on special fields like `tool.destinations`. For others like the function tool, these can be custom configured.
    */
-  function?: OpenAIFunction;
+  messages?: (ToolMessageStart | ToolMessageComplete | ToolMessageFailed | ToolMessageDelayed)[];
+  method?: 'POST' | 'GET' | 'PUT' | 'PATCH' | 'DELETE';
+  /**
+   * This is the timeout in seconds for the request. Defaults to 20 seconds.
+   *
+   * @default 20
+   * @min 1
+   * @max 300
+   * @example 20
+   */
+  timeoutSeconds?: number;
+  /**
+   * This is the name of the tool. This will be passed to the model.
+   *
+   * Must be a-z, A-Z, 0-9, or contain underscores and dashes, with a maximum length of 40.
+   * @maxLength 40
+   * @pattern /^[a-zA-Z0-9_-]{1,40}$/
+   */
+  name?: string;
+  /**
+   * This is the description of the tool. This will be passed to the model.
+   * @maxLength 1000
+   */
+  description?: string;
+  /** This is where the request will be sent. */
+  url?: string;
+  /** This is the body of the request. */
+  body?: JsonSchema;
+  /** These are the headers to send with the request. */
+  headers?: JsonSchema;
+  /**
+   * This is the backoff plan if the request fails. Defaults to undefined (the request will not be retried).
+   *
+   * @default undefined (the request will not be retried)
+   */
+  backoffPlan?: BackoffPlan;
+  /**
+   * This is the plan to extract variables from the tool's response. These will be accessible during the call and stored in `call.artifact.variableValues` after the call.
+   *
+   * Usage:
+   * 1. Use `aliases` to extract variables from the tool's response body. (Most common case)
+   *
+   * ```json
+   * {
+   *   "aliases": [
+   *     {
+   *       "key": "customerName",
+   *       "value": "{{customer.name}}"
+   *     },
+   *     {
+   *       "key": "customerAge",
+   *       "value": "{{customer.age}}"
+   *     }
+   *   ]
+   * }
+   * ```
+   *
+   * The tool response body is made available to the liquid template.
+   *
+   * 2. Use `aliases` to extract variables from the tool's response body if the response is an array.
+   *
+   * ```json
+   * {
+   *   "aliases": [
+   *     {
+   *       "key": "customerName",
+   *       "value": "{{$[0].name}}"
+   *     },
+   *     {
+   *       "key": "customerAge",
+   *       "value": "{{$[0].age}}"
+   *     }
+   *   ]
+   * }
+   * ```
+   *
+   * $ is a shorthand for the tool's response body. `$[0]` is the first item in the array. `$[n]` is the nth item in the array. Note, $ is available regardless of the response body type (both object and array).
+   *
+   * 3. Use `aliases` to extract variables from the tool's response headers.
+   *
+   * ```json
+   * {
+   *   "aliases": [
+   *     {
+   *       "key": "customerName",
+   *       "value": "{{tool.response.headers.customer-name}}"
+   *     },
+   *     {
+   *       "key": "customerAge",
+   *       "value": "{{tool.response.headers.customer-age}}"
+   *     }
+   *   ]
+   * }
+   * ```
+   *
+   * `tool.response` is made available to the liquid template. Particularly, both `tool.response.headers` and `tool.response.body` are available. Note, `tool.response` is available regardless of the response body type (both object and array).
+   *
+   * 4. Use `schema` to extract a large portion of the tool's response body.
+   *
+   * 4.1. If you hit example.com and it returns `{"name": "John", "age": 30}`, then you can specify the schema as:
+   *
+   * ```json
+   * {
+   *   "schema": {
+   *     "type": "object",
+   *     "properties": {
+   *       "name": {
+   *         "type": "string"
+   *       },
+   *       "age": {
+   *         "type": "number"
+   *       }
+   *     }
+   *   }
+   * }
+   * ```
+   * These will be extracted as `{{ name }}` and `{{ age }}` respectively. To emphasize, object properties are extracted as direct global variables.
+   *
+   * 4.2. If you hit example.com and it returns `{"name": {"first": "John", "last": "Doe"}}`, then you can specify the schema as:
+   *
+   * ```json
+   * {
+   *   "schema": {
+   *     "type": "object",
+   *     "properties": {
+   *       "name": {
+   *         "type": "object",
+   *         "properties": {
+   *           "first": {
+   *             "type": "string"
+   *           },
+   *           "last": {
+   *             "type": "string"
+   *           }
+   *         }
+   *       }
+   *     }
+   *   }
+   * }
+   * ```
+   *
+   * These will be extracted as `{{ name }}`. And, `{{ name.first }}` and `{{ name.last }}` will be accessible.
+   *
+   * 4.3. If you hit example.com and it returns `["94123", "94124"]`, then you can specify the schema as:
+   *
+   * ```json
+   * {
+   *   "schema": {
+   *     "type": "array",
+   *     "title": "zipCodes",
+   *     "items": {
+   *       "type": "string"
+   *     }
+   *   }
+   * }
+   * ```
+   *
+   * This will be extracted as `{{ zipCodes }}`. To access the array items, you can use `{{ zipCodes[0] }}` and `{{ zipCodes[1] }}`.
+   *
+   * 4.4. If you hit example.com and it returns `[{"name": "John", "age": 30, "zipCodes": ["94123", "94124"]}, {"name": "Jane", "age": 25, "zipCodes": ["94125", "94126"]}]`, then you can specify the schema as:
+   *
+   * ```json
+   * {
+   *   "schema": {
+   *     "type": "array",
+   *     "title": "people",
+   *     "items": {
+   *       "type": "object",
+   *       "properties": {
+   *         "name": {
+   *           "type": "string"
+   *         },
+   *         "age": {
+   *           "type": "number"
+   *         },
+   *         "zipCodes": {
+   *           "type": "array",
+   *           "items": {
+   *             "type": "string"
+   *           }
+   *         }
+   *       }
+   *     }
+   *   }
+   * }
+   * ```
+   *
+   * This will be extracted as `{{ people }}`. To access the array items, you can use `{{ people[n].name }}`, `{{ people[n].age }}`, `{{ people[n].zipCodes }}`, `{{ people[n].zipCodes[0] }}` and `{{ people[n].zipCodes[1] }}`.
+   *
+   * Note: Both `aliases` and `schema` can be used together.
+   */
+  variableExtractionPlan?: VariableExtractionPlan;
 }
 
 export interface UpdateDtmfToolDTO {
@@ -14945,14 +17911,6 @@ export interface UpdateDtmfToolDTO {
    * For some tools, this is auto-filled based on special fields like `tool.destinations`. For others like the function tool, these can be custom configured.
    */
   messages?: (ToolMessageStart | ToolMessageComplete | ToolMessageFailed | ToolMessageDelayed)[];
-  /**
-   * This is the function definition of the tool.
-   *
-   * For `endCall`, `transferCall`, and `dtmf` tools, this is auto-filled based on tool-specific fields like `tool.destinations`. But, even in those cases, you can provide a custom function definition for advanced use cases.
-   *
-   * An example of an advanced use case is if you want to customize the message that's spoken for `endCall` tool. You can specify a function where it returns an argument "reason". Then, in `messages` array, you can have many "request-complete" messages. One of these messages will be triggered if the `messages[].conditions` matches the "reason" argument.
-   */
-  function?: OpenAIFunction;
 }
 
 export interface UpdateEndCallToolDTO {
@@ -14962,14 +17920,6 @@ export interface UpdateEndCallToolDTO {
    * For some tools, this is auto-filled based on special fields like `tool.destinations`. For others like the function tool, these can be custom configured.
    */
   messages?: (ToolMessageStart | ToolMessageComplete | ToolMessageFailed | ToolMessageDelayed)[];
-  /**
-   * This is the function definition of the tool.
-   *
-   * For `endCall`, `transferCall`, and `dtmf` tools, this is auto-filled based on tool-specific fields like `tool.destinations`. But, even in those cases, you can provide a custom function definition for advanced use cases.
-   *
-   * An example of an advanced use case is if you want to customize the message that's spoken for `endCall` tool. You can specify a function where it returns an argument "reason". Then, in `messages` array, you can have many "request-complete" messages. One of these messages will be triggered if the `messages[].conditions` matches the "reason" argument.
-   */
-  function?: OpenAIFunction;
 }
 
 export interface UpdateFunctionToolDTO {
@@ -15002,13 +17952,7 @@ export interface UpdateFunctionToolDTO {
    *   - Webhook expects a response with tool call result.
    */
   server?: Server;
-  /**
-   * This is the function definition of the tool.
-   *
-   * For `endCall`, `transferCall`, and `dtmf` tools, this is auto-filled based on tool-specific fields like `tool.destinations`. But, even in those cases, you can provide a custom function definition for advanced use cases.
-   *
-   * An example of an advanced use case is if you want to customize the message that's spoken for `endCall` tool. You can specify a function where it returns an argument "reason". Then, in `messages` array, you can have many "request-complete" messages. One of these messages will be triggered if the `messages[].conditions` matches the "reason" argument.
-   */
+  /** This is the function definition of the tool. */
   function?: OpenAIFunction;
 }
 
@@ -15019,14 +17963,6 @@ export interface UpdateGhlToolDTO {
    * For some tools, this is auto-filled based on special fields like `tool.destinations`. For others like the function tool, these can be custom configured.
    */
   messages?: (ToolMessageStart | ToolMessageComplete | ToolMessageFailed | ToolMessageDelayed)[];
-  /**
-   * This is the function definition of the tool.
-   *
-   * For `endCall`, `transferCall`, and `dtmf` tools, this is auto-filled based on tool-specific fields like `tool.destinations`. But, even in those cases, you can provide a custom function definition for advanced use cases.
-   *
-   * An example of an advanced use case is if you want to customize the message that's spoken for `endCall` tool. You can specify a function where it returns an argument "reason". Then, in `messages` array, you can have many "request-complete" messages. One of these messages will be triggered if the `messages[].conditions` matches the "reason" argument.
-   */
-  function?: OpenAIFunction;
   metadata?: GhlToolMetadata;
 }
 
@@ -15037,14 +17973,6 @@ export interface UpdateMakeToolDTO {
    * For some tools, this is auto-filled based on special fields like `tool.destinations`. For others like the function tool, these can be custom configured.
    */
   messages?: (ToolMessageStart | ToolMessageComplete | ToolMessageFailed | ToolMessageDelayed)[];
-  /**
-   * This is the function definition of the tool.
-   *
-   * For `endCall`, `transferCall`, and `dtmf` tools, this is auto-filled based on tool-specific fields like `tool.destinations`. But, even in those cases, you can provide a custom function definition for advanced use cases.
-   *
-   * An example of an advanced use case is if you want to customize the message that's spoken for `endCall` tool. You can specify a function where it returns an argument "reason". Then, in `messages` array, you can have many "request-complete" messages. One of these messages will be triggered if the `messages[].conditions` matches the "reason" argument.
-   */
-  function?: OpenAIFunction;
   metadata?: MakeToolMetadata;
 }
 
@@ -15061,14 +17989,6 @@ export interface UpdateTransferCallToolDTO {
     | TransferDestinationNumber
     | TransferDestinationSip
   )[];
-  /**
-   * This is the function definition of the tool.
-   *
-   * For `endCall`, `transferCall`, and `dtmf` tools, this is auto-filled based on tool-specific fields like `tool.destinations`. But, even in those cases, you can provide a custom function definition for advanced use cases.
-   *
-   * An example of an advanced use case is if you want to customize the message that's spoken for `endCall` tool. You can specify a function where it returns an argument "reason". Then, in `messages` array, you can have many "request-complete" messages. One of these messages will be triggered if the `messages[].conditions` matches the "reason" argument.
-   */
-  function?: OpenAIFunction;
 }
 
 export interface UpdateOutputToolDTO {
@@ -15078,14 +17998,6 @@ export interface UpdateOutputToolDTO {
    * For some tools, this is auto-filled based on special fields like `tool.destinations`. For others like the function tool, these can be custom configured.
    */
   messages?: (ToolMessageStart | ToolMessageComplete | ToolMessageFailed | ToolMessageDelayed)[];
-  /**
-   * This is the function definition of the tool.
-   *
-   * For `endCall`, `transferCall`, and `dtmf` tools, this is auto-filled based on tool-specific fields like `tool.destinations`. But, even in those cases, you can provide a custom function definition for advanced use cases.
-   *
-   * An example of an advanced use case is if you want to customize the message that's spoken for `endCall` tool. You can specify a function where it returns an argument "reason". Then, in `messages` array, you can have many "request-complete" messages. One of these messages will be triggered if the `messages[].conditions` matches the "reason" argument.
-   */
-  function?: OpenAIFunction;
 }
 
 export interface UpdateBashToolDTO {
@@ -15109,14 +18021,6 @@ export interface UpdateBashToolDTO {
    *   - Webhook expects a response with tool call result.
    */
   server?: Server;
-  /**
-   * This is the function definition of the tool.
-   *
-   * For `endCall`, `transferCall`, and `dtmf` tools, this is auto-filled based on tool-specific fields like `tool.destinations`. But, even in those cases, you can provide a custom function definition for advanced use cases.
-   *
-   * An example of an advanced use case is if you want to customize the message that's spoken for `endCall` tool. You can specify a function where it returns an argument "reason". Then, in `messages` array, you can have many "request-complete" messages. One of these messages will be triggered if the `messages[].conditions` matches the "reason" argument.
-   */
-  function?: OpenAIFunction;
   /**
    * The name of the tool, fixed to 'bash'
    * @default "bash"
@@ -15145,14 +18049,6 @@ export interface UpdateComputerToolDTO {
    *   - Webhook expects a response with tool call result.
    */
   server?: Server;
-  /**
-   * This is the function definition of the tool.
-   *
-   * For `endCall`, `transferCall`, and `dtmf` tools, this is auto-filled based on tool-specific fields like `tool.destinations`. But, even in those cases, you can provide a custom function definition for advanced use cases.
-   *
-   * An example of an advanced use case is if you want to customize the message that's spoken for `endCall` tool. You can specify a function where it returns an argument "reason". Then, in `messages` array, you can have many "request-complete" messages. One of these messages will be triggered if the `messages[].conditions` matches the "reason" argument.
-   */
-  function?: OpenAIFunction;
   /**
    * The name of the tool, fixed to 'computer'
    * @default "computer"
@@ -15188,14 +18084,6 @@ export interface UpdateTextEditorToolDTO {
    */
   server?: Server;
   /**
-   * This is the function definition of the tool.
-   *
-   * For `endCall`, `transferCall`, and `dtmf` tools, this is auto-filled based on tool-specific fields like `tool.destinations`. But, even in those cases, you can provide a custom function definition for advanced use cases.
-   *
-   * An example of an advanced use case is if you want to customize the message that's spoken for `endCall` tool. You can specify a function where it returns an argument "reason". Then, in `messages` array, you can have many "request-complete" messages. One of these messages will be triggered if the `messages[].conditions` matches the "reason" argument.
-   */
-  function?: OpenAIFunction;
-  /**
    * The name of the tool, fixed to 'str_replace_editor'
    * @default "str_replace_editor"
    */
@@ -15211,14 +18099,6 @@ export interface UpdateQueryToolDTO {
   messages?: (ToolMessageStart | ToolMessageComplete | ToolMessageFailed | ToolMessageDelayed)[];
   /** The knowledge bases to query */
   knowledgeBases?: KnowledgeBase[];
-  /**
-   * This is the function definition of the tool.
-   *
-   * For `endCall`, `transferCall`, and `dtmf` tools, this is auto-filled based on tool-specific fields like `tool.destinations`. But, even in those cases, you can provide a custom function definition for advanced use cases.
-   *
-   * An example of an advanced use case is if you want to customize the message that's spoken for `endCall` tool. You can specify a function where it returns an argument "reason". Then, in `messages` array, you can have many "request-complete" messages. One of these messages will be triggered if the `messages[].conditions` matches the "reason" argument.
-   */
-  function?: OpenAIFunction;
 }
 
 export interface UpdateGoogleCalendarCreateEventToolDTO {
@@ -15228,14 +18108,6 @@ export interface UpdateGoogleCalendarCreateEventToolDTO {
    * For some tools, this is auto-filled based on special fields like `tool.destinations`. For others like the function tool, these can be custom configured.
    */
   messages?: (ToolMessageStart | ToolMessageComplete | ToolMessageFailed | ToolMessageDelayed)[];
-  /**
-   * This is the function definition of the tool.
-   *
-   * For `endCall`, `transferCall`, and `dtmf` tools, this is auto-filled based on tool-specific fields like `tool.destinations`. But, even in those cases, you can provide a custom function definition for advanced use cases.
-   *
-   * An example of an advanced use case is if you want to customize the message that's spoken for `endCall` tool. You can specify a function where it returns an argument "reason". Then, in `messages` array, you can have many "request-complete" messages. One of these messages will be triggered if the `messages[].conditions` matches the "reason" argument.
-   */
-  function?: OpenAIFunction;
 }
 
 export interface UpdateGoogleSheetsRowAppendToolDTO {
@@ -15245,14 +18117,6 @@ export interface UpdateGoogleSheetsRowAppendToolDTO {
    * For some tools, this is auto-filled based on special fields like `tool.destinations`. For others like the function tool, these can be custom configured.
    */
   messages?: (ToolMessageStart | ToolMessageComplete | ToolMessageFailed | ToolMessageDelayed)[];
-  /**
-   * This is the function definition of the tool.
-   *
-   * For `endCall`, `transferCall`, and `dtmf` tools, this is auto-filled based on tool-specific fields like `tool.destinations`. But, even in those cases, you can provide a custom function definition for advanced use cases.
-   *
-   * An example of an advanced use case is if you want to customize the message that's spoken for `endCall` tool. You can specify a function where it returns an argument "reason". Then, in `messages` array, you can have many "request-complete" messages. One of these messages will be triggered if the `messages[].conditions` matches the "reason" argument.
-   */
-  function?: OpenAIFunction;
 }
 
 export interface UpdateGoogleCalendarCheckAvailabilityToolDTO {
@@ -15262,14 +18126,6 @@ export interface UpdateGoogleCalendarCheckAvailabilityToolDTO {
    * For some tools, this is auto-filled based on special fields like `tool.destinations`. For others like the function tool, these can be custom configured.
    */
   messages?: (ToolMessageStart | ToolMessageComplete | ToolMessageFailed | ToolMessageDelayed)[];
-  /**
-   * This is the function definition of the tool.
-   *
-   * For `endCall`, `transferCall`, and `dtmf` tools, this is auto-filled based on tool-specific fields like `tool.destinations`. But, even in those cases, you can provide a custom function definition for advanced use cases.
-   *
-   * An example of an advanced use case is if you want to customize the message that's spoken for `endCall` tool. You can specify a function where it returns an argument "reason". Then, in `messages` array, you can have many "request-complete" messages. One of these messages will be triggered if the `messages[].conditions` matches the "reason" argument.
-   */
-  function?: OpenAIFunction;
 }
 
 export interface UpdateSlackSendMessageToolDTO {
@@ -15279,14 +18135,6 @@ export interface UpdateSlackSendMessageToolDTO {
    * For some tools, this is auto-filled based on special fields like `tool.destinations`. For others like the function tool, these can be custom configured.
    */
   messages?: (ToolMessageStart | ToolMessageComplete | ToolMessageFailed | ToolMessageDelayed)[];
-  /**
-   * This is the function definition of the tool.
-   *
-   * For `endCall`, `transferCall`, and `dtmf` tools, this is auto-filled based on tool-specific fields like `tool.destinations`. But, even in those cases, you can provide a custom function definition for advanced use cases.
-   *
-   * An example of an advanced use case is if you want to customize the message that's spoken for `endCall` tool. You can specify a function where it returns an argument "reason". Then, in `messages` array, you can have many "request-complete" messages. One of these messages will be triggered if the `messages[].conditions` matches the "reason" argument.
-   */
-  function?: OpenAIFunction;
 }
 
 export interface UpdateSmsToolDTO {
@@ -15296,14 +18144,6 @@ export interface UpdateSmsToolDTO {
    * For some tools, this is auto-filled based on special fields like `tool.destinations`. For others like the function tool, these can be custom configured.
    */
   messages?: (ToolMessageStart | ToolMessageComplete | ToolMessageFailed | ToolMessageDelayed)[];
-  /**
-   * This is the function definition of the tool.
-   *
-   * For `endCall`, `transferCall`, and `dtmf` tools, this is auto-filled based on tool-specific fields like `tool.destinations`. But, even in those cases, you can provide a custom function definition for advanced use cases.
-   *
-   * An example of an advanced use case is if you want to customize the message that's spoken for `endCall` tool. You can specify a function where it returns an argument "reason". Then, in `messages` array, you can have many "request-complete" messages. One of these messages will be triggered if the `messages[].conditions` matches the "reason" argument.
-   */
-  function?: OpenAIFunction;
 }
 
 export interface UpdateMcpToolDTO {
@@ -15325,14 +18165,7 @@ export interface UpdateMcpToolDTO {
    *   - Webhook expects a response with tool call result.
    */
   server?: Server;
-  /**
-   * This is the function definition of the tool.
-   *
-   * For `endCall`, `transferCall`, and `dtmf` tools, this is auto-filled based on tool-specific fields like `tool.destinations`. But, even in those cases, you can provide a custom function definition for advanced use cases.
-   *
-   * An example of an advanced use case is if you want to customize the message that's spoken for `endCall` tool. You can specify a function where it returns an argument "reason". Then, in `messages` array, you can have many "request-complete" messages. One of these messages will be triggered if the `messages[].conditions` matches the "reason" argument.
-   */
-  function?: OpenAIFunction;
+  metadata?: McpToolMetadata;
 }
 
 export interface UpdateGoHighLevelCalendarAvailabilityToolDTO {
@@ -15342,14 +18175,6 @@ export interface UpdateGoHighLevelCalendarAvailabilityToolDTO {
    * For some tools, this is auto-filled based on special fields like `tool.destinations`. For others like the function tool, these can be custom configured.
    */
   messages?: (ToolMessageStart | ToolMessageComplete | ToolMessageFailed | ToolMessageDelayed)[];
-  /**
-   * This is the function definition of the tool.
-   *
-   * For `endCall`, `transferCall`, and `dtmf` tools, this is auto-filled based on tool-specific fields like `tool.destinations`. But, even in those cases, you can provide a custom function definition for advanced use cases.
-   *
-   * An example of an advanced use case is if you want to customize the message that's spoken for `endCall` tool. You can specify a function where it returns an argument "reason". Then, in `messages` array, you can have many "request-complete" messages. One of these messages will be triggered if the `messages[].conditions` matches the "reason" argument.
-   */
-  function?: OpenAIFunction;
 }
 
 export interface UpdateGoHighLevelCalendarEventCreateToolDTO {
@@ -15359,14 +18184,6 @@ export interface UpdateGoHighLevelCalendarEventCreateToolDTO {
    * For some tools, this is auto-filled based on special fields like `tool.destinations`. For others like the function tool, these can be custom configured.
    */
   messages?: (ToolMessageStart | ToolMessageComplete | ToolMessageFailed | ToolMessageDelayed)[];
-  /**
-   * This is the function definition of the tool.
-   *
-   * For `endCall`, `transferCall`, and `dtmf` tools, this is auto-filled based on tool-specific fields like `tool.destinations`. But, even in those cases, you can provide a custom function definition for advanced use cases.
-   *
-   * An example of an advanced use case is if you want to customize the message that's spoken for `endCall` tool. You can specify a function where it returns an argument "reason". Then, in `messages` array, you can have many "request-complete" messages. One of these messages will be triggered if the `messages[].conditions` matches the "reason" argument.
-   */
-  function?: OpenAIFunction;
 }
 
 export interface UpdateGoHighLevelContactCreateToolDTO {
@@ -15376,14 +18193,6 @@ export interface UpdateGoHighLevelContactCreateToolDTO {
    * For some tools, this is auto-filled based on special fields like `tool.destinations`. For others like the function tool, these can be custom configured.
    */
   messages?: (ToolMessageStart | ToolMessageComplete | ToolMessageFailed | ToolMessageDelayed)[];
-  /**
-   * This is the function definition of the tool.
-   *
-   * For `endCall`, `transferCall`, and `dtmf` tools, this is auto-filled based on tool-specific fields like `tool.destinations`. But, even in those cases, you can provide a custom function definition for advanced use cases.
-   *
-   * An example of an advanced use case is if you want to customize the message that's spoken for `endCall` tool. You can specify a function where it returns an argument "reason". Then, in `messages` array, you can have many "request-complete" messages. One of these messages will be triggered if the `messages[].conditions` matches the "reason" argument.
-   */
-  function?: OpenAIFunction;
 }
 
 export interface UpdateGoHighLevelContactGetToolDTO {
@@ -15393,14 +18202,6 @@ export interface UpdateGoHighLevelContactGetToolDTO {
    * For some tools, this is auto-filled based on special fields like `tool.destinations`. For others like the function tool, these can be custom configured.
    */
   messages?: (ToolMessageStart | ToolMessageComplete | ToolMessageFailed | ToolMessageDelayed)[];
-  /**
-   * This is the function definition of the tool.
-   *
-   * For `endCall`, `transferCall`, and `dtmf` tools, this is auto-filled based on tool-specific fields like `tool.destinations`. But, even in those cases, you can provide a custom function definition for advanced use cases.
-   *
-   * An example of an advanced use case is if you want to customize the message that's spoken for `endCall` tool. You can specify a function where it returns an argument "reason". Then, in `messages` array, you can have many "request-complete" messages. One of these messages will be triggered if the `messages[].conditions` matches the "reason" argument.
-   */
-  function?: OpenAIFunction;
 }
 
 export interface CreateFileDTO {
@@ -15652,7 +18453,223 @@ export interface TrieveKnowledgeBaseImport {
 
 export interface Workflow {
   nodes: (ConversationNode | ToolNode)[];
-  model?: WorkflowOpenAIModel | WorkflowAnthropicModel;
+  /**
+   * This is the model for the workflow.
+   *
+   * This can be overridden at node level using `nodes[n].model`.
+   */
+  model?: WorkflowOpenAIModel | WorkflowAnthropicModel | WorkflowGoogleModel | WorkflowCustomModel;
+  /**
+   * This is the transcriber for the workflow.
+   *
+   * This can be overridden at node level using `nodes[n].transcriber`.
+   */
+  transcriber?:
+    | AssemblyAITranscriber
+    | AzureSpeechTranscriber
+    | CustomTranscriber
+    | DeepgramTranscriber
+    | ElevenLabsTranscriber
+    | GladiaTranscriber
+    | GoogleTranscriber
+    | SpeechmaticsTranscriber
+    | TalkscriberTranscriber
+    | OpenAITranscriber
+    | CartesiaTranscriber;
+  /**
+   * This is the voice for the workflow.
+   *
+   * This can be overridden at node level using `nodes[n].voice`.
+   */
+  voice?:
+    | AzureVoice
+    | CartesiaVoice
+    | CustomVoice
+    | DeepgramVoice
+    | ElevenLabsVoice
+    | HumeVoice
+    | LMNTVoice
+    | NeuphonicVoice
+    | OpenAIVoice
+    | PlayHTVoice
+    | RimeAIVoice
+    | SmallestAIVoice
+    | TavusVoice
+    | VapiVoice
+    | SesameVoice
+    | InworldVoice
+    | MinimaxVoice;
+  /**
+   * This is the plan for observability of workflow's calls.
+   *
+   * Currently, only Langfuse is supported.
+   */
+  observabilityPlan?: LangfuseObservabilityPlan;
+  /**
+   * This is the background sound in the call. Default for phone calls is 'office' and default for web calls is 'off'.
+   * You can also provide a custom sound by providing a URL to an audio file.
+   */
+  backgroundSound?: 'off' | 'office' | string;
+  /** This is a set of actions that will be performed on certain events. */
+  hooks?: (
+    | CallHookCallEnding
+    | CallHookAssistantSpeechInterrupted
+    | CallHookCustomerSpeechInterrupted
+    | CallHookCustomerSpeechTimeout
+  )[];
+  /** These are dynamic credentials that will be used for the workflow calls. By default, all the credentials are available for use in the call but you can supplement an additional credentials using this. Dynamic credentials override existing credentials. */
+  credentials?: (
+    | ({
+        provider: '11labs';
+      } & CreateElevenLabsCredentialDTO)
+    | ({
+        provider: 'anthropic';
+      } & CreateAnthropicCredentialDTO)
+    | ({
+        provider: 'anyscale';
+      } & CreateAnyscaleCredentialDTO)
+    | ({
+        provider: 'assembly-ai';
+      } & CreateAssemblyAICredentialDTO)
+    | ({
+        provider: 'azure-openai';
+      } & CreateAzureOpenAICredentialDTO)
+    | ({
+        provider: 'azure';
+      } & CreateAzureCredentialDTO)
+    | ({
+        provider: 'byo-sip-trunk';
+      } & CreateByoSipTrunkCredentialDTO)
+    | ({
+        provider: 'cartesia';
+      } & CreateCartesiaCredentialDTO)
+    | ({
+        provider: 'cerebras';
+      } & CreateCerebrasCredentialDTO)
+    | ({
+        provider: 'cloudflare';
+      } & CreateCloudflareCredentialDTO)
+    | ({
+        provider: 'custom-llm';
+      } & CreateCustomLLMCredentialDTO)
+    | ({
+        provider: 'deepgram';
+      } & CreateDeepgramCredentialDTO)
+    | ({
+        provider: 'deepinfra';
+      } & CreateDeepInfraCredentialDTO)
+    | ({
+        provider: 'deep-seek';
+      } & CreateDeepSeekCredentialDTO)
+    | ({
+        provider: 'gcp';
+      } & CreateGcpCredentialDTO)
+    | ({
+        provider: 'gladia';
+      } & CreateGladiaCredentialDTO)
+    | ({
+        provider: 'gohighlevel';
+      } & CreateGoHighLevelCredentialDTO)
+    | ({
+        provider: 'google';
+      } & CreateGoogleCredentialDTO)
+    | ({
+        provider: 'groq';
+      } & CreateGroqCredentialDTO)
+    | ({
+        provider: 'inflection-ai';
+      } & CreateInflectionAICredentialDTO)
+    | ({
+        provider: 'langfuse';
+      } & CreateLangfuseCredentialDTO)
+    | ({
+        provider: 'lmnt';
+      } & CreateLmntCredentialDTO)
+    | ({
+        provider: 'make';
+      } & CreateMakeCredentialDTO)
+    | ({
+        provider: 'openai';
+      } & CreateOpenAICredentialDTO)
+    | ({
+        provider: 'openrouter';
+      } & CreateOpenRouterCredentialDTO)
+    | ({
+        provider: 'perplexity-ai';
+      } & CreatePerplexityAICredentialDTO)
+    | ({
+        provider: 'playht';
+      } & CreatePlayHTCredentialDTO)
+    | ({
+        provider: 'rime-ai';
+      } & CreateRimeAICredentialDTO)
+    | ({
+        provider: 'runpod';
+      } & CreateRunpodCredentialDTO)
+    | ({
+        provider: 's3';
+      } & CreateS3CredentialDTO)
+    | ({
+        provider: 'supabase';
+      } & CreateSupabaseCredentialDTO)
+    | ({
+        provider: 'smallest-ai';
+      } & CreateSmallestAICredentialDTO)
+    | ({
+        provider: 'tavus';
+      } & CreateTavusCredentialDTO)
+    | ({
+        provider: 'together-ai';
+      } & CreateTogetherAICredentialDTO)
+    | ({
+        provider: 'twilio';
+      } & CreateTwilioCredentialDTO)
+    | ({
+        provider: 'vonage';
+      } & CreateVonageCredentialDTO)
+    | ({
+        provider: 'webhook';
+      } & CreateWebhookCredentialDTO)
+    | ({
+        provider: 'xai';
+      } & CreateXAiCredentialDTO)
+    | ({
+        provider: 'neuphonic';
+      } & CreateNeuphonicCredentialDTO)
+    | ({
+        provider: 'hume';
+      } & CreateHumeCredentialDTO)
+    | ({
+        provider: 'mistral';
+      } & CreateMistralCredentialDTO)
+    | ({
+        provider: 'speechmatics';
+      } & CreateSpeechmaticsCredentialDTO)
+    | ({
+        provider: 'trieve';
+      } & CreateTrieveCredentialDTO)
+    | ({
+        provider: 'google.calendar.oauth2-client';
+      } & CreateGoogleCalendarOAuth2ClientCredentialDTO)
+    | ({
+        provider: 'google.calendar.oauth2-authorization';
+      } & CreateGoogleCalendarOAuth2AuthorizationCredentialDTO)
+    | ({
+        provider: 'google.sheets.oauth2-authorization';
+      } & CreateGoogleSheetsOAuth2AuthorizationCredentialDTO)
+    | ({
+        provider: 'slack.oauth2-authorization';
+      } & CreateSlackOAuth2AuthorizationCredentialDTO)
+    | ({
+        provider: 'ghl.oauth2-authorization';
+      } & CreateGoHighLevelMCPCredentialDTO)
+    | ({
+        provider: 'inworld';
+      } & CreateInworldCredentialDTO)
+    | ({
+        provider: 'minimax';
+      } & CreateMinimaxCredentialDTO)
+  )[];
   id: string;
   orgId: string;
   /** @format date-time */
@@ -15664,16 +18681,354 @@ export interface Workflow {
   edges: Edge[];
   /** @maxLength 5000 */
   globalPrompt?: string;
+  /**
+   * This is where Vapi will send webhooks. You can find all webhooks available along with their shape in ServerMessage schema.
+   *
+   * The order of precedence is:
+   *
+   * 1. tool.server
+   * 2. workflow.server / assistant.server
+   * 3. phoneNumber.server
+   * 4. org.server
+   */
+  server?: Server;
+  /** This is the compliance plan for the workflow. It allows you to configure HIPAA and other compliance settings. */
+  compliancePlan?: CompliancePlan;
+  /** This is the plan for analysis of workflow's calls. Stored in `call.analysis`. */
+  analysisPlan?: AnalysisPlan;
+  /** This is the plan for artifacts generated during workflow's calls. Stored in `call.artifact`. */
+  artifactPlan?: ArtifactPlan;
+  /**
+   * This is the plan for when the workflow nodes should start talking.
+   *
+   * You should configure this if you're running into these issues:
+   * - The assistant is too slow to start talking after the customer is done speaking.
+   * - The assistant is too fast to start talking after the customer is done speaking.
+   * - The assistant is so fast that it's actually interrupting the customer.
+   */
+  startSpeakingPlan?: StartSpeakingPlan;
+  /**
+   * This is the plan for when workflow nodes should stop talking on customer interruption.
+   *
+   * You should configure this if you're running into these issues:
+   * - The assistant is too slow to recognize customer's interruption.
+   * - The assistant is too fast to recognize customer's interruption.
+   * - The assistant is getting interrupted by phrases that are just acknowledgments.
+   * - The assistant is getting interrupted by background noises.
+   * - The assistant is not properly stopping -- it starts talking right after getting interrupted.
+   */
+  stopSpeakingPlan?: StopSpeakingPlan;
+  /**
+   * This is the plan for real-time monitoring of the workflow's calls.
+   *
+   * Usage:
+   * - To enable live listening of the workflow's calls, set `monitorPlan.listenEnabled` to `true`.
+   * - To enable live control of the workflow's calls, set `monitorPlan.controlEnabled` to `true`.
+   */
+  monitorPlan?: MonitorPlan;
+  /**
+   * This enables filtering of noise and background speech while the user is talking.
+   *
+   * Features:
+   * - Smart denoising using Krisp
+   * - Fourier denoising
+   *
+   * Both can be used together. Order of precedence:
+   * - Smart denoising
+   * - Fourier denoising
+   */
+  backgroundSpeechDenoisingPlan?: BackgroundSpeechDenoisingPlan;
+  /** These are the credentials that will be used for the workflow calls. By default, all the credentials are available for use in the call but you can provide a subset using this. */
+  credentialIds?: string[];
+  /** This is the plan for keypad input handling during workflow calls. */
+  keypadInputPlan?: KeypadInputPlan;
 }
 
 export interface UpdateWorkflowDTO {
   nodes?: (ConversationNode | ToolNode)[];
-  model?: WorkflowOpenAIModel | WorkflowAnthropicModel;
+  /**
+   * This is the model for the workflow.
+   *
+   * This can be overridden at node level using `nodes[n].model`.
+   */
+  model?: WorkflowOpenAIModel | WorkflowAnthropicModel | WorkflowGoogleModel | WorkflowCustomModel;
+  /**
+   * This is the transcriber for the workflow.
+   *
+   * This can be overridden at node level using `nodes[n].transcriber`.
+   */
+  transcriber?:
+    | AssemblyAITranscriber
+    | AzureSpeechTranscriber
+    | CustomTranscriber
+    | DeepgramTranscriber
+    | ElevenLabsTranscriber
+    | GladiaTranscriber
+    | GoogleTranscriber
+    | SpeechmaticsTranscriber
+    | TalkscriberTranscriber
+    | OpenAITranscriber
+    | CartesiaTranscriber;
+  /**
+   * This is the voice for the workflow.
+   *
+   * This can be overridden at node level using `nodes[n].voice`.
+   */
+  voice?:
+    | AzureVoice
+    | CartesiaVoice
+    | CustomVoice
+    | DeepgramVoice
+    | ElevenLabsVoice
+    | HumeVoice
+    | LMNTVoice
+    | NeuphonicVoice
+    | OpenAIVoice
+    | PlayHTVoice
+    | RimeAIVoice
+    | SmallestAIVoice
+    | TavusVoice
+    | VapiVoice
+    | SesameVoice
+    | InworldVoice
+    | MinimaxVoice;
+  /**
+   * This is the plan for observability of workflow's calls.
+   *
+   * Currently, only Langfuse is supported.
+   */
+  observabilityPlan?: LangfuseObservabilityPlan;
+  /**
+   * This is the background sound in the call. Default for phone calls is 'office' and default for web calls is 'off'.
+   * You can also provide a custom sound by providing a URL to an audio file.
+   */
+  backgroundSound?: 'off' | 'office' | string;
+  /** This is a set of actions that will be performed on certain events. */
+  hooks?: (
+    | CallHookCallEnding
+    | CallHookAssistantSpeechInterrupted
+    | CallHookCustomerSpeechInterrupted
+    | CallHookCustomerSpeechTimeout
+  )[];
+  /** These are dynamic credentials that will be used for the workflow calls. By default, all the credentials are available for use in the call but you can supplement an additional credentials using this. Dynamic credentials override existing credentials. */
+  credentials?: (
+    | ({
+        provider: '11labs';
+      } & CreateElevenLabsCredentialDTO)
+    | ({
+        provider: 'anthropic';
+      } & CreateAnthropicCredentialDTO)
+    | ({
+        provider: 'anyscale';
+      } & CreateAnyscaleCredentialDTO)
+    | ({
+        provider: 'assembly-ai';
+      } & CreateAssemblyAICredentialDTO)
+    | ({
+        provider: 'azure-openai';
+      } & CreateAzureOpenAICredentialDTO)
+    | ({
+        provider: 'azure';
+      } & CreateAzureCredentialDTO)
+    | ({
+        provider: 'byo-sip-trunk';
+      } & CreateByoSipTrunkCredentialDTO)
+    | ({
+        provider: 'cartesia';
+      } & CreateCartesiaCredentialDTO)
+    | ({
+        provider: 'cerebras';
+      } & CreateCerebrasCredentialDTO)
+    | ({
+        provider: 'cloudflare';
+      } & CreateCloudflareCredentialDTO)
+    | ({
+        provider: 'custom-llm';
+      } & CreateCustomLLMCredentialDTO)
+    | ({
+        provider: 'deepgram';
+      } & CreateDeepgramCredentialDTO)
+    | ({
+        provider: 'deepinfra';
+      } & CreateDeepInfraCredentialDTO)
+    | ({
+        provider: 'deep-seek';
+      } & CreateDeepSeekCredentialDTO)
+    | ({
+        provider: 'gcp';
+      } & CreateGcpCredentialDTO)
+    | ({
+        provider: 'gladia';
+      } & CreateGladiaCredentialDTO)
+    | ({
+        provider: 'gohighlevel';
+      } & CreateGoHighLevelCredentialDTO)
+    | ({
+        provider: 'google';
+      } & CreateGoogleCredentialDTO)
+    | ({
+        provider: 'groq';
+      } & CreateGroqCredentialDTO)
+    | ({
+        provider: 'inflection-ai';
+      } & CreateInflectionAICredentialDTO)
+    | ({
+        provider: 'langfuse';
+      } & CreateLangfuseCredentialDTO)
+    | ({
+        provider: 'lmnt';
+      } & CreateLmntCredentialDTO)
+    | ({
+        provider: 'make';
+      } & CreateMakeCredentialDTO)
+    | ({
+        provider: 'openai';
+      } & CreateOpenAICredentialDTO)
+    | ({
+        provider: 'openrouter';
+      } & CreateOpenRouterCredentialDTO)
+    | ({
+        provider: 'perplexity-ai';
+      } & CreatePerplexityAICredentialDTO)
+    | ({
+        provider: 'playht';
+      } & CreatePlayHTCredentialDTO)
+    | ({
+        provider: 'rime-ai';
+      } & CreateRimeAICredentialDTO)
+    | ({
+        provider: 'runpod';
+      } & CreateRunpodCredentialDTO)
+    | ({
+        provider: 's3';
+      } & CreateS3CredentialDTO)
+    | ({
+        provider: 'supabase';
+      } & CreateSupabaseCredentialDTO)
+    | ({
+        provider: 'smallest-ai';
+      } & CreateSmallestAICredentialDTO)
+    | ({
+        provider: 'tavus';
+      } & CreateTavusCredentialDTO)
+    | ({
+        provider: 'together-ai';
+      } & CreateTogetherAICredentialDTO)
+    | ({
+        provider: 'twilio';
+      } & CreateTwilioCredentialDTO)
+    | ({
+        provider: 'vonage';
+      } & CreateVonageCredentialDTO)
+    | ({
+        provider: 'webhook';
+      } & CreateWebhookCredentialDTO)
+    | ({
+        provider: 'xai';
+      } & CreateXAiCredentialDTO)
+    | ({
+        provider: 'neuphonic';
+      } & CreateNeuphonicCredentialDTO)
+    | ({
+        provider: 'hume';
+      } & CreateHumeCredentialDTO)
+    | ({
+        provider: 'mistral';
+      } & CreateMistralCredentialDTO)
+    | ({
+        provider: 'speechmatics';
+      } & CreateSpeechmaticsCredentialDTO)
+    | ({
+        provider: 'trieve';
+      } & CreateTrieveCredentialDTO)
+    | ({
+        provider: 'google.calendar.oauth2-client';
+      } & CreateGoogleCalendarOAuth2ClientCredentialDTO)
+    | ({
+        provider: 'google.calendar.oauth2-authorization';
+      } & CreateGoogleCalendarOAuth2AuthorizationCredentialDTO)
+    | ({
+        provider: 'google.sheets.oauth2-authorization';
+      } & CreateGoogleSheetsOAuth2AuthorizationCredentialDTO)
+    | ({
+        provider: 'slack.oauth2-authorization';
+      } & CreateSlackOAuth2AuthorizationCredentialDTO)
+    | ({
+        provider: 'ghl.oauth2-authorization';
+      } & CreateGoHighLevelMCPCredentialDTO)
+    | ({
+        provider: 'inworld';
+      } & CreateInworldCredentialDTO)
+    | ({
+        provider: 'minimax';
+      } & CreateMinimaxCredentialDTO)
+  )[];
   /** @maxLength 80 */
   name?: string;
   edges?: Edge[];
   /** @maxLength 5000 */
   globalPrompt?: string;
+  /**
+   * This is where Vapi will send webhooks. You can find all webhooks available along with their shape in ServerMessage schema.
+   *
+   * The order of precedence is:
+   *
+   * 1. tool.server
+   * 2. workflow.server / assistant.server
+   * 3. phoneNumber.server
+   * 4. org.server
+   */
+  server?: Server;
+  /** This is the compliance plan for the workflow. It allows you to configure HIPAA and other compliance settings. */
+  compliancePlan?: CompliancePlan;
+  /** This is the plan for analysis of workflow's calls. Stored in `call.analysis`. */
+  analysisPlan?: AnalysisPlan;
+  /** This is the plan for artifacts generated during workflow's calls. Stored in `call.artifact`. */
+  artifactPlan?: ArtifactPlan;
+  /**
+   * This is the plan for when the workflow nodes should start talking.
+   *
+   * You should configure this if you're running into these issues:
+   * - The assistant is too slow to start talking after the customer is done speaking.
+   * - The assistant is too fast to start talking after the customer is done speaking.
+   * - The assistant is so fast that it's actually interrupting the customer.
+   */
+  startSpeakingPlan?: StartSpeakingPlan;
+  /**
+   * This is the plan for when workflow nodes should stop talking on customer interruption.
+   *
+   * You should configure this if you're running into these issues:
+   * - The assistant is too slow to recognize customer's interruption.
+   * - The assistant is too fast to recognize customer's interruption.
+   * - The assistant is getting interrupted by phrases that are just acknowledgments.
+   * - The assistant is getting interrupted by background noises.
+   * - The assistant is not properly stopping -- it starts talking right after getting interrupted.
+   */
+  stopSpeakingPlan?: StopSpeakingPlan;
+  /**
+   * This is the plan for real-time monitoring of the workflow's calls.
+   *
+   * Usage:
+   * - To enable live listening of the workflow's calls, set `monitorPlan.listenEnabled` to `true`.
+   * - To enable live control of the workflow's calls, set `monitorPlan.controlEnabled` to `true`.
+   */
+  monitorPlan?: MonitorPlan;
+  /**
+   * This enables filtering of noise and background speech while the user is talking.
+   *
+   * Features:
+   * - Smart denoising using Krisp
+   * - Fourier denoising
+   *
+   * Both can be used together. Order of precedence:
+   * - Smart denoising
+   * - Fourier denoising
+   */
+  backgroundSpeechDenoisingPlan?: BackgroundSpeechDenoisingPlan;
+  /** These are the credentials that will be used for the workflow calls. By default, all the credentials are available for use in the call but you can provide a subset using this. */
+  credentialIds?: string[];
+  /** This is the plan for keypad input handling during workflow calls. */
+  keypadInputPlan?: KeypadInputPlan;
 }
 
 export interface Squad {
@@ -16407,6 +19762,7 @@ export interface CreateOrgDTO {
   server?: Server;
   /**
    * This is the concurrency limit for the org. This is the maximum number of calls that can be active at any given time. To go beyond 10, please contact us at support@vapi.ai.
+   * @deprecated
    * @min 1
    * @max 10
    */
@@ -16454,7 +19810,7 @@ export interface Subscription {
    */
   updatedAt: string;
   /** This is the type / tier of the subscription. */
-  type: 'trial' | 'pay-as-you-go' | 'enterprise' | 'agency' | 'startup' | 'growth' | 'scale';
+  type: 'pay-as-you-go' | 'enterprise' | 'agency' | 'startup' | 'growth' | 'scale';
   /**
    * This is the status of the subscription. Past due subscriptions are subscriptions
    * with past due payments.
@@ -16646,6 +20002,7 @@ export interface Org {
   server?: Server;
   /**
    * This is the concurrency limit for the org. This is the maximum number of calls that can be active at any given time. To go beyond 10, please contact us at support@vapi.ai.
+   * @deprecated
    * @min 1
    * @max 10
    */
@@ -16696,6 +20053,7 @@ export interface UpdateOrgDTO {
   server?: Server;
   /**
    * This is the concurrency limit for the org. This is the maximum number of calls that can be active at any given time. To go beyond 10, please contact us at support@vapi.ai.
+   * @deprecated
    * @min 1
    * @max 10
    */
@@ -16940,6 +20298,11 @@ export interface AzureCredential {
    * @maxLength 10000
    */
   apiKey?: string;
+  /**
+   * This is the order in which this storage provider is tried during upload retries. Lower numbers are tried first in increasing order.
+   * @min 1
+   */
+  fallbackIndex?: number;
   /** This is the unique identifier for the credential. */
   id: string;
   /** This is the unique identifier for the org that this credential belongs to. */
@@ -17145,6 +20508,11 @@ export interface CloudflareCredential {
   apiKey?: string;
   /** Cloudflare Account Email. */
   accountEmail?: string;
+  /**
+   * This is the order in which this storage provider is tried during upload retries. Lower numbers are tried first in increasing order.
+   * @min 1
+   */
+  fallbackIndex?: number;
   /** This is the unique identifier for the credential. */
   id: string;
   /** This is the unique identifier for the org that this credential belongs to. */
@@ -17325,6 +20693,11 @@ export interface ElevenLabsCredential {
 
 export interface GcpCredential {
   provider: 'gcp';
+  /**
+   * This is the order in which this storage provider is tried during upload retries. Lower numbers are tried first in increasing order.
+   * @min 1
+   */
+  fallbackIndex?: number;
   /** This is the unique identifier for the credential. */
   id: string;
   /** This is the unique identifier for the org that this credential belongs to. */
@@ -17351,7 +20724,11 @@ export interface GcpCredential {
    * The schema is identical to the JSON that GCP outputs.
    */
   gcpKey: GcpKey;
-  /** This is the bucket plan that can be provided to store call artifacts in GCP. */
+  /**
+   * This is the region of the GCP resource.
+   * @maxLength 40
+   */
+  region?: string;
   bucketPlan?: BucketPlan;
 }
 
@@ -17833,6 +21210,11 @@ export interface S3Credential {
   s3BucketName: string;
   /** The path prefix for the uploaded recording. Ex. "recordings/" */
   s3PathPrefix: string;
+  /**
+   * This is the order in which this storage provider is tried during upload retries. Lower numbers are tried first in increasing order.
+   * @min 1
+   */
+  fallbackIndex?: number;
   /** This is the unique identifier for the credential. */
   id: string;
   /** This is the unique identifier for the org that this credential belongs to. */
@@ -17910,6 +21292,11 @@ export interface SpeechmaticsCredential {
 export interface SupabaseCredential {
   /** This is for supabase storage. */
   provider: 'supabase';
+  /**
+   * This is the order in which this storage provider is tried during upload retries. Lower numbers are tried first in increasing order.
+   * @min 1
+   */
+  fallbackIndex?: number;
   /** This is the unique identifier for the credential. */
   id: string;
   /** This is the unique identifier for the org that this credential belongs to. */
@@ -18083,8 +21470,14 @@ export interface VonageCredential {
 
 export interface WebhookCredential {
   provider: 'webhook';
-  /** This is the authentication plan. Currently supports OAuth2 RFC 6749. */
-  authenticationPlan: OAuth2AuthenticationPlan;
+  /** This is the authentication plan. Supports OAuth2 RFC 6749 and HMAC signing. */
+  authenticationPlan:
+    | ({
+        type: 'oauth2';
+      } & OAuth2AuthenticationPlan)
+    | ({
+        type: 'hmac';
+      } & HMACAuthenticationPlan);
   /** This is the unique identifier for the credential. */
   id: string;
   /** This is the unique identifier for the org that this credential belongs to. */
@@ -18267,6 +21660,35 @@ export interface GoHighLevelMCPCredential {
   name?: string;
 }
 
+export interface InworldCredential {
+  provider: 'inworld';
+  /**
+   * This is the Inworld Basic (Base64) authentication token. This is not returned in the API.
+   * @example "your-base64-token-here"
+   */
+  apiKey: string;
+  /** This is the unique identifier for the credential. */
+  id: string;
+  /** This is the unique identifier for the org that this credential belongs to. */
+  orgId: string;
+  /**
+   * This is the ISO 8601 date-time string of when the credential was created.
+   * @format date-time
+   */
+  createdAt: string;
+  /**
+   * This is the ISO 8601 date-time string of when the assistant was last updated.
+   * @format date-time
+   */
+  updatedAt: string;
+  /**
+   * This is the name of credential. This is just for your reference.
+   * @minLength 1
+   * @maxLength 40
+   */
+  name?: string;
+}
+
 export interface CreateCerebrasCredentialDTO {
   provider: 'cerebras';
   /**
@@ -18392,6 +21814,21 @@ export interface CreateGoHighLevelMCPCredentialDTO {
   name?: string;
 }
 
+export interface CreateInworldCredentialDTO {
+  provider: 'inworld';
+  /**
+   * This is the Inworld Basic (Base64) authentication token. This is not returned in the API.
+   * @example "your-base64-token-here"
+   */
+  apiKey: string;
+  /**
+   * This is the name of credential. This is just for your reference.
+   * @minLength 1
+   * @maxLength 40
+   */
+  name?: string;
+}
+
 export interface UpdateAnthropicCredentialDTO {
   /**
    * This is not returned in the API.
@@ -18462,6 +21899,11 @@ export interface UpdateAzureCredentialDTO {
    * @maxLength 10000
    */
   apiKey?: string;
+  /**
+   * This is the order in which this storage provider is tried during upload retries. Lower numbers are tried first in increasing order.
+   * @min 1
+   */
+  fallbackIndex?: number;
   /**
    * This is the name of credential. This is just for your reference.
    * @minLength 1
@@ -18591,6 +22033,11 @@ export interface UpdateCloudflareCredentialDTO {
   /** Cloudflare Account Email. */
   accountEmail?: string;
   /**
+   * This is the order in which this storage provider is tried during upload retries. Lower numbers are tried first in increasing order.
+   * @min 1
+   */
+  fallbackIndex?: number;
+  /**
    * This is the name of credential. This is just for your reference.
    * @minLength 1
    * @maxLength 40
@@ -18667,6 +22114,11 @@ export interface UpdateElevenLabsCredentialDTO {
 
 export interface UpdateGcpCredentialDTO {
   /**
+   * This is the order in which this storage provider is tried during upload retries. Lower numbers are tried first in increasing order.
+   * @min 1
+   */
+  fallbackIndex?: number;
+  /**
    * This is the name of credential. This is just for your reference.
    * @minLength 1
    * @maxLength 40
@@ -18678,7 +22130,11 @@ export interface UpdateGcpCredentialDTO {
    * The schema is identical to the JSON that GCP outputs.
    */
   gcpKey?: GcpKey;
-  /** This is the bucket plan that can be provided to store call artifacts in GCP. */
+  /**
+   * This is the region of the GCP resource.
+   * @maxLength 40
+   */
+  region?: string;
   bucketPlan?: BucketPlan;
 }
 
@@ -18902,6 +22358,11 @@ export interface UpdateS3CredentialDTO {
   /** The path prefix for the uploaded recording. Ex. "recordings/" */
   s3PathPrefix?: string;
   /**
+   * This is the order in which this storage provider is tried during upload retries. Lower numbers are tried first in increasing order.
+   * @min 1
+   */
+  fallbackIndex?: number;
+  /**
    * This is the name of credential. This is just for your reference.
    * @minLength 1
    * @maxLength 40
@@ -18932,6 +22393,11 @@ export interface UpdateSpeechmaticsCredentialDTO {
 }
 
 export interface UpdateSupabaseCredentialDTO {
+  /**
+   * This is the order in which this storage provider is tried during upload retries. Lower numbers are tried first in increasing order.
+   * @min 1
+   */
+  fallbackIndex?: number;
   /**
    * This is the name of credential. This is just for your reference.
    * @minLength 1
@@ -19003,8 +22469,14 @@ export interface UpdateVonageCredentialDTO {
 }
 
 export interface UpdateWebhookCredentialDTO {
-  /** This is the authentication plan. Currently supports OAuth2 RFC 6749. */
-  authenticationPlan?: OAuth2AuthenticationPlan;
+  /** This is the authentication plan. Supports OAuth2 RFC 6749 and HMAC signing. */
+  authenticationPlan?:
+    | ({
+        type: 'oauth2';
+      } & OAuth2AuthenticationPlan)
+    | ({
+        type: 'hmac';
+      } & HMACAuthenticationPlan);
   /**
    * This is the name of credential. This is just for your reference.
    * @minLength 1
@@ -19080,6 +22552,20 @@ export interface UpdateGoHighLevelMCPCredentialDTO {
   name?: string;
 }
 
+export interface UpdateInworldCredentialDTO {
+  /**
+   * This is the Inworld Basic (Base64) authentication token. This is not returned in the API.
+   * @example "your-base64-token-here"
+   */
+  apiKey?: string;
+  /**
+   * This is the name of credential. This is just for your reference.
+   * @minLength 1
+   * @maxLength 40
+   */
+  name?: string;
+}
+
 export interface CredentialSessionResponse {
   sessionToken: string;
 }
@@ -19111,6 +22597,30 @@ export interface CredentialWebhookDTO {
 export interface CredentialActionRequest {
   action_name: string;
   input: object;
+}
+
+export interface HMACAuthenticationPlan {
+  type: 'hmac';
+  /** This is the HMAC secret key used to sign requests. */
+  secretKey: string;
+  /** This is the HMAC algorithm to use for signing. */
+  algorithm: 'sha256' | 'sha512' | 'sha1';
+  /** This is the header name where the signature will be sent. Defaults to 'x-signature'. */
+  signatureHeader?: string;
+  /** This is the header name where the timestamp will be sent. Defaults to 'x-timestamp'. */
+  timestampHeader?: string;
+  /** This is the prefix for the signature. For example, 'sha256=' for GitHub-style signatures. */
+  signaturePrefix?: string;
+  /** Whether to include a timestamp in the signature payload. Defaults to true. */
+  includeTimestamp?: boolean;
+  /** Custom payload format. Use {body} for request body, {timestamp} for timestamp, {method} for HTTP method, {url} for URL, {svix-id} for unique message ID. Defaults to '{timestamp}.{body}'. */
+  payloadFormat?: string;
+  /** This is the header name where the unique message ID will be sent. Used for Svix-style webhooks. */
+  messageIdHeader?: string;
+  /** The encoding format for the signature. Defaults to 'hex'. */
+  signatureEncoding?: 'hex' | 'base64';
+  /** Whether the secret key is base64-encoded and should be decoded before use. Defaults to false. */
+  secretIsBase64?: boolean;
 }
 
 export interface CredentialSessionDTO {
@@ -19379,7 +22889,9 @@ export interface VoiceLibrary {
     | 'rime-ai'
     | 'smallest-ai'
     | 'tavus'
-    | 'sesame';
+    | 'sesame'
+    | 'inworld'
+    | 'minimax';
   /** The ID of the voice provided by the provider. */
   providerId?: string;
   /** The unique slug of the voice. */
@@ -19441,7 +22953,9 @@ export interface SyncVoiceLibraryDTO {
     | 'rime-ai'
     | 'smallest-ai'
     | 'tavus'
-    | 'sesame';
+    | 'sesame'
+    | 'inworld'
+    | 'minimax';
 }
 
 export interface CreateSesameVoiceDTO {
@@ -19449,6 +22963,76 @@ export interface CreateSesameVoiceDTO {
   voiceName?: string;
   /** The transcript of the utterance. */
   transcription?: string;
+}
+
+export interface ElevenLabsPronunciationDictionary {
+  /**
+   * The ID of the pronunciation dictionary
+   * @example "5xM3yVvZQKV0EfqQpLrJ"
+   */
+  pronunciationDictionaryId: string;
+  /**
+   * The name of the pronunciation dictionary
+   * @example "My Dictionary"
+   */
+  dictionaryName: string;
+  /**
+   * The user ID of the creator
+   * @example "ar6633Es2kUjFXBdR1iVc9ztsXl1"
+   */
+  createdBy: string;
+  /**
+   * The creation time in Unix timestamp
+   * @example 1714156800
+   */
+  creationTimeUnix: number;
+  /**
+   * The version ID of the pronunciation dictionary
+   * @example "5xM3yVvZQKV0EfqQpLrJ"
+   */
+  versionId: string;
+  /**
+   * The number of rules in this version
+   * @example 5
+   */
+  versionRulesNum: number;
+  /** The permission level on this resource */
+  permissionOnResource?: 'admin' | 'editor' | 'viewer';
+  /**
+   * The description of the pronunciation dictionary
+   * @example "This is a test dictionary"
+   */
+  description?: string;
+}
+
+export interface ProviderResource {
+  /** This is the unique identifier for the provider resource. */
+  id: string;
+  /** This is the unique identifier for the org that this provider resource belongs to. */
+  orgId: string;
+  /**
+   * This is the ISO 8601 date-time string of when the provider resource was created.
+   * @format date-time
+   */
+  createdAt: string;
+  /**
+   * This is the ISO 8601 date-time string of when the provider resource was last updated.
+   * @format date-time
+   */
+  updatedAt: string;
+  /** This is the provider that manages this resource. */
+  provider: '11labs';
+  /** This is the name/type of the resource. */
+  resourceName: 'pronunciation-dictionary';
+  /** This is the provider-specific identifier for the resource. */
+  resourceId: string;
+  /** This is the full resource data from the provider's API. */
+  resource: ElevenLabsPronunciationDictionary;
+}
+
+export interface ProviderResourcePaginatedResponse {
+  results: ProviderResource[];
+  metadata: PaginationMeta;
 }
 
 export interface VoiceLibraryVoiceResponse {
@@ -19797,6 +23381,116 @@ export interface ClientMessageVoiceInput {
   input: string;
 }
 
+export interface ClientMessageChatCreated {
+  /** This is the phone number that the message is associated with. */
+  phoneNumber?:
+    | CreateByoPhoneNumberDTO
+    | CreateTwilioPhoneNumberDTO
+    | CreateVonagePhoneNumberDTO
+    | CreateVapiPhoneNumberDTO
+    | CreateTelnyxPhoneNumberDTO;
+  /** This is the type of the message. "chat.created" is sent when a new chat is created. */
+  type: 'chat.created';
+  /** This is the timestamp of the message. */
+  timestamp?: number;
+  /** This is the call that the message is associated with. */
+  call?: Call;
+  /** This is the customer that the message is associated with. */
+  customer?: CreateCustomerDTO;
+  /** This is the assistant that the message is associated with. */
+  assistant?: CreateAssistantDTO;
+  /** This is the chat that was created. */
+  chat: Chat;
+}
+
+export interface ClientMessageChatDeleted {
+  /** This is the phone number that the message is associated with. */
+  phoneNumber?:
+    | CreateByoPhoneNumberDTO
+    | CreateTwilioPhoneNumberDTO
+    | CreateVonagePhoneNumberDTO
+    | CreateVapiPhoneNumberDTO
+    | CreateTelnyxPhoneNumberDTO;
+  /** This is the type of the message. "chat.deleted" is sent when a chat is deleted. */
+  type: 'chat.deleted';
+  /** This is the timestamp of the message. */
+  timestamp?: number;
+  /** This is the call that the message is associated with. */
+  call?: Call;
+  /** This is the customer that the message is associated with. */
+  customer?: CreateCustomerDTO;
+  /** This is the assistant that the message is associated with. */
+  assistant?: CreateAssistantDTO;
+  /** This is the chat that was deleted. */
+  chat: Chat;
+}
+
+export interface ClientMessageSessionCreated {
+  /** This is the phone number that the message is associated with. */
+  phoneNumber?:
+    | CreateByoPhoneNumberDTO
+    | CreateTwilioPhoneNumberDTO
+    | CreateVonagePhoneNumberDTO
+    | CreateVapiPhoneNumberDTO
+    | CreateTelnyxPhoneNumberDTO;
+  /** This is the type of the message. "session.created" is sent when a new session is created. */
+  type: 'session.created';
+  /** This is the timestamp of the message. */
+  timestamp?: number;
+  /** This is the call that the message is associated with. */
+  call?: Call;
+  /** This is the customer that the message is associated with. */
+  customer?: CreateCustomerDTO;
+  /** This is the assistant that the message is associated with. */
+  assistant?: CreateAssistantDTO;
+  /** This is the session that was created. */
+  session: Session;
+}
+
+export interface ClientMessageSessionUpdated {
+  /** This is the phone number that the message is associated with. */
+  phoneNumber?:
+    | CreateByoPhoneNumberDTO
+    | CreateTwilioPhoneNumberDTO
+    | CreateVonagePhoneNumberDTO
+    | CreateVapiPhoneNumberDTO
+    | CreateTelnyxPhoneNumberDTO;
+  /** This is the type of the message. "session.updated" is sent when a session is updated. */
+  type: 'session.updated';
+  /** This is the timestamp of the message. */
+  timestamp?: number;
+  /** This is the call that the message is associated with. */
+  call?: Call;
+  /** This is the customer that the message is associated with. */
+  customer?: CreateCustomerDTO;
+  /** This is the assistant that the message is associated with. */
+  assistant?: CreateAssistantDTO;
+  /** This is the session that was updated. */
+  session: Session;
+}
+
+export interface ClientMessageSessionDeleted {
+  /** This is the phone number that the message is associated with. */
+  phoneNumber?:
+    | CreateByoPhoneNumberDTO
+    | CreateTwilioPhoneNumberDTO
+    | CreateVonagePhoneNumberDTO
+    | CreateVapiPhoneNumberDTO
+    | CreateTelnyxPhoneNumberDTO;
+  /** This is the type of the message. "session.deleted" is sent when a session is deleted. */
+  type: 'session.deleted';
+  /** This is the timestamp of the message. */
+  timestamp?: number;
+  /** This is the call that the message is associated with. */
+  call?: Call;
+  /** This is the customer that the message is associated with. */
+  customer?: CreateCustomerDTO;
+  /** This is the assistant that the message is associated with. */
+  assistant?: CreateAssistantDTO;
+  /** This is the session that was deleted. */
+  session: Session;
+}
+
 export interface ClientMessage {
   /** These are all the messages that can be sent to the client-side SDKs during the call. Configure the messages you'd like to receive in `assistant.clientMessages`. */
   message:
@@ -19812,7 +23506,12 @@ export interface ClientMessage {
     | ClientMessageTransferUpdate
     | ClientMessageUserInterrupted
     | ClientMessageLanguageChangeDetected
-    | ClientMessageVoiceInput;
+    | ClientMessageVoiceInput
+    | ClientMessageChatCreated
+    | ClientMessageChatDeleted
+    | ClientMessageSessionCreated
+    | ClientMessageSessionUpdated
+    | ClientMessageSessionDeleted;
 }
 
 export interface ServerMessageAssistantRequest {
@@ -19839,6 +23538,8 @@ export interface ServerMessageAssistantRequest {
   customer?: CreateCustomerDTO;
   /** This is the call that the message is associated with. */
   call?: Call;
+  /** This is the chat object. */
+  chat?: Chat;
 }
 
 export interface ServerMessageConversationUpdate {
@@ -19869,6 +23570,8 @@ export interface ServerMessageConversationUpdate {
   customer?: CreateCustomerDTO;
   /** This is the call that the message is associated with. */
   call?: Call;
+  /** This is the chat object. */
+  chat?: Chat;
 }
 
 export interface ServerMessageEndOfCallReport {
@@ -19890,8 +23593,9 @@ export interface ServerMessageEndOfCallReport {
     | 'assistant-request-returned-invalid-assistant'
     | 'assistant-request-returned-no-assistant'
     | 'assistant-request-returned-forwarding-phone-number'
-    | 'call.start.error-get-org'
-    | 'call.start.error-get-subscription'
+    | 'scheduled-call-deleted'
+    | 'call.start.error-vapifault-get-org'
+    | 'call.start.error-vapifault-get-subscription'
     | 'call.start.error-get-assistant'
     | 'call.start.error-get-phone-number'
     | 'call.start.error-get-customer'
@@ -19899,6 +23603,11 @@ export interface ServerMessageEndOfCallReport {
     | 'call.start.error-vapi-number-international'
     | 'call.start.error-vapi-number-outbound-daily-limit'
     | 'call.start.error-get-transport'
+    | 'call.start.error-subscription-wallet-does-not-exist'
+    | 'call.start.error-subscription-frozen'
+    | 'call.start.error-subscription-insufficient-credits'
+    | 'call.start.error-subscription-upgrade-failed'
+    | 'call.start.error-subscription-concurrency-limit-reached'
     | 'assistant-not-valid'
     | 'database-error'
     | 'assistant-not-found'
@@ -19914,6 +23623,8 @@ export interface ServerMessageEndOfCallReport {
     | 'pipeline-error-neuphonic-voice-failed'
     | 'pipeline-error-hume-voice-failed'
     | 'pipeline-error-sesame-voice-failed'
+    | 'pipeline-error-inworld-voice-failed'
+    | 'pipeline-error-minimax-voice-failed'
     | 'pipeline-error-tavus-video-failed'
     | 'call.in-progress.error-vapifault-openai-voice-failed'
     | 'call.in-progress.error-vapifault-cartesia-voice-failed'
@@ -19927,6 +23638,8 @@ export interface ServerMessageEndOfCallReport {
     | 'call.in-progress.error-vapifault-neuphonic-voice-failed'
     | 'call.in-progress.error-vapifault-hume-voice-failed'
     | 'call.in-progress.error-vapifault-sesame-voice-failed'
+    | 'call.in-progress.error-vapifault-inworld-voice-failed'
+    | 'call.in-progress.error-vapifault-minimax-voice-failed'
     | 'call.in-progress.error-vapifault-tavus-video-failed'
     | 'pipeline-error-vapi-llm-failed'
     | 'pipeline-error-vapi-400-bad-request-validation-failed'
@@ -19966,7 +23679,6 @@ export interface ServerMessageEndOfCallReport {
     | 'call.in-progress.error-vapifault-azure-speech-transcriber-failed'
     | 'call.in-progress.error-pipeline-no-available-llm-model'
     | 'worker-shutdown'
-    | 'unknown-error'
     | 'vonage-disconnected'
     | 'vonage-failed-to-connect-call'
     | 'vonage-completed'
@@ -19977,6 +23689,8 @@ export interface ServerMessageEndOfCallReport {
     | 'call.in-progress.error-vapifault-transport-connected-but-call-not-active'
     | 'call.in-progress.error-vapifault-call-started-but-connection-to-transport-missing'
     | 'call.in-progress.error-vapifault-worker-died'
+    | 'call.in-progress.twilio-completed-call'
+    | 'call.in-progress.sip-completed-call'
     | 'call.in-progress.error-vapifault-openai-llm-failed'
     | 'call.in-progress.error-vapifault-azure-openai-llm-failed'
     | 'call.in-progress.error-vapifault-groq-llm-failed'
@@ -19986,6 +23700,7 @@ export interface ServerMessageEndOfCallReport {
     | 'call.in-progress.error-vapifault-inflection-ai-llm-failed'
     | 'call.in-progress.error-vapifault-cerebras-llm-failed'
     | 'call.in-progress.error-vapifault-deep-seek-llm-failed'
+    | 'call.in-progress.error-vapifault-chat-pipeline-failed-to-start'
     | 'pipeline-error-openai-400-bad-request-validation-failed'
     | 'pipeline-error-openai-401-unauthorized'
     | 'pipeline-error-openai-401-incorrect-api-key'
@@ -20253,6 +23968,7 @@ export interface ServerMessageEndOfCallReport {
     | 'pipeline-error-cartesia-socket-hang-up'
     | 'pipeline-error-cartesia-requested-payment'
     | 'pipeline-error-cartesia-500-server-error'
+    | 'pipeline-error-cartesia-502-server-error'
     | 'pipeline-error-cartesia-503-server-error'
     | 'pipeline-error-cartesia-522-server-error'
     | 'call.in-progress.error-vapifault-cartesia-socket-hang-up'
@@ -20282,6 +23998,7 @@ export interface ServerMessageEndOfCallReport {
     | 'pipeline-error-eleven-labs-max-character-limit-exceeded'
     | 'pipeline-error-eleven-labs-blocked-voice-potentially-against-terms-of-service-and-awaiting-verification'
     | 'pipeline-error-eleven-labs-500-server-error'
+    | 'pipeline-error-eleven-labs-503-server-error'
     | 'call.in-progress.error-vapifault-eleven-labs-voice-not-found'
     | 'call.in-progress.error-vapifault-eleven-labs-quota-exceeded'
     | 'call.in-progress.error-vapifault-eleven-labs-unauthorized-access'
@@ -20303,6 +24020,7 @@ export interface ServerMessageEndOfCallReport {
     | 'call.in-progress.error-vapifault-eleven-labs-max-character-limit-exceeded'
     | 'call.in-progress.error-vapifault-eleven-labs-blocked-voice-potentially-against-terms-of-service-and-awaiting-verification'
     | 'call.in-progress.error-providerfault-eleven-labs-500-server-error'
+    | 'call.in-progress.error-providerfault-eleven-labs-503-server-error'
     | 'pipeline-error-playht-request-timed-out'
     | 'pipeline-error-playht-invalid-voice'
     | 'pipeline-error-playht-unexpected-error'
@@ -20338,6 +24056,7 @@ export interface ServerMessageEndOfCallReport {
     | 'pipeline-error-deepgram-returning-500-invalid-json'
     | 'pipeline-error-deepgram-returning-502-network-error'
     | 'pipeline-error-deepgram-returning-502-bad-gateway-ehostunreach'
+    | 'pipeline-error-deepgram-returning-econnreset'
     | 'call.in-progress.error-vapifault-deepgram-returning-400-no-such-model-language-tier-combination'
     | 'call.in-progress.error-vapifault-deepgram-returning-401-invalid-credentials'
     | 'call.in-progress.error-vapifault-deepgram-returning-404-not-found'
@@ -20356,6 +24075,7 @@ export interface ServerMessageEndOfCallReport {
     | 'assistant-forwarded-call'
     | 'assistant-join-timed-out'
     | 'call.in-progress.error-assistant-did-not-receive-customer-audio'
+    | 'call.in-progress.error-transfer-failed'
     | 'customer-busy'
     | 'customer-ended-call'
     | 'customer-did-not-answer'
@@ -20402,6 +24122,8 @@ export interface ServerMessageEndOfCallReport {
   customer?: CreateCustomerDTO;
   /** This is the call that the message is associated with. */
   call?: Call;
+  /** This is the chat object. */
+  chat?: Chat;
   /** This is the analysis of the call. This can also be found at `call.analysis` on GET /call/:id. */
   analysis: Analysis;
   /**
@@ -20446,6 +24168,8 @@ export interface ServerMessageHang {
   customer?: CreateCustomerDTO;
   /** This is the call that the message is associated with. */
   call?: Call;
+  /** This is the chat object. */
+  chat?: Chat;
 }
 
 export interface ServerMessageKnowledgeBaseRequest {
@@ -20476,6 +24200,8 @@ export interface ServerMessageKnowledgeBaseRequest {
   customer?: CreateCustomerDTO;
   /** This is the call that the message is associated with. */
   call?: Call;
+  /** This is the chat object. */
+  chat?: Chat;
 }
 
 export interface ServerMessageModelOutput {
@@ -20502,6 +24228,8 @@ export interface ServerMessageModelOutput {
   customer?: CreateCustomerDTO;
   /** This is the call that the message is associated with. */
   call?: Call;
+  /** This is the chat object. */
+  chat?: Chat;
   /** This is the output of the model. It can be a token or tool call. */
   output: object;
 }
@@ -20538,6 +24266,8 @@ export interface ServerMessagePhoneCallControl {
   customer?: CreateCustomerDTO;
   /** This is the call that the message is associated with. */
   call?: Call;
+  /** This is the chat object. */
+  chat?: Chat;
 }
 
 export interface ServerMessageSpeechUpdate {
@@ -20570,6 +24300,8 @@ export interface ServerMessageSpeechUpdate {
   customer?: CreateCustomerDTO;
   /** This is the call that the message is associated with. */
   call?: Call;
+  /** This is the chat object. */
+  chat?: Chat;
 }
 
 export interface ServerMessageStatusUpdate {
@@ -20593,8 +24325,9 @@ export interface ServerMessageStatusUpdate {
     | 'assistant-request-returned-invalid-assistant'
     | 'assistant-request-returned-no-assistant'
     | 'assistant-request-returned-forwarding-phone-number'
-    | 'call.start.error-get-org'
-    | 'call.start.error-get-subscription'
+    | 'scheduled-call-deleted'
+    | 'call.start.error-vapifault-get-org'
+    | 'call.start.error-vapifault-get-subscription'
     | 'call.start.error-get-assistant'
     | 'call.start.error-get-phone-number'
     | 'call.start.error-get-customer'
@@ -20602,6 +24335,11 @@ export interface ServerMessageStatusUpdate {
     | 'call.start.error-vapi-number-international'
     | 'call.start.error-vapi-number-outbound-daily-limit'
     | 'call.start.error-get-transport'
+    | 'call.start.error-subscription-wallet-does-not-exist'
+    | 'call.start.error-subscription-frozen'
+    | 'call.start.error-subscription-insufficient-credits'
+    | 'call.start.error-subscription-upgrade-failed'
+    | 'call.start.error-subscription-concurrency-limit-reached'
     | 'assistant-not-valid'
     | 'database-error'
     | 'assistant-not-found'
@@ -20617,6 +24355,8 @@ export interface ServerMessageStatusUpdate {
     | 'pipeline-error-neuphonic-voice-failed'
     | 'pipeline-error-hume-voice-failed'
     | 'pipeline-error-sesame-voice-failed'
+    | 'pipeline-error-inworld-voice-failed'
+    | 'pipeline-error-minimax-voice-failed'
     | 'pipeline-error-tavus-video-failed'
     | 'call.in-progress.error-vapifault-openai-voice-failed'
     | 'call.in-progress.error-vapifault-cartesia-voice-failed'
@@ -20630,6 +24370,8 @@ export interface ServerMessageStatusUpdate {
     | 'call.in-progress.error-vapifault-neuphonic-voice-failed'
     | 'call.in-progress.error-vapifault-hume-voice-failed'
     | 'call.in-progress.error-vapifault-sesame-voice-failed'
+    | 'call.in-progress.error-vapifault-inworld-voice-failed'
+    | 'call.in-progress.error-vapifault-minimax-voice-failed'
     | 'call.in-progress.error-vapifault-tavus-video-failed'
     | 'pipeline-error-vapi-llm-failed'
     | 'pipeline-error-vapi-400-bad-request-validation-failed'
@@ -20669,7 +24411,6 @@ export interface ServerMessageStatusUpdate {
     | 'call.in-progress.error-vapifault-azure-speech-transcriber-failed'
     | 'call.in-progress.error-pipeline-no-available-llm-model'
     | 'worker-shutdown'
-    | 'unknown-error'
     | 'vonage-disconnected'
     | 'vonage-failed-to-connect-call'
     | 'vonage-completed'
@@ -20680,6 +24421,8 @@ export interface ServerMessageStatusUpdate {
     | 'call.in-progress.error-vapifault-transport-connected-but-call-not-active'
     | 'call.in-progress.error-vapifault-call-started-but-connection-to-transport-missing'
     | 'call.in-progress.error-vapifault-worker-died'
+    | 'call.in-progress.twilio-completed-call'
+    | 'call.in-progress.sip-completed-call'
     | 'call.in-progress.error-vapifault-openai-llm-failed'
     | 'call.in-progress.error-vapifault-azure-openai-llm-failed'
     | 'call.in-progress.error-vapifault-groq-llm-failed'
@@ -20689,6 +24432,7 @@ export interface ServerMessageStatusUpdate {
     | 'call.in-progress.error-vapifault-inflection-ai-llm-failed'
     | 'call.in-progress.error-vapifault-cerebras-llm-failed'
     | 'call.in-progress.error-vapifault-deep-seek-llm-failed'
+    | 'call.in-progress.error-vapifault-chat-pipeline-failed-to-start'
     | 'pipeline-error-openai-400-bad-request-validation-failed'
     | 'pipeline-error-openai-401-unauthorized'
     | 'pipeline-error-openai-401-incorrect-api-key'
@@ -20956,6 +24700,7 @@ export interface ServerMessageStatusUpdate {
     | 'pipeline-error-cartesia-socket-hang-up'
     | 'pipeline-error-cartesia-requested-payment'
     | 'pipeline-error-cartesia-500-server-error'
+    | 'pipeline-error-cartesia-502-server-error'
     | 'pipeline-error-cartesia-503-server-error'
     | 'pipeline-error-cartesia-522-server-error'
     | 'call.in-progress.error-vapifault-cartesia-socket-hang-up'
@@ -20985,6 +24730,7 @@ export interface ServerMessageStatusUpdate {
     | 'pipeline-error-eleven-labs-max-character-limit-exceeded'
     | 'pipeline-error-eleven-labs-blocked-voice-potentially-against-terms-of-service-and-awaiting-verification'
     | 'pipeline-error-eleven-labs-500-server-error'
+    | 'pipeline-error-eleven-labs-503-server-error'
     | 'call.in-progress.error-vapifault-eleven-labs-voice-not-found'
     | 'call.in-progress.error-vapifault-eleven-labs-quota-exceeded'
     | 'call.in-progress.error-vapifault-eleven-labs-unauthorized-access'
@@ -21006,6 +24752,7 @@ export interface ServerMessageStatusUpdate {
     | 'call.in-progress.error-vapifault-eleven-labs-max-character-limit-exceeded'
     | 'call.in-progress.error-vapifault-eleven-labs-blocked-voice-potentially-against-terms-of-service-and-awaiting-verification'
     | 'call.in-progress.error-providerfault-eleven-labs-500-server-error'
+    | 'call.in-progress.error-providerfault-eleven-labs-503-server-error'
     | 'pipeline-error-playht-request-timed-out'
     | 'pipeline-error-playht-invalid-voice'
     | 'pipeline-error-playht-unexpected-error'
@@ -21041,6 +24788,7 @@ export interface ServerMessageStatusUpdate {
     | 'pipeline-error-deepgram-returning-500-invalid-json'
     | 'pipeline-error-deepgram-returning-502-network-error'
     | 'pipeline-error-deepgram-returning-502-bad-gateway-ehostunreach'
+    | 'pipeline-error-deepgram-returning-econnreset'
     | 'call.in-progress.error-vapifault-deepgram-returning-400-no-such-model-language-tier-combination'
     | 'call.in-progress.error-vapifault-deepgram-returning-401-invalid-credentials'
     | 'call.in-progress.error-vapifault-deepgram-returning-404-not-found'
@@ -21059,6 +24807,7 @@ export interface ServerMessageStatusUpdate {
     | 'assistant-forwarded-call'
     | 'assistant-join-timed-out'
     | 'call.in-progress.error-assistant-did-not-receive-customer-audio'
+    | 'call.in-progress.error-transfer-failed'
     | 'customer-busy'
     | 'customer-ended-call'
     | 'customer-did-not-answer'
@@ -21102,6 +24851,8 @@ export interface ServerMessageStatusUpdate {
   customer?: CreateCustomerDTO;
   /** This is the call that the message is associated with. */
   call?: Call;
+  /** This is the chat object. */
+  chat?: Chat;
   /** This is the transcript of the call. This is only sent if the status is "forwarding". */
   transcript?: string;
   /** This is the summary of the call. This is only sent if the status is "forwarding". */
@@ -21148,6 +24899,8 @@ export interface ServerMessageToolCalls {
   customer?: CreateCustomerDTO;
   /** This is the call that the message is associated with. */
   call?: Call;
+  /** This is the chat object. */
+  chat?: Chat;
   /** This is the list of tool calls that the model is requesting. */
   toolCallList: ToolCall[];
 }
@@ -21176,6 +24929,8 @@ export interface ServerMessageTransferDestinationRequest {
   customer?: CreateCustomerDTO;
   /** This is the call that the message is associated with. */
   call?: Call;
+  /** This is the chat object. */
+  chat?: Chat;
 }
 
 export interface ServerMessageTransferUpdate {
@@ -21204,6 +24959,8 @@ export interface ServerMessageTransferUpdate {
   customer?: CreateCustomerDTO;
   /** This is the call that the message is associated with. */
   call?: Call;
+  /** This is the chat object. */
+  chat?: Chat;
   /** This is the assistant that the call is being transferred to. This is only sent if `destination.type` is "assistant". */
   toAssistant?: CreateAssistantDTO;
   /** This is the assistant that the call is being transferred from. This is only sent if `destination.type` is "assistant". */
@@ -21238,6 +24995,8 @@ export interface ServerMessageTranscript {
   customer?: CreateCustomerDTO;
   /** This is the call that the message is associated with. */
   call?: Call;
+  /** This is the chat object. */
+  chat?: Chat;
   /** This is the role for which the transcript is for. */
   role: 'assistant' | 'user';
   /** This is the type of the transcript. */
@@ -21270,6 +25029,8 @@ export interface ServerMessageUserInterrupted {
   customer?: CreateCustomerDTO;
   /** This is the call that the message is associated with. */
   call?: Call;
+  /** This is the chat object. */
+  chat?: Chat;
 }
 
 export interface ServerMessageLanguageChangeDetected {
@@ -21296,6 +25057,8 @@ export interface ServerMessageLanguageChangeDetected {
   customer?: CreateCustomerDTO;
   /** This is the call that the message is associated with. */
   call?: Call;
+  /** This is the chat object. */
+  chat?: Chat;
   /** This is the language the transcriber is switched to. */
   language: string;
 }
@@ -21324,6 +25087,8 @@ export interface ServerMessageVoiceInput {
   customer?: CreateCustomerDTO;
   /** This is the call that the message is associated with. */
   call?: Call;
+  /** This is the chat object. */
+  chat?: Chat;
   /** This is the voice input content */
   input: string;
 }
@@ -21375,10 +25140,217 @@ export interface ServerMessageVoiceRequest {
   customer?: CreateCustomerDTO;
   /** This is the call that the message is associated with. */
   call?: Call;
+  /** This is the chat object. */
+  chat?: Chat;
   /** This is the text to be synthesized. */
   text: string;
   /** This is the sample rate to be synthesized. */
   sampleRate: number;
+}
+
+export interface ServerMessageCallEndpointingRequest {
+  /** This is the phone number that the message is associated with. */
+  phoneNumber?:
+    | CreateByoPhoneNumberDTO
+    | CreateTwilioPhoneNumberDTO
+    | CreateVonagePhoneNumberDTO
+    | CreateVapiPhoneNumberDTO
+    | CreateTelnyxPhoneNumberDTO;
+  /**
+   * This is the type of the message. "call.endpointing.request" is sent when using `assistant.startSpeakingPlan.smartEndpointingPlan={ "provider": "custom-endpointing-model" }`.
+   *
+   * Here is what the request will look like:
+   *
+   * POST https://{assistant.startSpeakingPlan.smartEndpointingPlan.server.url}
+   * Content-Type: application/json
+   *
+   * {
+   *   "message": {
+   *     "type": "call.endpointing.request",
+   *     "messages": [
+   *       {
+   *         "role": "user",
+   *         "message": "Hello, how are you?",
+   *         "time": 1234567890,
+   *         "secondsFromStart": 0
+   *       }
+   *     ],
+   *     ...other metadata about the call...
+   *   }
+   * }
+   *
+   * The expected response:
+   * {
+   *   "timeoutSeconds": 0.5
+   * }
+   */
+  type: 'call.endpointing.request';
+  /** This is the conversation history at the time of the endpointing request. */
+  messages?: (UserMessage | SystemMessage | BotMessage | ToolCallMessage | ToolCallResultMessage)[];
+  /** This is just `messages` formatted for OpenAI. */
+  messagesOpenAIFormatted: OpenAIMessage[];
+  /** This is the timestamp of the message. */
+  timestamp?: number;
+  /**
+   * This is a live version of the `call.artifact`.
+   *
+   * This matches what is stored on `call.artifact` after the call.
+   */
+  artifact?: Artifact;
+  /** This is the assistant that the message is associated with. */
+  assistant?: CreateAssistantDTO;
+  /** This is the customer that the message is associated with. */
+  customer?: CreateCustomerDTO;
+  /** This is the call that the message is associated with. */
+  call?: Call;
+  /** This is the chat object. */
+  chat?: Chat;
+}
+
+export interface ServerMessageChatCreated {
+  /** This is the phone number that the message is associated with. */
+  phoneNumber?:
+    | CreateByoPhoneNumberDTO
+    | CreateTwilioPhoneNumberDTO
+    | CreateVonagePhoneNumberDTO
+    | CreateVapiPhoneNumberDTO
+    | CreateTelnyxPhoneNumberDTO;
+  /** This is the type of the message. "chat.created" is sent when a new chat is created. */
+  type: 'chat.created';
+  /** This is the timestamp of the message. */
+  timestamp?: number;
+  /**
+   * This is a live version of the `call.artifact`.
+   *
+   * This matches what is stored on `call.artifact` after the call.
+   */
+  artifact?: Artifact;
+  /** This is the assistant that the message is associated with. */
+  assistant?: CreateAssistantDTO;
+  /** This is the customer that the message is associated with. */
+  customer?: CreateCustomerDTO;
+  /** This is the call that the message is associated with. */
+  call?: Call;
+  /** This is the chat that was created. */
+  chat: Chat;
+}
+
+export interface ServerMessageChatDeleted {
+  /** This is the phone number that the message is associated with. */
+  phoneNumber?:
+    | CreateByoPhoneNumberDTO
+    | CreateTwilioPhoneNumberDTO
+    | CreateVonagePhoneNumberDTO
+    | CreateVapiPhoneNumberDTO
+    | CreateTelnyxPhoneNumberDTO;
+  /** This is the type of the message. "chat.deleted" is sent when a chat is deleted. */
+  type: 'chat.deleted';
+  /** This is the timestamp of the message. */
+  timestamp?: number;
+  /**
+   * This is a live version of the `call.artifact`.
+   *
+   * This matches what is stored on `call.artifact` after the call.
+   */
+  artifact?: Artifact;
+  /** This is the assistant that the message is associated with. */
+  assistant?: CreateAssistantDTO;
+  /** This is the customer that the message is associated with. */
+  customer?: CreateCustomerDTO;
+  /** This is the call that the message is associated with. */
+  call?: Call;
+  /** This is the chat that was deleted. */
+  chat: Chat;
+}
+
+export interface ServerMessageSessionCreated {
+  /** This is the phone number that the message is associated with. */
+  phoneNumber?:
+    | CreateByoPhoneNumberDTO
+    | CreateTwilioPhoneNumberDTO
+    | CreateVonagePhoneNumberDTO
+    | CreateVapiPhoneNumberDTO
+    | CreateTelnyxPhoneNumberDTO;
+  /** This is the type of the message. "session.created" is sent when a new session is created. */
+  type: 'session.created';
+  /** This is the timestamp of the message. */
+  timestamp?: number;
+  /**
+   * This is a live version of the `call.artifact`.
+   *
+   * This matches what is stored on `call.artifact` after the call.
+   */
+  artifact?: Artifact;
+  /** This is the assistant that the message is associated with. */
+  assistant?: CreateAssistantDTO;
+  /** This is the customer that the message is associated with. */
+  customer?: CreateCustomerDTO;
+  /** This is the call that the message is associated with. */
+  call?: Call;
+  /** This is the chat object. */
+  chat?: Chat;
+  /** This is the session that was created. */
+  session: Session;
+}
+
+export interface ServerMessageSessionUpdated {
+  /** This is the phone number that the message is associated with. */
+  phoneNumber?:
+    | CreateByoPhoneNumberDTO
+    | CreateTwilioPhoneNumberDTO
+    | CreateVonagePhoneNumberDTO
+    | CreateVapiPhoneNumberDTO
+    | CreateTelnyxPhoneNumberDTO;
+  /** This is the type of the message. "session.updated" is sent when a session is updated. */
+  type: 'session.updated';
+  /** This is the timestamp of the message. */
+  timestamp?: number;
+  /**
+   * This is a live version of the `call.artifact`.
+   *
+   * This matches what is stored on `call.artifact` after the call.
+   */
+  artifact?: Artifact;
+  /** This is the assistant that the message is associated with. */
+  assistant?: CreateAssistantDTO;
+  /** This is the customer that the message is associated with. */
+  customer?: CreateCustomerDTO;
+  /** This is the call that the message is associated with. */
+  call?: Call;
+  /** This is the chat object. */
+  chat?: Chat;
+  /** This is the session that was updated. */
+  session: Session;
+}
+
+export interface ServerMessageSessionDeleted {
+  /** This is the phone number that the message is associated with. */
+  phoneNumber?:
+    | CreateByoPhoneNumberDTO
+    | CreateTwilioPhoneNumberDTO
+    | CreateVonagePhoneNumberDTO
+    | CreateVapiPhoneNumberDTO
+    | CreateTelnyxPhoneNumberDTO;
+  /** This is the type of the message. "session.deleted" is sent when a session is deleted. */
+  type: 'session.deleted';
+  /** This is the timestamp of the message. */
+  timestamp?: number;
+  /**
+   * This is a live version of the `call.artifact`.
+   *
+   * This matches what is stored on `call.artifact` after the call.
+   */
+  artifact?: Artifact;
+  /** This is the assistant that the message is associated with. */
+  assistant?: CreateAssistantDTO;
+  /** This is the customer that the message is associated with. */
+  customer?: CreateCustomerDTO;
+  /** This is the call that the message is associated with. */
+  call?: Call;
+  /** This is the chat object. */
+  chat?: Chat;
+  /** This is the session that was deleted. */
+  session: Session;
 }
 
 export interface ServerMessage {
@@ -21409,7 +25381,13 @@ export interface ServerMessage {
     | ServerMessageUserInterrupted
     | ServerMessageLanguageChangeDetected
     | ServerMessageVoiceInput
-    | ServerMessageVoiceRequest;
+    | ServerMessageVoiceRequest
+    | ServerMessageCallEndpointingRequest
+    | ServerMessageChatCreated
+    | ServerMessageChatDeleted
+    | ServerMessageSessionCreated
+    | ServerMessageSessionUpdated
+    | ServerMessageSessionDeleted;
 }
 
 export interface ServerMessageResponseAssistantRequest {
@@ -21546,6 +25524,8 @@ export interface ServerMessageResponseToolCalls {
 export interface ServerMessageResponseTransferDestinationRequest {
   /** This is the destination you'd like the call to be transferred to. */
   destination?: TransferDestinationAssistant | TransferDestinationNumber | TransferDestinationSip;
+  /** This is the message that will be spoken to the user as the tool is running. */
+  message?: ToolMessageStart | ToolMessageComplete | ToolMessageFailed | ToolMessageDelayed;
   /** This is the error message if the transfer should not be made. */
   error?: string;
 }
@@ -21578,6 +25558,15 @@ export interface ServerMessageResponseVoiceRequest {
   data: string;
 }
 
+export interface ServerMessageResponseCallEndpointingRequest {
+  /**
+   * This is the timeout in seconds to wait before considering the user's speech as finished.
+   * @min 0
+   * @max 15
+   */
+  timeoutSeconds: number;
+}
+
 export interface ServerMessageResponse {
   /**
    * This is the response that is expected from the server to the message.
@@ -21589,7 +25578,8 @@ export interface ServerMessageResponse {
     | ServerMessageResponseKnowledgeBaseRequest
     | ServerMessageResponseToolCalls
     | ServerMessageResponseTransferDestinationRequest
-    | ServerMessageResponseVoiceRequest;
+    | ServerMessageResponseVoiceRequest
+    | ServerMessageResponseCallEndpointingRequest;
 }
 
 export interface ClientInboundMessageAddMessage {
@@ -21625,11 +25615,18 @@ export interface ClientInboundMessageControl {
 export interface ClientInboundMessageSay {
   /** This is the type of the message. Send "say" message to make the assistant say something. */
   type?: 'say';
+  /**
+   * This is the flag for whether the message should replace existing assistant speech.
+   *
+   * @default false
+   * @default false
+   */
+  interruptAssistantEnabled?: boolean;
   /** This is the content to say. */
   content?: string;
   /** This is the flag to end call after content is spoken. */
   endCallAfterSpoken?: boolean;
-  /** This is the flag for whether the message is interruptible. */
+  /** This is the flag for whether the message is interruptible by the user. */
   interruptionsEnabled?: boolean;
 }
 
@@ -21837,6 +25834,13 @@ export interface KnowledgeBaseCost {
   cost: number;
 }
 
+export interface ChatCost {
+  /** This is the type of cost, always 'chat' for this class. */
+  type: 'chat';
+  /** This is the cost of the component in USD. */
+  cost: number;
+}
+
 export interface FunctionToolWithToolCall {
   /**
    * These are the messages that will be spoken to the user as the tool is running.
@@ -21870,13 +25874,7 @@ export interface FunctionToolWithToolCall {
    */
   server?: Server;
   toolCall: ToolCall;
-  /**
-   * This is the function definition of the tool.
-   *
-   * For `endCall`, `transferCall`, and `dtmf` tools, this is auto-filled based on tool-specific fields like `tool.destinations`. But, even in those cases, you can provide a custom function definition for advanced use cases.
-   *
-   * An example of an advanced use case is if you want to customize the message that's spoken for `endCall` tool. You can specify a function where it returns an argument "reason". Then, in `messages` array, you can have many "request-complete" messages. One of these messages will be triggered if the `messages[].conditions` matches the "reason" argument.
-   */
+  /** This is the function definition of the tool. */
   function?: OpenAIFunction;
 }
 
@@ -21891,14 +25889,6 @@ export interface GhlToolWithToolCall {
   type: 'ghl';
   toolCall: ToolCall;
   metadata: GhlToolMetadata;
-  /**
-   * This is the function definition of the tool.
-   *
-   * For `endCall`, `transferCall`, and `dtmf` tools, this is auto-filled based on tool-specific fields like `tool.destinations`. But, even in those cases, you can provide a custom function definition for advanced use cases.
-   *
-   * An example of an advanced use case is if you want to customize the message that's spoken for `endCall` tool. You can specify a function where it returns an argument "reason". Then, in `messages` array, you can have many "request-complete" messages. One of these messages will be triggered if the `messages[].conditions` matches the "reason" argument.
-   */
-  function?: OpenAIFunction;
 }
 
 export interface MakeToolWithToolCall {
@@ -21912,14 +25902,6 @@ export interface MakeToolWithToolCall {
   type: 'make';
   toolCall: ToolCall;
   metadata: MakeToolMetadata;
-  /**
-   * This is the function definition of the tool.
-   *
-   * For `endCall`, `transferCall`, and `dtmf` tools, this is auto-filled based on tool-specific fields like `tool.destinations`. But, even in those cases, you can provide a custom function definition for advanced use cases.
-   *
-   * An example of an advanced use case is if you want to customize the message that's spoken for `endCall` tool. You can specify a function where it returns an argument "reason". Then, in `messages` array, you can have many "request-complete" messages. One of these messages will be triggered if the `messages[].conditions` matches the "reason" argument.
-   */
-  function?: OpenAIFunction;
 }
 
 export interface BashToolWithToolCall {
@@ -21951,14 +25933,6 @@ export interface BashToolWithToolCall {
    * @default "bash"
    */
   name: 'bash';
-  /**
-   * This is the function definition of the tool.
-   *
-   * For `endCall`, `transferCall`, and `dtmf` tools, this is auto-filled based on tool-specific fields like `tool.destinations`. But, even in those cases, you can provide a custom function definition for advanced use cases.
-   *
-   * An example of an advanced use case is if you want to customize the message that's spoken for `endCall` tool. You can specify a function where it returns an argument "reason". Then, in `messages` array, you can have many "request-complete" messages. One of these messages will be triggered if the `messages[].conditions` matches the "reason" argument.
-   */
-  function?: OpenAIFunction;
 }
 
 export interface ComputerToolWithToolCall {
@@ -21996,14 +25970,6 @@ export interface ComputerToolWithToolCall {
   displayHeightPx: number;
   /** Optional display number */
   displayNumber?: number;
-  /**
-   * This is the function definition of the tool.
-   *
-   * For `endCall`, `transferCall`, and `dtmf` tools, this is auto-filled based on tool-specific fields like `tool.destinations`. But, even in those cases, you can provide a custom function definition for advanced use cases.
-   *
-   * An example of an advanced use case is if you want to customize the message that's spoken for `endCall` tool. You can specify a function where it returns an argument "reason". Then, in `messages` array, you can have many "request-complete" messages. One of these messages will be triggered if the `messages[].conditions` matches the "reason" argument.
-   */
-  function?: OpenAIFunction;
 }
 
 export interface TextEditorToolWithToolCall {
@@ -22035,14 +26001,6 @@ export interface TextEditorToolWithToolCall {
    * @default "str_replace_editor"
    */
   name: 'str_replace_editor';
-  /**
-   * This is the function definition of the tool.
-   *
-   * For `endCall`, `transferCall`, and `dtmf` tools, this is auto-filled based on tool-specific fields like `tool.destinations`. But, even in those cases, you can provide a custom function definition for advanced use cases.
-   *
-   * An example of an advanced use case is if you want to customize the message that's spoken for `endCall` tool. You can specify a function where it returns an argument "reason". Then, in `messages` array, you can have many "request-complete" messages. One of these messages will be triggered if the `messages[].conditions` matches the "reason" argument.
-   */
-  function?: OpenAIFunction;
 }
 
 export interface GoogleCalendarCreateEventToolWithToolCall {
@@ -22052,17 +26010,9 @@ export interface GoogleCalendarCreateEventToolWithToolCall {
    * For some tools, this is auto-filled based on special fields like `tool.destinations`. For others like the function tool, these can be custom configured.
    */
   messages?: (ToolMessageStart | ToolMessageComplete | ToolMessageFailed | ToolMessageDelayed)[];
-  /** The type of tool. "google.calendar.event.create" for Google Calendar tool. */
+  /** The type of tool. "google.calendar.event.create" for Google Calendar Create Event tool. */
   type: 'google.calendar.event.create';
   toolCall: ToolCall;
-  /**
-   * This is the function definition of the tool.
-   *
-   * For `endCall`, `transferCall`, and `dtmf` tools, this is auto-filled based on tool-specific fields like `tool.destinations`. But, even in those cases, you can provide a custom function definition for advanced use cases.
-   *
-   * An example of an advanced use case is if you want to customize the message that's spoken for `endCall` tool. You can specify a function where it returns an argument "reason". Then, in `messages` array, you can have many "request-complete" messages. One of these messages will be triggered if the `messages[].conditions` matches the "reason" argument.
-   */
-  function?: OpenAIFunction;
 }
 
 export interface GoogleSheetsRowAppendToolWithToolCall {
@@ -22072,17 +26022,9 @@ export interface GoogleSheetsRowAppendToolWithToolCall {
    * For some tools, this is auto-filled based on special fields like `tool.destinations`. For others like the function tool, these can be custom configured.
    */
   messages?: (ToolMessageStart | ToolMessageComplete | ToolMessageFailed | ToolMessageDelayed)[];
-  /** The type of tool. "google.sheets.row.append" for Google Sheets tool. */
+  /** The type of tool. "google.sheets.row.append" for Google Sheets Row Append tool. */
   type: 'google.sheets.row.append';
   toolCall: ToolCall;
-  /**
-   * This is the function definition of the tool.
-   *
-   * For `endCall`, `transferCall`, and `dtmf` tools, this is auto-filled based on tool-specific fields like `tool.destinations`. But, even in those cases, you can provide a custom function definition for advanced use cases.
-   *
-   * An example of an advanced use case is if you want to customize the message that's spoken for `endCall` tool. You can specify a function where it returns an argument "reason". Then, in `messages` array, you can have many "request-complete" messages. One of these messages will be triggered if the `messages[].conditions` matches the "reason" argument.
-   */
-  function?: OpenAIFunction;
 }
 
 export interface GoHighLevelCalendarAvailabilityToolWithToolCall {
@@ -22092,17 +26034,9 @@ export interface GoHighLevelCalendarAvailabilityToolWithToolCall {
    * For some tools, this is auto-filled based on special fields like `tool.destinations`. For others like the function tool, these can be custom configured.
    */
   messages?: (ToolMessageStart | ToolMessageComplete | ToolMessageFailed | ToolMessageDelayed)[];
-  /** The type of tool. "gohighlevel.calendar.availability.check" for GoHighLevel Calendar availability check tool. */
+  /** The type of tool. "gohighlevel.calendar.availability.check" for GoHighLevel Calendar Availability Check tool. */
   type: 'gohighlevel.calendar.availability.check';
   toolCall: ToolCall;
-  /**
-   * This is the function definition of the tool.
-   *
-   * For `endCall`, `transferCall`, and `dtmf` tools, this is auto-filled based on tool-specific fields like `tool.destinations`. But, even in those cases, you can provide a custom function definition for advanced use cases.
-   *
-   * An example of an advanced use case is if you want to customize the message that's spoken for `endCall` tool. You can specify a function where it returns an argument "reason". Then, in `messages` array, you can have many "request-complete" messages. One of these messages will be triggered if the `messages[].conditions` matches the "reason" argument.
-   */
-  function?: OpenAIFunction;
 }
 
 export interface GoHighLevelCalendarEventCreateToolWithToolCall {
@@ -22112,17 +26046,9 @@ export interface GoHighLevelCalendarEventCreateToolWithToolCall {
    * For some tools, this is auto-filled based on special fields like `tool.destinations`. For others like the function tool, these can be custom configured.
    */
   messages?: (ToolMessageStart | ToolMessageComplete | ToolMessageFailed | ToolMessageDelayed)[];
-  /** The type of tool. "gohighlevel.calendar.event.create" for GoHighLevel Calendar event create tool. */
+  /** The type of tool. "gohighlevel.calendar.event.create" for GoHighLevel Calendar Event Create tool. */
   type: 'gohighlevel.calendar.event.create';
   toolCall: ToolCall;
-  /**
-   * This is the function definition of the tool.
-   *
-   * For `endCall`, `transferCall`, and `dtmf` tools, this is auto-filled based on tool-specific fields like `tool.destinations`. But, even in those cases, you can provide a custom function definition for advanced use cases.
-   *
-   * An example of an advanced use case is if you want to customize the message that's spoken for `endCall` tool. You can specify a function where it returns an argument "reason". Then, in `messages` array, you can have many "request-complete" messages. One of these messages will be triggered if the `messages[].conditions` matches the "reason" argument.
-   */
-  function?: OpenAIFunction;
 }
 
 export interface GoHighLevelContactCreateToolWithToolCall {
@@ -22132,17 +26058,9 @@ export interface GoHighLevelContactCreateToolWithToolCall {
    * For some tools, this is auto-filled based on special fields like `tool.destinations`. For others like the function tool, these can be custom configured.
    */
   messages?: (ToolMessageStart | ToolMessageComplete | ToolMessageFailed | ToolMessageDelayed)[];
-  /** The type of tool. "gohighlevel.contact.create" for GoHighLevel contact create tool. */
+  /** The type of tool. "gohighlevel.contact.create" for GoHighLevel Contact Create tool. */
   type: 'gohighlevel.contact.create';
   toolCall: ToolCall;
-  /**
-   * This is the function definition of the tool.
-   *
-   * For `endCall`, `transferCall`, and `dtmf` tools, this is auto-filled based on tool-specific fields like `tool.destinations`. But, even in those cases, you can provide a custom function definition for advanced use cases.
-   *
-   * An example of an advanced use case is if you want to customize the message that's spoken for `endCall` tool. You can specify a function where it returns an argument "reason". Then, in `messages` array, you can have many "request-complete" messages. One of these messages will be triggered if the `messages[].conditions` matches the "reason" argument.
-   */
-  function?: OpenAIFunction;
 }
 
 export interface GoHighLevelContactGetToolWithToolCall {
@@ -22152,17 +26070,9 @@ export interface GoHighLevelContactGetToolWithToolCall {
    * For some tools, this is auto-filled based on special fields like `tool.destinations`. For others like the function tool, these can be custom configured.
    */
   messages?: (ToolMessageStart | ToolMessageComplete | ToolMessageFailed | ToolMessageDelayed)[];
-  /** The type of tool. "gohighlevel.contact.get" for GoHighLevel contact get tool. */
+  /** The type of tool. "gohighlevel.contact.get" for GoHighLevel Contact Get tool. */
   type: 'gohighlevel.contact.get';
   toolCall: ToolCall;
-  /**
-   * This is the function definition of the tool.
-   *
-   * For `endCall`, `transferCall`, and `dtmf` tools, this is auto-filled based on tool-specific fields like `tool.destinations`. But, even in those cases, you can provide a custom function definition for advanced use cases.
-   *
-   * An example of an advanced use case is if you want to customize the message that's spoken for `endCall` tool. You can specify a function where it returns an argument "reason". Then, in `messages` array, you can have many "request-complete" messages. One of these messages will be triggered if the `messages[].conditions` matches the "reason" argument.
-   */
-  function?: OpenAIFunction;
 }
 
 export type QueryParamsType = Record<string | number, any>;
@@ -22633,6 +26543,18 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
           | 'phoneCallProviderId'
           | 'createdAt'
           | 'updatedAt';
+        /**
+         * This determines if the CSV export is async.
+         *
+         * If async, the API will enqueue a background job to export the calls and return a job ID in the response.
+         *
+         * If sync, the API will export the calls and return the CSV file in the response.
+         *
+         * Defaults to async (`true`).
+         * @default true
+         * @example true
+         */
+        async?: boolean;
         /** This will return calls with the specified assistantId. */
         assistantId?: string;
         /** This will return calls with the specified callId. */
@@ -22655,6 +26577,57 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
          * @maxLength 1000
          */
         endedReason?: string;
+        /** This will return calls with the specified phoneNumberId. */
+        phoneNumberId?: string;
+        /**
+         * This is the flag to toggle the E164 check for the `number` field. This is an advanced property which should be used if you know your use case requires it.
+         *
+         * Use cases:
+         * - `false`: To allow non-E164 numbers like `+001234567890`, `1234`, or `abc`. This is useful for dialing out to non-E164 numbers on your SIP trunks.
+         * - `true` (default): To allow only E164 numbers like `+14155551234`. This is standard for PSTN calls.
+         *
+         * If `false`, the `number` is still required to only contain alphanumeric characters (regex: `/^\+?[a-zA-Z0-9]+$/`).
+         *
+         * @default true (E164 check is enabled)
+         * @default true
+         */
+        numberE164CheckEnabled?: boolean;
+        /**
+         * This is the extension that will be dialed after the call is answered.
+         * @maxLength 10
+         * @example null
+         */
+        extension?: string;
+        /**
+         * These are the overrides for the assistant's settings and template variables specific to this customer.
+         * This allows customization of the assistant's behavior for individual customers in batch calls.
+         */
+        assistantOverrides?: AssistantOverrides;
+        /**
+         * This is the number of the customer.
+         * @minLength 3
+         * @maxLength 40
+         */
+        number?: string;
+        /** This is the SIP URI of the customer. */
+        sipUri?: string;
+        /**
+         * This is the name of the customer. This is just for your own reference.
+         *
+         * For SIP inbound calls, this is extracted from the `From` SIP header with format `"Display Name" <sip:username@domain>`.
+         * @maxLength 40
+         */
+        name?: string;
+        /**
+         * This is the email of the customer.
+         * @maxLength 40
+         */
+        email?: string;
+        /**
+         * This is the external ID of the customer.
+         * @maxLength 40
+         */
+        externalId?: string;
         /**
          * This is the page number to return. Defaults to 1.
          * @min 1
@@ -22752,6 +26725,57 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
          * @maxLength 1000
          */
         endedReason?: string;
+        /** This will return calls with the specified phoneNumberId. */
+        phoneNumberId?: string;
+        /**
+         * This is the flag to toggle the E164 check for the `number` field. This is an advanced property which should be used if you know your use case requires it.
+         *
+         * Use cases:
+         * - `false`: To allow non-E164 numbers like `+001234567890`, `1234`, or `abc`. This is useful for dialing out to non-E164 numbers on your SIP trunks.
+         * - `true` (default): To allow only E164 numbers like `+14155551234`. This is standard for PSTN calls.
+         *
+         * If `false`, the `number` is still required to only contain alphanumeric characters (regex: `/^\+?[a-zA-Z0-9]+$/`).
+         *
+         * @default true (E164 check is enabled)
+         * @default true
+         */
+        numberE164CheckEnabled?: boolean;
+        /**
+         * This is the extension that will be dialed after the call is answered.
+         * @maxLength 10
+         * @example null
+         */
+        extension?: string;
+        /**
+         * These are the overrides for the assistant's settings and template variables specific to this customer.
+         * This allows customization of the assistant's behavior for individual customers in batch calls.
+         */
+        assistantOverrides?: AssistantOverrides;
+        /**
+         * This is the number of the customer.
+         * @minLength 3
+         * @maxLength 40
+         */
+        number?: string;
+        /** This is the SIP URI of the customer. */
+        sipUri?: string;
+        /**
+         * This is the name of the customer. This is just for your own reference.
+         *
+         * For SIP inbound calls, this is extracted from the `From` SIP header with format `"Display Name" <sip:username@domain>`.
+         * @maxLength 40
+         */
+        name?: string;
+        /**
+         * This is the email of the customer.
+         * @maxLength 40
+         */
+        email?: string;
+        /**
+         * This is the external ID of the customer.
+         * @maxLength 40
+         */
+        externalId?: string;
         /**
          * This is the page number to return. Defaults to 1.
          * @min 1
@@ -22850,6 +26874,57 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
          * @maxLength 1000
          */
         endedReason?: string;
+        /** This will return calls with the specified phoneNumberId. */
+        phoneNumberId?: string;
+        /**
+         * This is the flag to toggle the E164 check for the `number` field. This is an advanced property which should be used if you know your use case requires it.
+         *
+         * Use cases:
+         * - `false`: To allow non-E164 numbers like `+001234567890`, `1234`, or `abc`. This is useful for dialing out to non-E164 numbers on your SIP trunks.
+         * - `true` (default): To allow only E164 numbers like `+14155551234`. This is standard for PSTN calls.
+         *
+         * If `false`, the `number` is still required to only contain alphanumeric characters (regex: `/^\+?[a-zA-Z0-9]+$/`).
+         *
+         * @default true (E164 check is enabled)
+         * @default true
+         */
+        numberE164CheckEnabled?: boolean;
+        /**
+         * This is the extension that will be dialed after the call is answered.
+         * @maxLength 10
+         * @example null
+         */
+        extension?: string;
+        /**
+         * These are the overrides for the assistant's settings and template variables specific to this customer.
+         * This allows customization of the assistant's behavior for individual customers in batch calls.
+         */
+        assistantOverrides?: AssistantOverrides;
+        /**
+         * This is the number of the customer.
+         * @minLength 3
+         * @maxLength 40
+         */
+        number?: string;
+        /** This is the SIP URI of the customer. */
+        sipUri?: string;
+        /**
+         * This is the name of the customer. This is just for your own reference.
+         *
+         * For SIP inbound calls, this is extracted from the `From` SIP header with format `"Display Name" <sip:username@domain>`.
+         * @maxLength 40
+         */
+        name?: string;
+        /**
+         * This is the email of the customer.
+         * @maxLength 40
+         */
+        email?: string;
+        /**
+         * This is the external ID of the customer.
+         * @maxLength 40
+         */
+        externalId?: string;
         /**
          * This is the page number to return. Defaults to 1.
          * @min 1
@@ -23002,6 +27077,11 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
      */
     phoneNumberControllerFindAllPaginated: (
       query?: {
+        /**
+         * This will search phone numbers by name, number, or SIP URI (partial match, case-insensitive).
+         * @maxLength 100
+         */
+        search?: string;
         /**
          * This is the page number to return. Defaults to 1.
          * @min 1
@@ -23229,6 +27309,208 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
         body: data,
         secure: true,
         type: ContentType.Json,
+        format: 'json',
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Chats
+     * @name ChatControllerCreateWebChat
+     * @summary Create WebChat
+     * @request POST:/chat/web
+     * @secure
+     */
+    chatControllerCreateWebChat: (data: CreateWebChatDTO, params: RequestParams = {}) =>
+      this.request<WebChat | CreateChatStreamResponse, any>({
+        path: `/chat/web`,
+        method: 'POST',
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        format: 'json',
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Chats
+     * @name ChatControllerCreateOpenAiWebChat
+     * @summary Create WebChat (OpenAI Compatible)
+     * @request POST:/chat/web/responses
+     * @secure
+     */
+    chatControllerCreateOpenAiWebChat: (data: OpenAIWebChatRequest, params: RequestParams = {}) =>
+      this.request<
+        | ResponseObject
+        | ResponseTextDeltaEvent
+        | ResponseTextDoneEvent
+        | ResponseCompletedEvent
+        | ResponseErrorEvent,
+        any
+      >({
+        path: `/chat/web/responses`,
+        method: 'POST',
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        format: 'json',
+        ...params,
+      }),
+  };
+  campaign = {
+    /**
+     * No description
+     *
+     * @tags Campaigns
+     * @name CampaignControllerCreate
+     * @summary Create Campaign
+     * @request POST:/campaign
+     * @secure
+     */
+    campaignControllerCreate: (data: CreateCampaignDTO, params: RequestParams = {}) =>
+      this.request<Campaign, any>({
+        path: `/campaign`,
+        method: 'POST',
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        format: 'json',
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Campaigns
+     * @name CampaignControllerFindAll
+     * @summary List Campaigns
+     * @request GET:/campaign
+     * @secure
+     */
+    campaignControllerFindAll: (
+      query?: {
+        id?: string;
+        status?: 'scheduled' | 'in-progress' | 'ended';
+        /**
+         * This is the page number to return. Defaults to 1.
+         * @min 1
+         */
+        page?: number;
+        /** This is the sort order for pagination. Defaults to 'DESC'. */
+        sortOrder?: 'ASC' | 'DESC';
+        /**
+         * This is the maximum number of items to return. Defaults to 100.
+         * @min 0
+         * @max 1000
+         */
+        limit?: number;
+        /**
+         * This will return items where the createdAt is greater than the specified value.
+         * @format date-time
+         */
+        createdAtGt?: string;
+        /**
+         * This will return items where the createdAt is less than the specified value.
+         * @format date-time
+         */
+        createdAtLt?: string;
+        /**
+         * This will return items where the createdAt is greater than or equal to the specified value.
+         * @format date-time
+         */
+        createdAtGe?: string;
+        /**
+         * This will return items where the createdAt is less than or equal to the specified value.
+         * @format date-time
+         */
+        createdAtLe?: string;
+        /**
+         * This will return items where the updatedAt is greater than the specified value.
+         * @format date-time
+         */
+        updatedAtGt?: string;
+        /**
+         * This will return items where the updatedAt is less than the specified value.
+         * @format date-time
+         */
+        updatedAtLt?: string;
+        /**
+         * This will return items where the updatedAt is greater than or equal to the specified value.
+         * @format date-time
+         */
+        updatedAtGe?: string;
+        /**
+         * This will return items where the updatedAt is less than or equal to the specified value.
+         * @format date-time
+         */
+        updatedAtLe?: string;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<CampaignPaginatedResponse, any>({
+        path: `/campaign`,
+        method: 'GET',
+        query: query,
+        secure: true,
+        format: 'json',
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Campaigns
+     * @name CampaignControllerFindOne
+     * @summary Get Campaign
+     * @request GET:/campaign/{id}
+     * @secure
+     */
+    campaignControllerFindOne: (id: string, params: RequestParams = {}) =>
+      this.request<Campaign, any>({
+        path: `/campaign/${id}`,
+        method: 'GET',
+        secure: true,
+        format: 'json',
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Campaigns
+     * @name CampaignControllerUpdate
+     * @summary Update Campaign
+     * @request PATCH:/campaign/{id}
+     * @secure
+     */
+    campaignControllerUpdate: (id: string, data: UpdateCampaignDTO, params: RequestParams = {}) =>
+      this.request<Campaign, any>({
+        path: `/campaign/${id}`,
+        method: 'PATCH',
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        format: 'json',
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Campaigns
+     * @name CampaignControllerRemove
+     * @summary Delete Campaign
+     * @request DELETE:/campaign/{id}
+     * @secure
+     */
+    campaignControllerRemove: (id: string, params: RequestParams = {}) =>
+      this.request<Campaign, any>({
+        path: `/campaign/${id}`,
+        method: 'DELETE',
+        secure: true,
         format: 'json',
         ...params,
       }),
@@ -23954,6 +28236,9 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
     toolControllerCreate: (
       data:
         | ({
+            type: 'apiRequest';
+          } & CreateApiRequestToolDTO)
+        | ({
             type: 'dtmf';
           } & CreateDtmfToolDTO)
         | ({
@@ -23963,17 +28248,8 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
             type: 'function';
           } & CreateFunctionToolDTO)
         | ({
-            type: 'ghl';
-          } & CreateGhlToolDTO)
-        | ({
-            type: 'make';
-          } & CreateMakeToolDTO)
-        | ({
             type: 'transferCall';
           } & CreateTransferCallToolDTO)
-        | ({
-            type: 'output';
-          } & CreateOutputToolDTO)
         | ({
             type: 'bash';
           } & CreateBashToolDTO)
@@ -24020,6 +28296,9 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
     ) =>
       this.request<
         | ({
+            type: 'apiRequest';
+          } & ApiRequestTool)
+        | ({
             type: 'dtmf';
           } & DtmfTool)
         | ({
@@ -24029,17 +28308,8 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
             type: 'function';
           } & FunctionTool)
         | ({
-            type: 'ghl';
-          } & GhlTool)
-        | ({
-            type: 'make';
-          } & MakeTool)
-        | ({
             type: 'transferCall';
           } & TransferCallTool)
-        | ({
-            type: 'output';
-          } & OutputTool)
         | ({
             type: 'bash';
           } & BashTool)
@@ -24156,6 +28426,9 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
       this.request<
         (
           | ({
+              type: 'apiRequest';
+            } & ApiRequestTool)
+          | ({
               type: 'dtmf';
             } & DtmfTool)
           | ({
@@ -24165,17 +28438,8 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
               type: 'function';
             } & FunctionTool)
           | ({
-              type: 'ghl';
-            } & GhlTool)
-          | ({
-              type: 'make';
-            } & MakeTool)
-          | ({
               type: 'transferCall';
             } & TransferCallTool)
-          | ({
-              type: 'output';
-            } & OutputTool)
           | ({
               type: 'bash';
             } & BashTool)
@@ -24241,6 +28505,9 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
     toolControllerFindOne: (id: string, params: RequestParams = {}) =>
       this.request<
         | ({
+            type: 'apiRequest';
+          } & ApiRequestTool)
+        | ({
             type: 'dtmf';
           } & DtmfTool)
         | ({
@@ -24250,17 +28517,8 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
             type: 'function';
           } & FunctionTool)
         | ({
-            type: 'ghl';
-          } & GhlTool)
-        | ({
-            type: 'make';
-          } & MakeTool)
-        | ({
             type: 'transferCall';
           } & TransferCallTool)
-        | ({
-            type: 'output';
-          } & OutputTool)
         | ({
             type: 'bash';
           } & BashTool)
@@ -24325,6 +28583,9 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
       id: string,
       data:
         | ({
+            type: 'apiRequest';
+          } & UpdateApiRequestToolDTO)
+        | ({
             type: 'dtmf';
           } & UpdateDtmfToolDTO)
         | ({
@@ -24334,17 +28595,8 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
             type: 'function';
           } & UpdateFunctionToolDTO)
         | ({
-            type: 'ghl';
-          } & UpdateGhlToolDTO)
-        | ({
-            type: 'make';
-          } & UpdateMakeToolDTO)
-        | ({
             type: 'transferCall';
           } & UpdateTransferCallToolDTO)
-        | ({
-            type: 'output';
-          } & UpdateOutputToolDTO)
         | ({
             type: 'bash';
           } & UpdateBashToolDTO)
@@ -24391,6 +28643,9 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
     ) =>
       this.request<
         | ({
+            type: 'apiRequest';
+          } & ApiRequestTool)
+        | ({
             type: 'dtmf';
           } & DtmfTool)
         | ({
@@ -24400,17 +28655,8 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
             type: 'function';
           } & FunctionTool)
         | ({
-            type: 'ghl';
-          } & GhlTool)
-        | ({
-            type: 'make';
-          } & MakeTool)
-        | ({
             type: 'transferCall';
           } & TransferCallTool)
-        | ({
-            type: 'output';
-          } & OutputTool)
         | ({
             type: 'bash';
           } & BashTool)
@@ -24476,6 +28722,9 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
     toolControllerRemove: (id: string, params: RequestParams = {}) =>
       this.request<
         | ({
+            type: 'apiRequest';
+          } & ApiRequestTool)
+        | ({
             type: 'dtmf';
           } & DtmfTool)
         | ({
@@ -24485,17 +28734,8 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
             type: 'function';
           } & FunctionTool)
         | ({
-            type: 'ghl';
-          } & GhlTool)
-        | ({
-            type: 'make';
-          } & MakeTool)
-        | ({
             type: 'transferCall';
           } & TransferCallTool)
-        | ({
-            type: 'output';
-          } & OutputTool)
         | ({
             type: 'bash';
           } & BashTool)
@@ -26383,7 +30623,13 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
           } & CreateSlackOAuth2AuthorizationCredentialDTO)
         | ({
             provider: 'ghl.oauth2-authorization';
-          } & CreateGoHighLevelMCPCredentialDTO),
+          } & CreateGoHighLevelMCPCredentialDTO)
+        | ({
+            provider: 'inworld';
+          } & CreateInworldCredentialDTO)
+        | ({
+            provider: 'minimax';
+          } & CreateMinimaxCredentialDTO),
       params: RequestParams = {},
     ) =>
       this.request<
@@ -26536,7 +30782,13 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
           } & any)
         | ({
             provider: 'ghl.oauth2-authorization';
-          } & GoHighLevelMCPCredential),
+          } & GoHighLevelMCPCredential)
+        | ({
+            provider: 'inworld';
+          } & InworldCredential)
+        | ({
+            provider: 'minimax';
+          } & any),
         any
       >({
         path: `/credential`,
@@ -26760,6 +31012,12 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
           | ({
               provider: 'ghl.oauth2-authorization';
             } & GoHighLevelMCPCredential)
+          | ({
+              provider: 'inworld';
+            } & InworldCredential)
+          | ({
+              provider: 'minimax';
+            } & any)
         )[],
         any
       >({
@@ -26931,7 +31189,13 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
           } & any)
         | ({
             provider: 'ghl.oauth2-authorization';
-          } & GoHighLevelMCPCredential),
+          } & GoHighLevelMCPCredential)
+        | ({
+            provider: 'inworld';
+          } & InworldCredential)
+        | ({
+            provider: 'minimax';
+          } & any),
         any
       >({
         path: `/credential/${id}`,
@@ -27069,7 +31333,10 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
           } & UpdateWebhookCredentialDTO)
         | ({
             provider: 'xai';
-          } & UpdateXAiCredentialDTO),
+          } & UpdateXAiCredentialDTO)
+        | ({
+            provider: 'inworld';
+          } & UpdateInworldCredentialDTO),
       params: RequestParams = {},
     ) =>
       this.request<
@@ -27222,7 +31489,13 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
           } & any)
         | ({
             provider: 'ghl.oauth2-authorization';
-          } & GoHighLevelMCPCredential),
+          } & GoHighLevelMCPCredential)
+        | ({
+            provider: 'inworld';
+          } & InworldCredential)
+        | ({
+            provider: 'minimax';
+          } & any),
         any
       >({
         path: `/credential/${id}`,
@@ -27394,7 +31667,13 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
           } & any)
         | ({
             provider: 'ghl.oauth2-authorization';
-          } & GoHighLevelMCPCredential),
+          } & GoHighLevelMCPCredential)
+        | ({
+            provider: 'inworld';
+          } & InworldCredential)
+        | ({
+            provider: 'minimax';
+          } & any),
         any
       >({
         path: `/credential/${id}`,
@@ -27660,7 +31939,9 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
         | 'rime-ai'
         | 'smallest-ai'
         | 'tavus'
-        | 'sesame',
+        | 'sesame'
+        | 'inworld'
+        | 'minimax',
       query?: {
         page?: number;
         keyword?: string;
@@ -27750,7 +32031,9 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
         | 'rime-ai'
         | 'smallest-ai'
         | 'tavus'
-        | 'sesame',
+        | 'sesame'
+        | 'inworld'
+        | 'minimax',
       params: RequestParams = {},
     ) =>
       this.request<VoiceLibrary[], any>({
@@ -27786,7 +32069,9 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
         | 'rime-ai'
         | 'smallest-ai'
         | 'tavus'
-        | 'sesame',
+        | 'sesame'
+        | 'inworld'
+        | 'minimax',
       params: RequestParams = {},
     ) =>
       this.request<VoiceLibrary[], any>({
@@ -27846,6 +32131,177 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
     /**
      * No description
      *
+     * @tags Provider Resources
+     * @name ProviderResourceControllerCreateProviderResource
+     * @summary Create Provider Resource
+     * @request POST:/provider/{provider}/{resourceName}
+     * @secure
+     */
+    providerResourceControllerCreateProviderResource: (
+      provider: '11labs',
+      resourceName: 'pronunciation-dictionary',
+      params: RequestParams = {},
+    ) =>
+      this.request<ProviderResource, any>({
+        path: `/provider/${provider}/${resourceName}`,
+        method: 'POST',
+        secure: true,
+        format: 'json',
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Provider Resources
+     * @name ProviderResourceControllerGetProviderResourcesPaginated
+     * @summary List Provider Resources
+     * @request GET:/provider/{provider}/{resourceName}
+     * @secure
+     */
+    providerResourceControllerGetProviderResourcesPaginated: (
+      provider: '11labs',
+      resourceName: 'pronunciation-dictionary',
+      query?: {
+        id?: string;
+        resourceId?: string;
+        /**
+         * This is the page number to return. Defaults to 1.
+         * @min 1
+         */
+        page?: number;
+        /** This is the sort order for pagination. Defaults to 'DESC'. */
+        sortOrder?: 'ASC' | 'DESC';
+        /**
+         * This is the maximum number of items to return. Defaults to 100.
+         * @min 0
+         * @max 1000
+         */
+        limit?: number;
+        /**
+         * This will return items where the createdAt is greater than the specified value.
+         * @format date-time
+         */
+        createdAtGt?: string;
+        /**
+         * This will return items where the createdAt is less than the specified value.
+         * @format date-time
+         */
+        createdAtLt?: string;
+        /**
+         * This will return items where the createdAt is greater than or equal to the specified value.
+         * @format date-time
+         */
+        createdAtGe?: string;
+        /**
+         * This will return items where the createdAt is less than or equal to the specified value.
+         * @format date-time
+         */
+        createdAtLe?: string;
+        /**
+         * This will return items where the updatedAt is greater than the specified value.
+         * @format date-time
+         */
+        updatedAtGt?: string;
+        /**
+         * This will return items where the updatedAt is less than the specified value.
+         * @format date-time
+         */
+        updatedAtLt?: string;
+        /**
+         * This will return items where the updatedAt is greater than or equal to the specified value.
+         * @format date-time
+         */
+        updatedAtGe?: string;
+        /**
+         * This will return items where the updatedAt is less than or equal to the specified value.
+         * @format date-time
+         */
+        updatedAtLe?: string;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<ProviderResourcePaginatedResponse, any>({
+        path: `/provider/${provider}/${resourceName}`,
+        method: 'GET',
+        query: query,
+        secure: true,
+        format: 'json',
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Provider Resources
+     * @name ProviderResourceControllerGetProviderResource
+     * @summary Get Provider Resource
+     * @request GET:/provider/{provider}/{resourceName}/{id}
+     * @secure
+     */
+    providerResourceControllerGetProviderResource: (
+      provider: '11labs',
+      resourceName: 'pronunciation-dictionary',
+      id: string,
+      params: RequestParams = {},
+    ) =>
+      this.request<ProviderResource, void>({
+        path: `/provider/${provider}/${resourceName}/${id}`,
+        method: 'GET',
+        secure: true,
+        format: 'json',
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Provider Resources
+     * @name ProviderResourceControllerDeleteProviderResource
+     * @summary Delete Provider Resource
+     * @request DELETE:/provider/{provider}/{resourceName}/{id}
+     * @secure
+     */
+    providerResourceControllerDeleteProviderResource: (
+      provider: '11labs',
+      resourceName: 'pronunciation-dictionary',
+      id: string,
+      params: RequestParams = {},
+    ) =>
+      this.request<ProviderResource, void>({
+        path: `/provider/${provider}/${resourceName}/${id}`,
+        method: 'DELETE',
+        secure: true,
+        format: 'json',
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Provider Resources
+     * @name ProviderResourceControllerUpdateProviderResource
+     * @summary Update Provider Resource
+     * @request PATCH:/provider/{provider}/{resourceName}/{id}
+     * @secure
+     */
+    providerResourceControllerUpdateProviderResource: (
+      provider: '11labs',
+      resourceName: 'pronunciation-dictionary',
+      id: string,
+      params: RequestParams = {},
+    ) =>
+      this.request<ProviderResource, void>({
+        path: `/provider/${provider}/${resourceName}/${id}`,
+        method: 'PATCH',
+        secure: true,
+        format: 'json',
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
      * @tags Providers
      * @name ProviderControllerGetWorkflows
      * @request GET:/{provider}/workflows
@@ -27858,7 +32314,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
       },
       params: RequestParams = {},
     ) =>
-      this.request<VariableExtractionPlan, any>({
+      this.request<SbcConfiguration, any>({
         path: `/${provider}/workflows`,
         method: 'GET',
         query: query,
@@ -27880,7 +32336,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
       workflowId: string,
       params: RequestParams = {},
     ) =>
-      this.request<VariableExtractionPlan, any>({
+      this.request<SbcConfiguration, any>({
         path: `/${provider}/workflows/${workflowId}/hooks`,
         method: 'GET',
         secure: true,
@@ -27897,7 +32353,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
      * @secure
      */
     providerControllerGetLocations: (provider: 'make' | 'ghl', params: RequestParams = {}) =>
-      this.request<VariableExtractionPlan, any>({
+      this.request<SbcConfiguration, any>({
         path: `/${provider}/locations`,
         method: 'GET',
         secure: true,

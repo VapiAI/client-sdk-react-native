@@ -1,18 +1,19 @@
 # Vapi React Native SDK
 
-This package lets you start Vapi calls directly in your React Native app.
+This package lets you start Vapi voice and video calls directly in your React Native app.
 
 ## 📋 Table of Contents
 
 - [⚠️ Important Notes](#⚠️-important-notes)
 - [📋 Prerequisites](#📋-prerequisites)
 - [🔧 Installation](#🔧-installation)
-- [🚀 Quick Start](#🚀-quick-start)
-  - [1. Import and Initialize](#1-import-and-initialize)
-  - [2. Set Up Event Listeners](#2-set-up-event-listeners)
-  - [3. Start a Call](#3-start-a-call)
-  - [4. Control the Call](#4-control-the-call)
-- [🔧 Advanced Usage](#🔧-advanced-usage)
+  - [🚀 Quick Start](#🚀-quick-start)
+    - [1. Import and Initialize](#1-import-and-initialize)
+    - [2. Set Up Event Listeners](#2-set-up-event-listeners)
+    - [3. Start a Call](#3-start-a-call)
+    - [4. Control the Call](#4-control-the-call)
+  - [🎥 Video Features](#🎥-video-features)
+  - [🔧 Advanced Usage](#🔧-advanced-usage)
 - [🐛 Troubleshooting](#🐛-troubleshooting)
 - [🔗 Expo Integration](#🔗-expo-integration)
 - [📚 API Reference](#📚-api-reference)
@@ -83,7 +84,7 @@ Add these keys to your `ios/YourApp/Info.plist`:
 
 | Key | Type | Value |
 |-----|------|-------|
-| `NSCameraUsageDescription` | String | "This app needs camera access for voice calls" |
+| `NSCameraUsageDescription` | String | "This app needs camera access for video calls" |
 | `NSMicrophoneUsageDescription` | String | "This app needs microphone access for voice calls" |
 | `UIBackgroundModes` | Array | Item 0: `voip` |
 
@@ -169,6 +170,15 @@ vapi.on('volume-level', (volume) => {
 vapi.on('error', (error) => {
   console.error('Vapi error:', error);
 });
+
+// Video-specific events
+vapi.on('video', (track) => {
+  console.log('Video track received:', track);
+});
+
+vapi.on('camera-error', (error) => {
+  console.error('Camera error:', error);
+});
 ```
 
 ### 3. Start a Call
@@ -176,22 +186,22 @@ vapi.on('error', (error) => {
 ```javascript
 try {
   await vapi.start({
-    model: {
-      provider: 'openai',
-      model: 'gpt-4o',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a helpful AI assistant.',
-        },
-      ],
-    },
-    voice: {
-      provider: '11labs',
-      voiceId: 'pNInz6obpgDQGcFmaJgB',
-    },
-    firstMessage: 'Hello! How can I help you today?',
-  });
+     model: {
+       provider: 'openai',
+       model: 'gpt-4o',
+       messages: [
+         {
+           role: 'system',
+           content: 'You are a helpful AI assistant.',
+         },
+       ],
+     },
+     voice: {
+       provider: '11labs',
+       voiceId: 'pNInz6obpgDQGcFmaJgB',
+     },
+     firstMessage: 'Hello! How can I help you today?',
+   });
 } catch (error) {
   console.error('Failed to start call:', error);
 }
@@ -205,31 +215,265 @@ vapi.setMuted(true);
 
 // Send a message
 vapi.send({
-  type: 'add-message',
-  message: {
-    role: 'user',
-    content: 'Hello from React Native!',
-  },
+   type: 'add-message',
+   message: {
+     role: 'user',
+     content: 'Hello from React Native!',
+   },
 });
 
 // End the call
 vapi.stop();
 ```
 
+## 🎥 Video Features
+
+The SDK now fully supports video calls with the following capabilities:
+
+### Video UI Components
+
+To display video, you'll need to use the `DailyMediaView` component from `@daily-co/react-native-daily-js`:
+
+```javascript
+import React from 'react';
+import { View, StyleSheet } from 'react-native';
+import { DailyMediaView } from '@daily-co/react-native-daily-js';
+
+const VideoCall = () => {
+  const participants = vapi.participants();
+  
+  return (
+    <View style={styles.container}>
+      {Object.entries(participants).map(([sessionId, participant]) => (
+        <DailyMediaView
+          key={sessionId}
+          videoTrack={participant.tracks.video.track}
+          audioTrack={participant.tracks.audio.track}
+          mirror={participant.local}
+          zOrder={participant.local ? 1 : 0}
+          style={styles.video}
+        />
+      ))}
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: 'black',
+  },
+  video: {
+    flex: 1,
+    margin: 5,
+  },
+});
+```
+
+### Complete Video Example
+
+```javascript
+import React, { useState, useEffect } from 'react';
+import { View, Button, Text } from 'react-native';
+import Vapi from '@vapi-ai/react-native';
+import { DailyMediaView } from '@daily-co/react-native-daily-js';
+
+const VideoCallScreen = () => {
+  const [vapi] = useState(new Vapi('your-api-key'));
+  const [isInCall, setIsInCall] = useState(false);
+  const [participants, setParticipants] = useState({});
+  const [isVideoOn, setIsVideoOn] = useState(true);
+
+  useEffect(() => {
+    // Set up event listeners
+    vapi.on('call-start', () => {
+      setIsInCall(true);
+    });
+
+    vapi.on('call-end', () => {
+      setIsInCall(false);
+      setParticipants({});
+    });
+
+    vapi.on('daily-participant-updated', () => {
+      setParticipants(vapi.participants());
+    });
+
+    vapi.on('video', (track) => {
+      // Video track received, participants will be updated
+      setParticipants(vapi.participants());
+    });
+
+    return () => {
+      vapi.stop();
+    };
+  }, []);
+
+  const startCall = async () => {
+    await vapi.start({
+      model: {
+        provider: 'openai',
+        model: 'gpt-4o',
+        messages: [{
+          role: 'system',
+          content: 'You are a helpful video assistant.',
+        }],
+      },
+      voice: {
+        provider: 'tavus', // For video avatars
+        voiceId: 'your-voice-id',
+      },
+    });
+  };
+
+  const toggleVideo = () => {
+    vapi.setLocalVideo(!isVideoOn);
+    setIsVideoOn(!isVideoOn);
+  };
+
+  return (
+    <View style={{ flex: 1 }}>
+      {!isInCall ? (
+        <Button title="Start Video Call" onPress={startCall} />
+      ) : (
+        <>
+          <View style={{ flex: 1 }}>
+            {Object.entries(participants).map(([id, participant]) => (
+              <DailyMediaView
+                key={id}
+                videoTrack={participant.tracks?.video?.track}
+                audioTrack={participant.tracks?.audio?.track}
+                mirror={participant.local}
+                style={{ flex: 1 }}
+              />
+            ))}
+          </View>
+          <View style={{ flexDirection: 'row', padding: 20 }}>
+            <Button 
+              title={isVideoOn ? "Turn Off Video" : "Turn On Video"} 
+              onPress={toggleVideo} 
+            />
+            <Button title="Switch Camera" onPress={() => vapi.cycleCamera()} />
+            <Button title="End Call" onPress={() => vapi.stop()} />
+          </View>
+        </>
+      )}
+    </View>
+  );
+};
+```
+
 ## 🔧 Advanced Usage
+
+### Video Call Features
+
+```javascript
+// Enable/disable video
+vapi.setLocalVideo(true);  // Turn on camera
+vapi.setLocalVideo(false); // Turn off camera
+
+// Check if video is enabled
+const isVideoOn = vapi.isVideoEnabled();
+
+// Switch between front/back camera
+vapi.cycleCamera();
+
+// Start camera before call
+await vapi.startCamera();
+
+// Display video tracks using DailyMediaView
+import { DailyMediaView } from '@daily-co/react-native-daily-js';
+
+// In your component
+<DailyMediaView
+  videoTrack={participant.videoTrack}
+  audioTrack={participant.audioTrack}
+  mirror={participant.local}
+  zOrder={participant.local ? 1 : 0}
+  style={styles.video}
+/>
+```
+
+### Say Feature
+
+```javascript
+// Have the assistant say something
+vapi.say('Hello, how can I help you today?');
+
+// With options
+vapi.say(
+  'Goodbye!', 
+  true,  // endCallAfterSpoken
+  false, // interruptionsEnabled
+  false  // interruptAssistantEnabled
+);
+```
 
 ### Device Management
 
 ```javascript
-// Get available audio devices
-const devices = vapi.getAudioDevices();
-console.log('Available devices:', devices);
-
-// Set specific audio device
+// Audio devices
+const audioDevices = vapi.getAudioDevices();
 vapi.setAudioDevice(deviceId);
+const currentAudioDevice = vapi.getCurrentAudioDevice();
 
-// Get current device
-const currentDevice = vapi.getCurrentAudioDevice();
+// Camera devices
+const cameraDevices = vapi.getCameraDevices();
+vapi.setCamera(deviceId);
+const currentCamera = vapi.getCurrentCameraDevice();
+```
+
+### Screen Sharing
+
+```javascript
+// Start screen sharing
+vapi.startScreenShare();
+
+// Stop screen sharing
+vapi.stopScreenShare();
+```
+
+### Participant Management
+
+```javascript
+// Get all participants
+const participants = vapi.participants();
+
+// Update participant settings
+vapi.updateParticipant(sessionId, {
+  setSubscribedTracks: {
+    audio: true,
+    video: true
+  }
+});
+```
+
+### Network Quality Monitoring
+
+```javascript
+vapi.on('network-quality-change', (event) => {
+  console.log('Network quality:', event);
+});
+
+vapi.on('network-connection', (event) => {
+  console.log('Network connection:', event);
+});
+```
+
+### Call Progress Tracking
+
+```javascript
+vapi.on('call-start-progress', (event) => {
+  console.log(`Stage: ${event.stage}, Status: ${event.status}`);
+});
+
+vapi.on('call-start-success', (event) => {
+  console.log('Call started successfully in', event.totalDuration, 'ms');
+});
+
+vapi.on('call-start-failed', (event) => {
+  console.error('Call failed at stage:', event.stage, 'Error:', event.error);
+});
 ```
 
 ### Error Handling
@@ -243,6 +487,11 @@ vapi.on('error', (error) => {
     // Handle network errors
     Alert.alert('Network Error', 'Please check your internet connection');
   }
+});
+
+vapi.on('camera-error', (error) => {
+  console.error('Camera error:', error);
+  Alert.alert('Camera Error', 'Unable to access camera');
 });
 ```
 
@@ -369,15 +618,41 @@ npx expo run:ios  # or run:android
 new Vapi(apiKey: string, apiBaseUrl?: string)
 ```
 
-#### Methods
-- `start(assistant, overrides?)` - Start a voice call
+#### Core Methods
+- `start(assistant, overrides?)` - Start a voice/video call
 - `stop()` - End the current call
+- `send(message)` - Send a message during call
+- `say(message, endCallAfterSpoken?, interruptionsEnabled?, interruptAssistantEnabled?)` - Have assistant speak
+
+#### Audio Methods
 - `setMuted(muted: boolean)` - Mute/unmute microphone
 - `isMuted()` - Check if currently muted
-- `send(message)` - Send a message during call
 - `getAudioDevices()` - Get available audio devices
 - `setAudioDevice(deviceId)` - Set audio device
 - `getCurrentAudioDevice()` - Get current audio device
+
+#### Video Methods
+- `setLocalVideo(enable: boolean)` - Enable/disable video
+- `isVideoEnabled()` - Check if video is enabled
+- `startCamera()` - Start camera before call
+- `cycleCamera()` - Switch between cameras
+- `getCameraDevices()` - Get available cameras
+- `setCamera(deviceId)` - Set specific camera
+- `getCurrentCameraDevice()` - Get current camera
+
+#### Screen Sharing Methods
+- `startScreenShare()` - Start screen sharing
+- `stopScreenShare()` - Stop screen sharing
+
+#### Participant Methods
+- `participants()` - Get all participants
+- `updateParticipant(sessionId, updates)` - Update participant settings
+
+#### Advanced Methods
+- `getDailyCallObject()` - Get underlying Daily call object
+- `updateSendSettings(settings)` - Update send settings
+- `updateReceiveSettings(settings)` - Update receive settings
+- `updateInputSettings(settings)` - Update input settings
 
 #### Events
 - `call-start` - Call has started
@@ -387,6 +662,14 @@ new Vapi(apiKey: string, apiBaseUrl?: string)
 - `speech-end` - Speech detection ended
 - `message` - Received message
 - `error` - Error occurred
+- `video` - Video track received
+- `camera-error` - Camera error occurred
+- `network-quality-change` - Network quality changed
+- `network-connection` - Network connection status
+- `daily-participant-updated` - Participant updated
+- `call-start-progress` - Call initialization progress
+- `call-start-success` - Call started successfully
+- `call-start-failed` - Call failed to start
 
 ## 🤝 Contributing
 
