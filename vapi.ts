@@ -190,11 +190,6 @@ export default class Vapi extends VapiEventEmitter {
       this.emit('video', e.track);
     }
     
-    if (e.track.kind === 'audio') {
-      // In React Native, we don't need to create audio elements
-      // Audio is handled automatically by the DailyMediaView component
-    }
-    
     this.call?.sendAppMessage('playable');
   }
 
@@ -283,7 +278,7 @@ export default class Vapi extends VapiEventEmitter {
       this.emit('daily-participant-updated', e.participant);
     });
     this.call.on('participant-left', (e) => {
-      // In React Native we don't need to destroy audio players
+      this.cleanup();
     });
     this.call.on('left-meeting', (e) => {
       if (!this.hasEmittedCallEndedStatus) {
@@ -345,7 +340,7 @@ export default class Vapi extends VapiEventEmitter {
       'nonfatal-error',
     ];
     for (const event of events) {
-      this.call.off(event, (e: any) => console.log('Off ', e));
+      this.call.off(event, (e: any) => {});
     }
   }
 
